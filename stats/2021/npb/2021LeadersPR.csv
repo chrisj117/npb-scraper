@@ -1,0 +1,24 @@
+Pitcher,G,W,L,SV,HLD,CG,SHO,BF,IP,H,HR,SO,BB,IBB,HB,WP,R,ER,ERA,FIP,kwERA,WHIP,ERA+,FIP-,kwERA-,Diff,HR%,K%,BB%,K-BB%,Team,League
+Aoyagi Koyo,25,13,6,0,0,0,0,651,156.1,143,11,104,48,8,3,0,48,43,2.48,3.72,3.94,1.22,139,98,108,-1.24,1.7%,16.0%,7.4%,8.6%,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,CL
+Nishi Yuki,24,6,9,0,0,2,0,610,143.2,143,12,95,40,6,4,2,68,60,3.76,3.84,3.90,1.27,92,101,107,-0.08,2.0%,15.6%,6.6%,9.0%,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,CL
+Kuri Aren,25,13,9,0,0,2,0,647,149.0,150,18,102,51,1,8,4,73,63,3.81,4.54,4.01,1.35,90,121,110,-0.73,2.8%,15.8%,7.9%,7.9%,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
+Morishita Masato,24,8,7,0,0,1,1,672,163.1,144,16,132,52,3,3,6,55,54,2.98,3.82,3.61,1.20,115,102,99,-0.84,2.4%,19.6%,7.7%,11.9%,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
+Ohsera Daichi,23,10,5,0,0,1,1,600,146.2,136,12,102,31,2,5,1,57,50,3.07,3.56,3.62,1.14,111,95,99,-0.49,2.0%,17.0%,5.2%,11.8%,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
+Togo Shosei,26,9,8,0,0,1,0,639,151.2,130,19,138,58,2,6,3,75,72,4.27,4.23,3.55,1.24,87,104,97,0.04,3.0%,21.6%,9.1%,12.5%,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,CL
+Ogasawara Shinnosuke,25,8,10,0,0,0,0,615,143.1,141,16,115,51,1,4,4,60,58,3.64,4.15,3.76,1.34,92,113,103,-0.51,2.6%,18.7%,8.3%,10.4%,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
+Ohno Yudai,22,7,11,0,0,1,0,566,143.1,121,12,118,26,1,2,1,48,47,2.95,3.18,3.17,1.03,113,87,87,-0.23,2.1%,20.8%,4.6%,16.2%,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
+Yanagi Yuya,26,11,6,0,0,2,2,676,172.0,133,11,168,41,1,3,3,47,42,2.20,2.80,2.92,1.01,151,76,80,-0.60,1.6%,24.9%,6.1%,18.8%,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
+Miyagi Hiroya,23,13,4,0,0,0,0,594,147.0,118,9,131,39,1,9,0,44,41,2.51,3.15,3.25,1.07,137,83,89,-0.64,1.5%,22.1%,6.6%,15.5%,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
+Tajima Daiki,24,8,8,0,0,0,0,608,143.1,137,10,135,48,1,5,4,62,57,3.58,3.29,3.37,1.29,96,87,92,0.29,1.6%,22.2%,7.9%,14.3%,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
+Yamamoto Yoshinobu,26,18,5,0,0,6,4,736,193.2,124,7,206,40,1,2,3,37,30,1.39,2.15,2.54,0.85,247,57,70,-0.76,1.0%,28.0%,5.4%,22.6%,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
+Ojima Kazuya,24,10,4,0,0,3,2,606,146.0,123,16,92,51,1,6,2,65,61,3.76,4.49,4.12,1.19,97,112,113,-0.73,2.6%,15.2%,8.4%,6.8%,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
+Ishikawa Shuta,28,6,9,0,0,0,0,653,156.1,135,22,134,51,0,17,3,70,59,3.40,4.57,3.53,1.19,104,117,97,-1.17,3.4%,20.5%,7.8%,12.7%,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
+Kishi Takayuki,25,9,10,0,0,1,1,620,149.0,149,17,131,34,0,1,1,62,57,3.44,3.58,3.24,1.23,101,94,89,-0.14,2.7%,21.1%,5.5%,15.6%,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,PL
+Norimoto Takahiro,23,11,5,0,0,2,1,584,144.2,123,18,152,35,0,3,3,56,51,3.17,3.46,2.80,1.09,110,91,77,-0.29,3.1%,26.0%,6.0%,20.0%,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,PL
+Tanaka Masahiro,23,4,9,0,0,1,0,624,155.2,131,17,126,29,0,5,6,54,52,3.01,3.61,3.25,1.03,115,95,89,-0.60,2.7%,20.2%,4.6%,15.6%,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,PL
+Imai Tatsuya,25,8,8,0,0,3,1,682,158.1,123,15,137,99,1,11,11,66,58,3.30,4.74,4.24,1.40,109,120,116,-1.44,2.2%,20.1%,14.5%,5.6%,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
+Matsumoto Wataru,28,10,8,0,0,1,1,638,149.2,137,15,130,64,0,4,4,63,63,3.79,4.08,3.77,1.34,95,103,103,-0.29,2.4%,20.4%,10.0%,10.4%,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
+Takahashi Kona,27,11,9,0,0,0,0,728,173.2,157,23,127,62,0,6,13,81,73,3.78,4.59,3.91,1.26,95,116,107,-0.81,3.2%,17.4%,8.5%,8.9%,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
+Itoh Hiromi,23,10,9,0,0,1,1,610,146.0,125,8,141,53,1,6,1,51,47,2.90,3.15,3.36,1.22,120,82,92,-0.25,1.3%,23.1%,8.7%,14.4%,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
+Katoh Takayuki,25,6,7,0,0,1,1,595,150.0,136,13,102,21,1,3,2,61,57,3.42,3.40,3.44,1.05,102,89,94,0.02,2.2%,17.1%,3.5%,13.6%,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
+Uwasawa Naoyuki,24,12,6,0,0,1,0,643,160.1,119,8,135,48,1,4,5,53,50,2.81,3.09,3.45,1.04,124,80,95,-0.28,1.2%,21.0%,7.5%,13.5%,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
