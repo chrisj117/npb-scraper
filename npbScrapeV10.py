@@ -68,7 +68,9 @@ def main():
     # positions
     npbFielding = FieldingData(statsDir, yearDir, "R", scrapeYear)
     # NPB Team Fielding
-    npbTeamFielding = TeamFieldingData(npbFielding.df, statsDir, yearDir, "R", scrapeYear)
+    npbTeamFielding = TeamFieldingData(
+        npbFielding.df, statsDir, yearDir, "R", scrapeYear
+    )
     # NPB Standings
     # NOTE: standings must be organized before any player stats to calculate
     # correct IP/PA drop consts
@@ -87,8 +89,17 @@ def main():
         regPitchPlayerStats.df, statsDir, yearDir, "PR", scrapeYear
     )
     # NPB team summary
-    regTeamSummary = TeamSummaryData(npbTeamFielding.df, centralStandings.df, pacificStandings.df,
-        regBatTeamStats.df, regPitchTeamStats.df, statsDir, yearDir, "R", scrapeYear)
+    regTeamSummary = TeamSummaryData(
+        npbTeamFielding.df,
+        centralStandings.df,
+        pacificStandings.df,
+        regBatTeamStats.df,
+        regPitchTeamStats.df,
+        statsDir,
+        yearDir,
+        "R",
+        scrapeYear,
+    )
     # NPB output
     regBatPlayerStats.output_final()
     regPitchPlayerStats.output_final()
@@ -114,7 +125,9 @@ def main():
     # Farm Fielding
     farmFielding = FieldingData(statsDir, yearDir, "F", scrapeYear)
     # NPB Team Fielding
-    farmTeamFielding = TeamFieldingData(farmFielding.df, statsDir, yearDir, "F", scrapeYear)
+    farmTeamFielding = TeamFieldingData(
+        farmFielding.df, statsDir, yearDir, "F", scrapeYear
+    )
     # Farm Standings
     easternStandings = StandingsData(statsDir, yearDir, "E", scrapeYear)
     westernStandings = StandingsData(statsDir, yearDir, "W", scrapeYear)
@@ -260,10 +273,8 @@ class PlayerData(Stats):
             leaderDf.drop(["GTeam"], axis=1, inplace=True)
 
             # Convert player/team names to HTML that contains appropriate URLs
-            #if int(self.year) == datetime.now().year:
-            leaderDf = convert_player_to_html(
-                leaderDf, self.suffix, self.year
-            )
+            # if int(self.year) == datetime.now().year:
+            leaderDf = convert_player_to_html(leaderDf, self.suffix, self.year)
             leaderDf = convert_team_to_html(leaderDf, "Abb")
             # Output leader file as a csv
             newCsvLeader = (
@@ -302,10 +313,8 @@ class PlayerData(Stats):
             leaderDf.drop(["GTeam"], axis=1, inplace=True)
 
             # Convert player/team names to HTML that contains appropriate URLs
-            #if int(self.year) == datetime.now().year:
-            leaderDf = convert_player_to_html(
-                leaderDf, self.suffix, self.year
-            )
+            # if int(self.year) == datetime.now().year:
+            leaderDf = convert_player_to_html(leaderDf, self.suffix, self.year)
             leaderDf = convert_team_to_html(leaderDf, "Abb")
             # Output leader file as a csv
             newCsvLeader = (
@@ -457,7 +466,7 @@ class PlayerData(Stats):
         self.df["Diff"] = self.df["Diff"].astype(str)
         self.df["Diff"] = self.df["Diff"].str.replace("nan", "")
         # Add age and throwing/batting arm columns
-        #if int(self.year) == datetime.now().year:
+        # if int(self.year) == datetime.now().year:
         self.df = add_roster_data(self.df, self.suffix)
         # Column reordering
         if self.suffix == "PR":
@@ -635,7 +644,7 @@ class PlayerData(Stats):
         # Replace BB/K infs with '1.00' (same format as MLB website)
         self.df["BB/K"] = self.df["BB/K"].str.replace("inf", "1.00")
         # Add age, (temp) position, and throwing/batting arm columns
-        #if int(self.year) == datetime.now().year:
+        # if int(self.year) == datetime.now().year:
         self.df = add_roster_data(self.df, self.suffix)
         self.df["Pos"] = np.nan
         # Column reordering
@@ -725,23 +734,23 @@ class PlayerData(Stats):
         # primary position only for the batting Pos column
         # Create a temp df with players as rows and all positions they play as cols
         dfPivot = fieldDf.pivot_table(
-            index='Player',
-            columns='Pos',
-            values='Inn',
-            aggfunc='sum',
-            fill_value=0
+            index="Player",
+            columns="Pos",
+            values="Inn",
+            aggfunc="sum",
+            fill_value=0,
         )
-        dfPivot['Pos'] = dfPivot.apply(assign_primary_or_utl, axis=1)
+        dfPivot["Pos"] = dfPivot.apply(assign_primary_or_utl, axis=1)
         # Extract only the player_id and primary_position:
-        tempPrimaryDf = dfPivot[['Pos']].reset_index()
+        tempPrimaryDf = dfPivot[["Pos"]].reset_index()
         # Then merge if needed:
-        self.df = pd.merge(self.df, tempPrimaryDf, on='Player', how='left')
+        self.df = pd.merge(self.df, tempPrimaryDf, on="Player", how="left")
         # Swap temp Pos with updated Pos, drop placeholder Pos, rename
-        self.df['Pos_x'], self.df['Pos_y'] = self.df['Pos_y'], self.df['Pos_x']
-        self.df = self.df.drop('Pos_y',axis=1)
-        self.df = self.df.rename(columns={'Pos_x': 'Pos'})
+        self.df["Pos_x"], self.df["Pos_y"] = self.df["Pos_y"], self.df["Pos_x"]
+        self.df = self.df.drop("Pos_y", axis=1)
+        self.df = self.df.rename(columns={"Pos_x": "Pos"})
         # NaN means player was not on fielding dataframe, and is thus a pitcher
-        self.df['Pos'] = self.df['Pos'].fillna("1")
+        self.df["Pos"] = self.df["Pos"].fillna("1")
         return
 
 
@@ -1549,9 +1558,11 @@ class StandingsData(Stats):
         for key, value in formatMapping.items():
             self.df[key] = self.df[key].apply(value.format)
 
-# NEEDS DOCUMENTATION
+
 class FieldingData(Stats):
     def __init__(self, statsDir, yearDir, suffix, year):
+        """FieldingData new variables:
+        df (pandas dataframe): Holds the individual fielding stats"""
         super().__init__(statsDir, yearDir, suffix, year)
         # Initialize data frame to store stats
         self.df = pd.read_csv(
@@ -1564,8 +1575,13 @@ class FieldingData(Stats):
         """Outputs the Alt view of the associated dataframe (no HTML
         team or player names, no csv formatting)"""
         return self.df.to_string()
-    
+
     def output_final(self):
+        """Outputs final files using the fielding dataframes
+        
+        Parameters: N/A
+        
+        Returns: N/A"""
         # Make dir that will store alt views of the dataframes
         altDir = os.path.join(self.yearDir, "alt")
         if not (os.path.exists(altDir)):
@@ -1582,7 +1598,9 @@ class FieldingData(Stats):
                 os.mkdir(uploadDir)
 
         # Print organized dataframe to file
-        newCsvAlt = altDir + "/" + self.year + "FieldingAlt" + self.suffix + ".csv"
+        newCsvAlt = (
+            altDir + "/" + self.year + "FieldingAlt" + self.suffix + ".csv"
+        )
         self.df.to_string(newCsvAlt)
         # Add blank Rank column for Wordpress table counter
         self.df["Rank"] = ""
@@ -1596,36 +1614,61 @@ class FieldingData(Stats):
         finalDf = convert_team_to_html(finalDf, "Abb")
         # Print final file with all players
         newCsvFinal = (
-            uploadDir + "/" + self.year + "FieldingFinal" + self.suffix + ".csv"
+            uploadDir
+            + "/"
+            + self.year
+            + "FieldingFinal"
+            + self.suffix
+            + ".csv"
         )
         finalDf.to_csv(newCsvFinal, index=False)
 
         if self.suffix == "R":
             print(
-                "An alternative view of the regular season individual fielding results will "
-                "be stored in: " + newCsvAlt
+                "An alternative view of the regular season individual fielding"
+                " results will be stored in: " + newCsvAlt
             )
             print(
-                "The final organized regular season individual fielding results will be stored in: "
-                + newCsvFinal
+                "The final organized regular season individual fielding "
+                "results will be stored in: " + newCsvFinal
             )
         elif self.suffix == "F":
             print(
-                "An alternative view of the farm individual fielding results will "
-                "be stored in: " + newCsvAlt
+                "An alternative view of the farm individual fielding results "
+                "will be stored in: " + newCsvAlt
             )
             print(
-                "The final organized farm individual fielding results will be stored in: "
-                + newCsvFinal
+                "The final organized farm individual fielding results will be "
+                "stored in: " + newCsvFinal
             )
 
     def org_fielding(self):
+        """Organize the fielding stat csv and adds new stats (TZR, TZR/143)
+
+        Parameters: N/A
+
+        Returns: N/A"""
         # Drop empty last column and convert column names
         self.df = self.df.drop(self.df.columns[-1], axis=1)
         if self.suffix == "R":
-            self.df.rename(columns={'Position': 'Pos', 'Inning': 'Inn', '位置補正': 'Pos Adj'}, inplace=True)
+            self.df.rename(
+                columns={
+                    "Position": "Pos",
+                    "Inning": "Inn",
+                    "位置補正": "Pos Adj",
+                },
+                inplace=True,
+            )
         if self.suffix == "F":
-            self.df.rename(columns={'Position': 'Pos', 'Inning': 'Inn', '位置補正': 'Pos Adj', 'Error': 'ErrR'}, inplace=True)
+            self.df.rename(
+                columns={
+                    "Position": "Pos",
+                    "Inning": "Inn",
+                    "位置補正": "Pos Adj",
+                    "Error": "ErrR",
+                },
+                inplace=True,
+            )
 
         # '-' converted to nan
         self.df["RngR"] = self.df["RngR"].astype(str).replace("-", "")
@@ -1635,14 +1678,15 @@ class FieldingData(Stats):
         self.df["Framing"] = self.df["Framing"].astype(str).replace("-", "")
         self.df["Blocking"] = self.df["Blocking"].astype(str).replace("-", "")
         # Convert Pos to numbers for WordPress sorting
-        posDict = {"C":"2",
-            "1B":"3",
-            "2B":"4",
-            "3B":"5",
-            "SS":"6",
-            "LF":"7",
-            "CF":"8",
-            "RF":"9",
+        posDict = {
+            "C": "2",
+            "1B": "3",
+            "2B": "4",
+            "3B": "5",
+            "SS": "6",
+            "LF": "7",
+            "CF": "8",
+            "RF": "9",
         }
         self.df["Pos"] = (
             self.df["Pos"]
@@ -1652,20 +1696,21 @@ class FieldingData(Stats):
             .astype(str)
         )
         # Translate team and player names
-        teamDict = {"巨":"Yomiuri Giants",
-            "中":"Chunichi Dragons",
-            "神":"Hanshin Tigers",
-            "広":"Hiroshima Carp",
-            "デ":"DeNA BayStars",
-            "ヤ":"Yakult Swallows",
-            "ソ":"SoftBank Hawks",
-            "西":"Seibu Lions",
-            "楽":"Rakuten Eagles",
-            "ロ":"Lotte Marines",
-            "日":"Nipponham Fighters",
-            "オ":"ORIX Buffaloes",
-            "ハ":"HAYATE Ventures",
-            "O":"Oisix Albirex"
+        teamDict = {
+            "巨": "Yomiuri Giants",
+            "中": "Chunichi Dragons",
+            "神": "Hanshin Tigers",
+            "広": "Hiroshima Carp",
+            "デ": "DeNA BayStars",
+            "ヤ": "Yakult Swallows",
+            "ソ": "SoftBank Hawks",
+            "西": "Seibu Lions",
+            "楽": "Rakuten Eagles",
+            "ロ": "Lotte Marines",
+            "日": "Nipponham Fighters",
+            "オ": "ORIX Buffaloes",
+            "ハ": "HAYATE Ventures",
+            "O": "Oisix Albirex",
         }
         self.df["Team"] = (
             self.df["Team"]
@@ -1679,7 +1724,7 @@ class FieldingData(Stats):
         self.df["TZR"] = self.df["TZR"].astype(str).replace("-", "inf")
         self.df["TZR"] = self.df["TZR"].astype(float)
         self.df["TZR/143"] = (self.df["TZR"] / self.df["Inn"]) * 1287
-        self.df = self.df.round({"TZR/143":1})
+        self.df = self.df.round({"TZR/143": 1})
         self.df["TZR/143"] = self.df["TZR/143"].astype(str).replace("inf", "")
         self.df["TZR"] = self.df["TZR"].astype(str).replace("inf", "")
         # Innings conversion
@@ -1704,13 +1749,16 @@ class FieldingData(Stats):
                 "Framing",
                 "Blocking",
                 "Team",
-                "League"
+                "League",
             ]
         ]
 
-# NEEDS DOCUMENTATION
+
 class TeamFieldingData(Stats):
     def __init__(self, fieldingDf, statsDir, yearDir, suffix, year):
+        """TeamFieldingData new variables:
+        fieldingDf (pandas dataframe): Holds the individual fielding stats df
+        df (pandas dataframe): Holds a team's fielding stats"""
         super().__init__(statsDir, yearDir, suffix, year)
         # Initialize data frame to store individual stats
         self.fieldingDf = fieldingDf
@@ -1722,8 +1770,13 @@ class TeamFieldingData(Stats):
         """Outputs the Alt view of the associated dataframe (no HTML
         team or player names, no csv formatting)"""
         return self.df.to_string()
-    
+
     def output_final(self):
+        """Outputs final files using the team fielding dataframes
+        
+        Parameters: N/A
+        
+        Returns: N/A"""
         # Make dir that will store alt views of the dataframes
         altDir = os.path.join(self.yearDir, "alt")
         if not (os.path.exists(altDir)):
@@ -1740,7 +1793,9 @@ class TeamFieldingData(Stats):
                 os.mkdir(uploadDir)
 
         # Print organized dataframe to file
-        newCsvAlt = altDir + "/" + self.year + "TeamFieldingAlt" + self.suffix + ".csv"
+        newCsvAlt = (
+            altDir + "/" + self.year + "TeamFieldingAlt" + self.suffix + ".csv"
+        )
         self.df.to_string(newCsvAlt)
         # Add blank # column for Wordpress table counter
         self.df["#"] = ""
@@ -1752,18 +1807,23 @@ class TeamFieldingData(Stats):
         finalDf = convert_team_to_html(finalDf, "Full")
         # Print final file with all players
         newCsvFinal = (
-            uploadDir + "/" + self.year + "TeamFieldingFinal" + self.suffix + ".csv"
+            uploadDir
+            + "/"
+            + self.year
+            + "TeamFieldingFinal"
+            + self.suffix
+            + ".csv"
         )
         finalDf.to_csv(newCsvFinal, index=False)
 
         if self.suffix == "R":
             print(
-                "An alternative view of the regular season team fielding results will "
-                "be stored in: " + newCsvAlt
+                "An alternative view of the regular season team fielding "
+                "results will be stored in: " + newCsvAlt
             )
             print(
-                "The final organized regular season team fielding results will be stored in: "
-                + newCsvFinal
+                "The final organized regular season team fielding results "
+                "will be stored in: " + newCsvFinal
             )
         elif self.suffix == "F":
             print(
@@ -1771,26 +1831,58 @@ class TeamFieldingData(Stats):
                 "be stored in: " + newCsvAlt
             )
             print(
-                "The final organized farm team fielding results will be stored in: "
-                + newCsvFinal
+                "The final organized farm team fielding results will be stored"
+                " in: "+ newCsvFinal
             )
 
     def org_team_fielding(self):
+        """Organize the team fielding stat csv using the individual fielding
+        stats
+        
+        Parameters: N/A
+        
+        Returns: N/A"""
         # Convert cols that are numeric to float
-        cols = self.fieldingDf.columns.drop(['Team','League'])
-        self.fieldingDf[cols] = self.fieldingDf[cols].apply(pd.to_numeric, errors='coerce')
+        cols = self.fieldingDf.columns.drop(["Team", "League"])
+        self.fieldingDf[cols] = self.fieldingDf[cols].apply(
+            pd.to_numeric, errors="coerce"
+        )
         # Group stats by team and append to team dataframe
-        self.df['Team'] = self.fieldingDf['Team'].unique()
-        self.df = pd.merge(self.df, self.fieldingDf.groupby('Team', as_index=False)['TZR'].sum())
-        self.df = pd.merge(self.df, self.fieldingDf.groupby('Team', as_index=False)['Inn'].sum())
-        #self.df['Inn'] = convert_ip_column_in(self.df)
+        self.df["Team"] = self.fieldingDf["Team"].unique()
+        self.df = pd.merge(
+            self.df,
+            self.fieldingDf.groupby("Team", as_index=False)["TZR"].sum(),
+        )
+        self.df = pd.merge(
+            self.df,
+            self.fieldingDf.groupby("Team", as_index=False)["Inn"].sum(),
+        )
+        # self.df['Inn'] = convert_ip_column_in(self.df)
         self.df["TZR/143"] = (self.df["TZR"] / self.df["Inn"]) * 1287
-        self.df = pd.merge(self.df, self.fieldingDf.groupby('Team', as_index=False)['RngR'].sum())
-        self.df = pd.merge(self.df, self.fieldingDf.groupby('Team', as_index=False)['ARM'].sum())
-        self.df = pd.merge(self.df, self.fieldingDf.groupby('Team', as_index=False)['DPR'].sum())
-        self.df = pd.merge(self.df, self.fieldingDf.groupby('Team', as_index=False)['ErrR'].sum())
-        self.df = pd.merge(self.df, self.fieldingDf.groupby('Team', as_index=False)['Framing'].sum())
-        self.df = pd.merge(self.df, self.fieldingDf.groupby('Team', as_index=False)['Blocking'].sum())
+        self.df = pd.merge(
+            self.df,
+            self.fieldingDf.groupby("Team", as_index=False)["RngR"].sum(),
+        )
+        self.df = pd.merge(
+            self.df,
+            self.fieldingDf.groupby("Team", as_index=False)["ARM"].sum(),
+        )
+        self.df = pd.merge(
+            self.df,
+            self.fieldingDf.groupby("Team", as_index=False)["DPR"].sum(),
+        )
+        self.df = pd.merge(
+            self.df,
+            self.fieldingDf.groupby("Team", as_index=False)["ErrR"].sum(),
+        )
+        self.df = pd.merge(
+            self.df,
+            self.fieldingDf.groupby("Team", as_index=False)["Framing"].sum(),
+        )
+        self.df = pd.merge(
+            self.df,
+            self.fieldingDf.groupby("Team", as_index=False)["Blocking"].sum(),
+        )
         self.df = select_league(self.df, self.suffix)
 
         # Column reordering
@@ -1805,7 +1897,7 @@ class TeamFieldingData(Stats):
                 "ErrR",
                 "Framing",
                 "Blocking",
-                "League"
+                "League",
             ]
         ]
         # Number formatting
@@ -1817,18 +1909,36 @@ class TeamFieldingData(Stats):
             "DPR": "{:.1f}",
             "ErrR": "{:.1f}",
             "Framing": "{:.1f}",
-            "Blocking": "{:.1f}"
+            "Blocking": "{:.1f}",
         }
         for key, value in formatMapping.items():
             self.df[key] = self.df[key].apply(value.format)
 
-# NEEDS DOCUMENTATION
+
 class TeamSummaryData(Stats):
-    def __init__(self, teamFieldingDf, standings1Df, standings2Df, teamBatDf, teamPitchDf, statsDir, yearDir, suffix, year):
+    def __init__(
+        self,
+        teamFieldingDf,
+        standings1Df,
+        standings2Df,
+        teamBatDf,
+        teamPitchDf,
+        statsDir,
+        yearDir,
+        suffix,
+        year,
+    ):
+        """TeamSummaryData new variables:
+        teamFieldingDf (pandas dataframe): Holds the team fielding stats df
+        standings1Df (pandas dataframe): Holds the first half of the standings
+        standings2Df (pandas dataframe): Holds the second half of the standings
+        teamBatDf (pandas dataframe): Holds the team batting stats df
+        teamPitchDf (pandas dataframe): Holds the team pitching stats df
+        df (pandas dataframe): Holds a team's summarized stats"""
         super().__init__(statsDir, yearDir, suffix, year)
         # Initialize data frames to store team stats
         self.teamFieldingDf = teamFieldingDf
-        self.standingsDf = pd.concat([standings1Df,standings2Df])
+        self.standingsDf = pd.concat([standings1Df, standings2Df])
         self.teamBatDf = teamBatDf
         self.teamPitchDf = teamPitchDf
         self.df = pd.DataFrame()
@@ -1839,8 +1949,13 @@ class TeamSummaryData(Stats):
         """Outputs the Alt view of the associated dataframe (no HTML
         team or player names, no csv formatting)"""
         return self.df.to_string()
-    
+
     def output_final(self):
+        """Outputs final files using the team summary dataframes
+
+        Parameters: N/A
+
+        Returns: N/A"""
         # Make dir that will store alt views of the dataframes
         altDir = os.path.join(self.yearDir, "alt")
         if not (os.path.exists(altDir)):
@@ -1857,7 +1972,9 @@ class TeamSummaryData(Stats):
                 os.mkdir(uploadDir)
 
         # Print organized dataframe to file
-        newCsvAlt = altDir + "/" + self.year + "TeamSummaryAlt" + self.suffix + ".csv"
+        newCsvAlt = (
+            altDir + "/" + self.year + "TeamSummaryAlt" + self.suffix + ".csv"
+        )
         self.df.to_string(newCsvAlt)
         # Add blank Rank column for Wordpress table counter
         self.df["#"] = ""
@@ -1869,18 +1986,23 @@ class TeamSummaryData(Stats):
         finalDf = convert_team_to_html(finalDf, "Full")
         # Print final file with all players
         newCsvFinal = (
-            uploadDir + "/" + self.year + "TeamSummaryFinal" + self.suffix + ".csv"
+            uploadDir
+            + "/"
+            + self.year
+            + "TeamSummaryFinal"
+            + self.suffix
+            + ".csv"
         )
         finalDf.to_csv(newCsvFinal, index=False)
 
         if self.suffix == "R":
             print(
-                "An alternative view of the regular season team summary results will "
-                "be stored in: " + newCsvAlt
+                "An alternative view of the regular season team summary "
+                "results will be stored in: " + newCsvAlt
             )
             print(
-                "The final organized regular season team summary results will be stored in: "
-                + newCsvFinal
+                "The final organized regular season team summary results will "
+                "be stored in: " + newCsvFinal
             )
         elif self.suffix == "F":
             print(
@@ -1888,20 +2010,42 @@ class TeamSummaryData(Stats):
                 "be stored in: " + newCsvAlt
             )
             print(
-                "The final organized farm team summary results will be stored in: "
-                + newCsvFinal
+                "The final organized farm team summary results will be stored "
+                "in: " + newCsvFinal
             )
 
     def org_team_summary(self):
+        """Organize the team summary stat csv using the various team stat dfs
+
+        Parameters: N/A
+
+        Returns: N/A"""
         # Group stats by team and append to team dataframe
-        self.df['Team'] = self.teamFieldingDf['Team'].tolist()
-        self.df = pd.merge(self.df, self.teamPitchDf[["Team","W","L","ERA+","FIP-","K-BB%","R"]], on="Team", how="left")
+        self.df["Team"] = self.teamFieldingDf["Team"].tolist()
+        self.df = pd.merge(
+            self.df,
+            self.teamPitchDf[["Team", "W", "L", "ERA+", "FIP-", "K-BB%", "R"]],
+            on="Team",
+            how="left",
+        )
         self.df.rename(columns={"R": "RA"}, inplace=True)
-        self.df = pd.merge(self.df, self.teamBatDf[["Team","HR","SB","OPS+","R"]], on="Team", how="left")
+        self.df = pd.merge(
+            self.df,
+            self.teamBatDf[["Team", "HR", "SB", "OPS+", "R"]],
+            on="Team",
+            how="left",
+        )
         self.df.rename(columns={"R": "RS"}, inplace=True)
-        self.df = pd.merge(self.df, self.standingsDf[["Team","PCT"]], on="Team", how="left")
-        self.df['Diff'] = self.df['RS'].astype(int) - self.df['RA'].astype(int)
-        self.df = pd.merge(self.df, self.teamFieldingDf[["Team","TZR"]], on="Team", how="left")
+        self.df = pd.merge(
+            self.df, self.standingsDf[["Team", "PCT"]], on="Team", how="left"
+        )
+        self.df["Diff"] = self.df["RS"].astype(int) - self.df["RA"].astype(int)
+        self.df = pd.merge(
+            self.df,
+            self.teamFieldingDf[["Team", "TZR"]],
+            on="Team",
+            how="left",
+        )
         self.df = select_league(self.df, self.suffix)
 
         # Column reordering
@@ -1918,13 +2062,11 @@ class TeamSummaryData(Stats):
                 "ERA+",
                 "FIP-",
                 "K-BB%",
-                "TZR"
+                "TZR",
             ]
         ]
         # Number formatting
-        formatMapping = {
-            "PCT": "{:.3f}"
-        }
+        formatMapping = {"PCT": "{:.3f}"}
         for key, value in formatMapping.items():
             self.df[key] = self.df[key].apply(value.format)
 
@@ -2129,17 +2271,28 @@ def get_standings(yearDir, suffix, year):
     # Pace requests to npb.jp to avoid excessive requests
     sleep(randint(3, 5))
 
-# NEEDS DOCUMENTATION
+
 def get_fielding(yearDir, suffix, year):
-    # TODO: fielding urls change every year randomly, make a fieldingUrls.txt in input folder and integrate here
+    """Scrapes the fielding stats for the desired year and suffix
+    
+    Parameters:
+    yearDir (string): The directory to store relevant year statistics
+    suffix (string): Indicates URL being scraped:
+    "R" = regular season fielding stats
+    "F" = farm fielding stats
+    year (string): The desired fielding stat year
+
+    Return: N/A"""
+    # TODO: fielding urls change every year randomly, make a fieldingUrls.txt 
+    # in input folder and integrate here
     if suffix == "R":
         fieldingUrl = "https://bo-no05.hatenadiary.org/entry/2024/04/21/212756"
     elif suffix == "F":
         fieldingUrl = "https://bo-no05.hatenadiary.org/entry/2024/04/21/171840"
-    
+
     outputFile = make_raw_fielding_file(yearDir, suffix, year)
     r = get_url(fieldingUrl)
-    soup = BeautifulSoup(r.content, 'html.parser')
+    soup = BeautifulSoup(r.content, "html.parser")
     # Grab all fielding table entries
     fieldingTr = soup.find_all("tr")
     for tr in fieldingTr:
@@ -2375,8 +2528,22 @@ def make_raw_standings_file(writeDir, suffix, year):
     newFile = open(newCsvName, "w")
     return newFile
 
-# NEEDS DOCUMENTATION
+
 def make_raw_fielding_file(writeDir, suffix, year):
+    """Opens a file to hold all fielding stats inside a relative /stats/ 
+    directory that is created before calling this function
+
+    Parameters:
+    writeDir (string): The directory that stores the scraped NPB stats
+    suffix (string): Indicates the raw stat file to create:
+    "R" = regular season fielding stats
+    "F" = farm fielding stats
+    year (string): The desired npb year to scrape
+
+    Return:
+    newFile (file stream object): An opened file in /stats/ named
+    "[Year]FieldingRaw[Suffix].csv"
+    """
     # Open and return the file object in write mode
     newCsvName = writeDir + "/" + year + "FieldingRaw" + suffix + ".csv"
     if suffix == "R":
@@ -2568,16 +2735,25 @@ def convert_team_to_html(df, mode):
     # Create dict of Team Name:Complete HTML tag and convert
     teamDict = dict(linkDf.values)
     df["Team"] = (
-        df["Team"]
-        .map(teamDict)
-        .infer_objects()
-        .fillna(df["Team"])
-        .astype(str)
+        df["Team"].map(teamDict).infer_objects().fillna(df["Team"]).astype(str)
     )
     return df
 
-# NEEDS DOCUMENTATION
+
 def add_roster_data(df, suffix):
+    """Adds player age and throwing/batting arm data to the dataframe
+
+    Parameters:
+    df (pandas dataframe): A dataframe containing entries with player names
+    suffix (string): Indicates the data to add:
+    "BR" = regular season batting arm data
+    "BF" = farm batting arm data
+    "PR" = regular season throwing arm data
+    "PF" = farm throwing arm data
+
+    Returns:
+    df (pandas dataframe): The inputted dataframe with the appended throwing
+    arms and ages"""
     # Check for the team link file, if missing, tell user and return
     relDir = os.path.dirname(__file__)
     rosterDataFile = relDir + "/input/playerUrls.csv"
@@ -2597,7 +2773,7 @@ def add_roster_data(df, suffix):
             tbCol = "T"
         elif suffix == "BR" or suffix == "BF":
             tbCol = "B"
-        playerArmDict = dict(zip(rosterDf['Player'], rosterDf[tbCol]))
+        playerArmDict = dict(zip(rosterDf["Player"], rosterDf[tbCol]))
         df[tbCol] = (
             df[convertCol]
             .map(playerArmDict)
@@ -2607,36 +2783,44 @@ def add_roster_data(df, suffix):
         )
 
     # Player age
-    rosterDf["BirthDate"] = pd.to_datetime(rosterDf['BirthDate'], format='mixed')
-    rosterDf["Age"] = rosterDf['BirthDate'].apply(calculate_age)
+    rosterDf["BirthDate"] = pd.to_datetime(
+        rosterDf["BirthDate"], format="mixed"
+    )
+    rosterDf["Age"] = rosterDf["BirthDate"].apply(calculate_age)
     # Create dict of Player Name,Team:Age tag
-    playerAgeDict = dict(zip((zip(rosterDf["Player"],rosterDf["Team"])), rosterDf["Age"]))
-    df['keys'] = list(zip(df[convertCol],df["Team"]))
-    df['Age'] = (
-        df['keys']
+    playerAgeDict = dict(
+        zip((zip(rosterDf["Player"], rosterDf["Team"])), rosterDf["Age"])
+    )
+    df["keys"] = list(zip(df[convertCol], df["Team"]))
+    df["Age"] = (
+        df["keys"]
         .map(playerAgeDict)
         .infer_objects()
         .fillna(df[convertCol])
         .astype(str)
     )
-    """
-    old code:
-    playerAgeDict = dict(zip(rosterDf["Player"], rosterDf["Age"]))
-    df['Age'] = (
-        df[convertCol]
-        .map(playerAgeDict)
-        .infer_objects()
-        .fillna(df[convertCol])
-        .astype(str)
-    )
-    """
     return df
 
-# NEEDS DOCUMENTATION
+
 def calculate_age(birthdate):
-    #cutoff = datetime(datetime.today().year, 6, 30)
+    """Calculates the age of a player based on their birthdate according to
+    when the NPB season ends (June 30th)
+
+    Parameters:
+    birthdate (datetime object): The birthdate of the player
+
+    Returns:
+    npbAge (int): The age of the player at the start of the NPB season"""
+    # READD ONCE 2025 SEASON STARTS
+    # cutoff = datetime(datetime.today().year, 6, 30)
+    # REMOVE ONCE 2025 SEASON STARTS
     cutoff = datetime(2024, 6, 30)
-    return cutoff.year - birthdate.year - ((cutoff.month, cutoff.day) < (birthdate.month, birthdate.day))
+    npbAge = (
+        cutoff.year
+        - birthdate.year
+        - ((cutoff.month, cutoff.day) < (birthdate.month, birthdate.day))
+    )
+    return npbAge
 
 
 def convert_ip_column_out(df):
@@ -2650,12 +2834,12 @@ def convert_ip_column_out(df):
     representation
 
     Returns:
-    tempDf['IP']/tempDf['Inn'] (pandas dataframe column): An innings column 
+    tempDf['IP']/tempDf['Inn'] (pandas dataframe column): An innings column
     converted back to the informal innings representation"""
-    if 'IP' in df.columns:
-        innCol = 'IP'
-    elif 'Inn' in df.columns:
-        innCol = 'Inn'
+    if "IP" in df.columns:
+        innCol = "IP"
+    elif "Inn" in df.columns:
+        innCol = "Inn"
     # Innings ".0 .1 .2" fix
     tempDf = pd.DataFrame(df[innCol])
     # Get the ".0 .3 .7" in the innings column
@@ -2686,10 +2870,10 @@ def convert_ip_column_in(df):
     Returns:
     tempDf['IP'] (pandas dataframe column): An IP column converted for stat
     calculations"""
-    if 'IP' in df.columns:
-        innCol = 'IP'
-    elif 'Inn' in df.columns:
-        innCol = 'Inn'
+    if "IP" in df.columns:
+        innCol = "IP"
+    elif "Inn" in df.columns:
+        innCol = "Inn"
     tempDf = pd.DataFrame(df[innCol])
     # Get the ".0 .1 .2" in the 'IP' column
     ipDecimals = tempDf[innCol] % 1
@@ -2828,23 +3012,40 @@ def select_league(df, suffix):
         df.loc[df.Team == team, "League"] = leagueDict[team]
     return df
 
-# NEEDS DOCUMENTATION
-def assign_primary_or_utl(row, pct_utl_thresholdHigh=0.075, pct_utl_thresholdLow=0.05, pct_primary_threshold=0.50):
-    """
-    Given a row with positions (e.g. row['1B'], row['2B'], etc.),
+
+def assign_primary_or_utl(
+    row,
+    pct_utl_thresholdHigh=0.075,
+    pct_utl_thresholdLow=0.05,
+    pct_primary_threshold=0.50,
+):
+    """Given a row with positions (e.g. row['1B'], row['2B'], etc.),
     decide if the player is 'UTL' or has a primary position.
-    """
+
+    Parameters:
+    row (pandas series): A row of a dataframe with positions as columns
+    pct_utl_thresholdHigh (float): The threshold for a player to be considered
+    UTL if they have 3 or more positions >= this value
+    pct_utl_thresholdLow (float): The threshold for a player to be considered
+    UTL if they have 4 or more positions >= this value
+    pct_primary_threshold (float): The threshold for a player to be considered
+    primary at a position if they have >= this value
+
+    Returns:
+    df (pandas dataframe): The final stat dataframe with valid HTML in the
+    player/pitcher columns"""
     total_innings = row.sum()
     if total_innings == 0:
         return "No Data"
-    
+
     # Calculate fraction for each position
-    fractions = row / (total_innings - row['DH'])
+    fractions = row / (total_innings - row["DH"])
     # Count how many positions >= our thresholds
     num_positions_10plus = (fractions >= pct_utl_thresholdHigh).sum()
     num_positions_5plus = (fractions >= pct_utl_thresholdLow).sum()
-    # Rule 0: If the player has 3 positions that are all in the outfield, the largest OF pos is the primary
-    if row['7'] > 0 and row['8'] > 0 and row['9'] > 0:
+    # Rule 0: If the player has 3 positions that are all in the outfield, the 
+    # largest OF pos is the primary
+    if row["7"] > 0 and row["8"] > 0 and row["9"] > 0:
         return fractions.idxmax()
     # Rule 1: If any position >= 50%, that is primary
     if any(fractions >= pct_primary_threshold):
@@ -2854,6 +3055,7 @@ def assign_primary_or_utl(row, pct_utl_thresholdHigh=0.075, pct_utl_thresholdLow
         return "UTL"
     # Otherwise, pick whichever position is the largest fraction
     return fractions.idxmax()
+
 
 def convert_player_to_html(df, suffix, year):
     """The WordPress tables associated with this project accepts HTML code, so
@@ -2871,8 +3073,7 @@ def convert_player_to_html(df, suffix, year):
 
     Returns:
     df (pandas dataframe): The final stat dataframe with valid HTML in the
-    player/pitcher columns
-    """
+    player/pitcher columns"""
     relDir = os.path.dirname(__file__)
     playerLinkFile = relDir + "/input/playerUrls.csv"
     if not (os.path.exists(playerLinkFile)):
@@ -2882,12 +3083,12 @@ def convert_player_to_html(df, suffix, year):
             "directory to fix this.\n"
         )
         return df
- 
+
     linkDf = pd.read_csv(playerLinkFile)
     # Create new HTML code column
     linkDf["Link"] = linkDf.apply(build_html, axis=1)
     # Create dict of Player Name:Complete HTML tag
-    playerDict = dict(zip(linkDf['Player'], linkDf['Link']))
+    playerDict = dict(zip(linkDf["Player"], linkDf["Link"]))
 
     # Replace all player entries with HTML that leads to their pages
     if suffix == "PR" or suffix == "PF":
@@ -2919,8 +3120,15 @@ def convert_player_to_html(df, suffix, year):
             )
     return df
 
-# NEEDS DOCUMENTATION
+
 def translate_players(df):
+    """Translates player names from Japanese to English using a csv file
+
+    Parameters:
+    df (pandas dataframe): A NPB stat dataframe containing player names
+
+    Returns:
+    df (pandas dataframe): The final stat dataframe with translated names"""
     relDir = os.path.dirname(__file__)
     translationFile = relDir + "/input/nameTranslations.csv"
     if not (os.path.exists(translationFile)):
@@ -2930,12 +3138,17 @@ def translate_players(df):
             " the /input/ directory to fix this.\n"
         )
         return df
-    
+
     # Read in csv that contains player name and their personal page link
     translateDf = pd.read_csv(translationFile)
     # Create dict of (JP name,EN team):Eng name
-    playerDict = dict(zip((zip(translateDf["jp_name"],translateDf["en_team"])), translateDf["en_name"]))
-    df['keys'] = list(zip(df["Player"],df["Team"]))
+    playerDict = dict(
+        zip(
+            (zip(translateDf["jp_name"], translateDf["en_team"])),
+            translateDf["en_name"],
+        )
+    )
+    df["keys"] = list(zip(df["Player"], df["Team"]))
     df["Player"] = (
         df["keys"]
         .map(playerDict)
@@ -2943,7 +3156,7 @@ def translate_players(df):
         .fillna(df["Player"])
         .astype(str)
     )
-    df["Player"] = df["Player"].str.replace("\"", "")
+    df["Player"] = df["Player"].str.replace('"', "")
     df["Player"] = df["Player"].str.replace(",", "")
     return df
 
