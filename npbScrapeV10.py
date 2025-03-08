@@ -719,7 +719,7 @@ class PlayerData(Stats):
         fielding stats"""
         # Fielding df has all positions a player is in, but we want the
         # primary position only for the batting Pos column
-        # Create a temp df with players as rows and all positions they play as cols
+        # Create a temp df with players as rows and all pos they play as cols
         dfPivot = fieldDf.pivot_table(
             index="Player",
             columns="Pos",
@@ -1659,7 +1659,7 @@ class TeamFieldingData(Stats):
         df (pandas dataframe): Holds a team's fielding stats"""
         super().__init__(statsDir, yearDir, suffix, year)
         # Initialize data frame to store individual stats
-        self.fieldingDf = fieldingDf
+        self.fieldingDf = fieldingDf.copy()
         self.df = pd.DataFrame()
         # Modify df for correct stats
         self.org_team_fielding()
@@ -2675,6 +2675,9 @@ def add_roster_data(df, suffix):
         .fillna(df[convertCol])
         .astype(str)
     )
+    # Remove trailing zeroes from age
+    df['Age'] = df['Age'].astype(str)
+    df['Age'] = df['Age'].str.replace('.0', '')
     return df
 
 
