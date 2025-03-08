@@ -213,11 +213,7 @@ class PlayerData(Stats):
     def output_final(self):
         """Outputs final files for upload using the filtered and organized
         stat dataframes (NOTE: IP and PA drop constants are determined in this
-        function) (CONVERSION OF writePlayerStats())
-
-        Parameters: N/A
-
-        Returns: N/A"""
+        function)"""
         # Make dir that will store alt views of the dataframes
         altDir = os.path.join(self.yearDir, "alt")
         if not (os.path.exists(altDir)):
@@ -335,12 +331,7 @@ class PlayerData(Stats):
             )
 
     def org_pitch(self):
-        """Organize the raw pitching stat csv and add new stats
-        (CONVERSION OF pitchOrg())
-
-        Parameters: N/A
-
-        Returns: N/A"""
+        """Organize the raw pitching stat csv and add new stats"""
         # Some IP entries can be '+', replace with 0 for conversions and
         # calculations
         self.df["IP"] = self.df["IP"].astype(str).replace("+", "0")
@@ -553,12 +544,7 @@ class PlayerData(Stats):
         self.df = select_league(self.df, self.suffix)
 
     def org_bat(self):
-        """Organize the raw batting stat csv and add additional stats
-        (CONVERSION OF batOrg())
-
-        Parameters: N/A
-
-        Returns: N/A"""
+        """Organize the raw batting stat csv and add additional stats"""
         # Unnecessary data removal
         # Remove all players if their PA is 0
         self.df = self.df.drop(self.df[self.df.PA == 0].index)
@@ -694,9 +680,6 @@ class PlayerData(Stats):
     def get_team_games(self):
         """Combines Central and Pacific (NPB) or Eastern and Western (farm)
         team games played into a single dataframe
-        (CONVERSION OF getTeamGames())
-
-        Parameters: N/A
 
         Returns:
         ipPaDf (pandas dataframe): A dataframe with 2 columns: team name and
@@ -728,8 +711,12 @@ class PlayerData(Stats):
         # constFile = ipPaDf.to_string(newCsvName)
         return ipPaDf
 
-    # NEEDS DOCUMENTATION
     def append_positions(self, fieldDf):
+        """Adds the primary position of a player to the player dataframe
+
+        Parameters:
+        fieldDf (pandas dataframe): Holds an entire NPB league's individual
+        fielding stats"""
         # Fielding df has all positions a player is in, but we want the
         # primary position only for the batting Pos column
         # Create a temp df with players as rows and all positions they play as cols
@@ -774,12 +761,7 @@ class TeamData(Stats):
         return self.df.to_string()
 
     def output_final(self):
-        """Outputs final files for upload using the team stat dataframes
-        (CONVERSION OF writeTeamStats())
-
-        Parameters: N/A
-
-        Returns: N/A"""
+        """Outputs final files for upload using the team stat dataframes"""
         # Make dir that will store alt views of the dataframes
         altDir = os.path.join(self.yearDir, "alt")
         if not (os.path.exists(altDir)):
@@ -834,48 +816,27 @@ class TeamData(Stats):
 
     def org_team_bat(self):
         """Outputs batting team stat files using the organized player stat
-        dataframes (CONVERSION OF batTeamOrg())
-
-        Parameters: N/A
-
-        Returns: N/A"""
+        dataframes"""
         # Initialize new row list with all possible teams
+        rowArr = [
+            "Hanshin Tigers",
+            "Hiroshima Carp",
+            "DeNA BayStars",
+            "Yomiuri Giants",
+            "Yakult Swallows",
+            "Chunichi Dragons",
+            "ORIX Buffaloes",
+            "Lotte Marines",
+            "SoftBank Hawks",
+            "Rakuten Eagles",
+            "Seibu Lions",
+            "Nipponham Fighters",
+        ]
         # 2024 farm has 2 new teams
         if self.suffix == "BF" and int(self.year) >= 2024:
-            rowArr = [
-                "Hanshin Tigers",
-                "Hiroshima Carp",
-                "DeNA BayStars",
-                "Yomiuri Giants",
-                "Yakult Swallows",
-                "Chunichi Dragons",
-                "ORIX Buffaloes",
-                "Lotte Marines",
-                "SoftBank Hawks",
-                "Rakuten Eagles",
-                "Seibu Lions",
-                "Nipponham Fighters",
-                "Oisix Albirex",
-                "HAYATE Ventures",
-            ]
-        else:
-            rowArr = [
-                "Hanshin Tigers",
-                "Hiroshima Carp",
-                "DeNA BayStars",
-                "Yomiuri Giants",
-                "Yakult Swallows",
-                "Chunichi Dragons",
-                "ORIX Buffaloes",
-                "Lotte Marines",
-                "SoftBank Hawks",
-                "Rakuten Eagles",
-                "Seibu Lions",
-                "Nipponham Fighters",
-            ]
+            rowArr.extend(["Oisix Albirex", "HAYATE Ventures"])
 
-        # Initialize a list and put team columns in first
-        # REFACTOR (?)
+        # Initialize a list and put stat columns in first
         colArr = [
             "Team",
             "PA",
@@ -908,6 +869,7 @@ class TeamData(Stats):
             "BB%",
             "BB/K",
         ]
+
         teamBatList = []
         teamBatList.append(colArr)
 
@@ -1092,119 +1054,66 @@ class TeamData(Stats):
 
     def org_team_pitch(self):
         """Outputs pitching team stat files using the organized player stat
-        dataframes (CONVERSION OF pitchTeamOrg())
-
-        Parameters: N/A
-
-        Returns: N/A"""
+        dataframes"""
         # IP column ".1 .2 .3" calculation fix
         self.playerDf["IP"] = convert_ip_column_in(self.playerDf)
         # Initialize new row list with all possible teams
+        rowArr = [
+            "Hanshin Tigers",
+            "Hiroshima Carp",
+            "DeNA BayStars",
+            "Yomiuri Giants",
+            "Yakult Swallows",
+            "Chunichi Dragons",
+            "ORIX Buffaloes",
+            "Lotte Marines",
+            "SoftBank Hawks",
+            "Rakuten Eagles",
+            "Seibu Lions",
+            "Nipponham Fighters",
+        ]
         # 2024 and later farm has 2 new teams
         if self.suffix == "PF" and int(self.year) >= 2024:
-            rowArr = [
-                "Hanshin Tigers",
-                "Hiroshima Carp",
-                "DeNA BayStars",
-                "Yomiuri Giants",
-                "Yakult Swallows",
-                "Chunichi Dragons",
-                "ORIX Buffaloes",
-                "Lotte Marines",
-                "SoftBank Hawks",
-                "Rakuten Eagles",
-                "Seibu Lions",
-                "Nipponham Fighters",
-                "Oisix Albirex",
-                "HAYATE Ventures",
-            ]
-        else:
-            rowArr = [
-                "Hanshin Tigers",
-                "Hiroshima Carp",
-                "DeNA BayStars",
-                "Yomiuri Giants",
-                "Yakult Swallows",
-                "Chunichi Dragons",
-                "ORIX Buffaloes",
-                "Lotte Marines",
-                "SoftBank Hawks",
-                "Rakuten Eagles",
-                "Seibu Lions",
-                "Nipponham Fighters",
-            ]
+            rowArr.extend(["Oisix Albirex", "HAYATE Ventures"])
 
         # Initialize a list and put team columns in first
+        colArr = [
+            "Team",
+            "W",
+            "L",
+            "SV",
+            "CG",
+            "SHO",
+            "BF",
+            "IP",
+            "H",
+            "HR",
+            "SO",
+            "BB",
+            "IBB",
+            "HB",
+            "WP",
+            "R",
+            "ER",
+            "ERA",
+            "FIP",
+            "kwERA",
+            "WHIP",
+            "ERA+",
+            "FIP-",
+            "kwERA-",
+            "Diff",
+            "HR%",
+            "K%",
+            "BB%",
+            "K-BB%",
+        ]
         # Farm pitching stats have no HLD
-        if self.suffix == "PF":
-            teamPitList = [
-                [
-                    "Team",
-                    "W",
-                    "L",
-                    "SV",
-                    "CG",
-                    "SHO",
-                    "BF",
-                    "IP",
-                    "H",
-                    "HR",
-                    "SO",
-                    "BB",
-                    "IBB",
-                    "HB",
-                    "WP",
-                    "R",
-                    "ER",
-                    "ERA",
-                    "FIP",
-                    "kwERA",
-                    "WHIP",
-                    "ERA+",
-                    "FIP-",
-                    "kwERA-",
-                    "Diff",
-                    "HR%",
-                    "K%",
-                    "BB%",
-                    "K-BB%",
-                ]
-            ]
-        else:
-            teamPitList = [
-                [
-                    "Team",
-                    "W",
-                    "L",
-                    "SV",
-                    "HLD",
-                    "CG",
-                    "SHO",
-                    "BF",
-                    "IP",
-                    "H",
-                    "HR",
-                    "SO",
-                    "BB",
-                    "IBB",
-                    "HB",
-                    "WP",
-                    "R",
-                    "ER",
-                    "ERA",
-                    "FIP",
-                    "kwERA",
-                    "WHIP",
-                    "ERA+",
-                    "FIP-",
-                    "kwERA-",
-                    "Diff",
-                    "HR%",
-                    "K%",
-                    "BB%",
-                    "K-BB%",
-                ]
-            ]
+        if self.suffix != "PF":
+            colArr.insert(4, "HLD")
+
+        teamPitList = []
+        teamPitList.append(colArr)
 
         # Form team stat rows and collect all COUNTING stats
         # TODO: REFACTOR (?)
@@ -1440,13 +1349,11 @@ class StandingsData(Stats):
 
     def output_final(self, tbDf, tpDf):
         """Outputs final files using the standings dataframes
-        (CONVERSION OF writeStandingsStats() and writeNewStandingsStats())
 
         Parameters:
         tbDf (pandas dataframe): An organized NPB team batting stat dataframe
         tpDf (pandas dataframe): An organized NPB team pitching stat dataframe
-
-        Returns: N/A"""
+        """
         # Organize standings
         self.org_standings(tbDf, tpDf)
 
@@ -1509,13 +1416,12 @@ class StandingsData(Stats):
 
     def org_standings(self, tbDf, tpDf):
         """Organize the standings stat csv and adds new stats (RS, RA, and
-        XPCT) that incorporate team data (CONVERSION OF standingsOrg())
+        XPCT) that incorporate team data
 
         Parameters:
         tbDf (pandas dataframe): An organized NPB team batting stat dataframe
         tpDf (pandas dataframe): An organized NPB team pitching stat dataframe
-
-        Returns:N/A"""
+        """
         # Merge team batting column to create 'RS'
         self.df = pd.merge(self.df, tbDf[["Team", "R"]], on="Team", how="left")
         self.df.rename(columns={"R": "RS"}, inplace=True)
@@ -1577,11 +1483,7 @@ class FieldingData(Stats):
         return self.df.to_string()
 
     def output_final(self):
-        """Outputs final files using the fielding dataframes
-        
-        Parameters: N/A
-        
-        Returns: N/A"""
+        """Outputs final files using the fielding dataframes"""
         # Make dir that will store alt views of the dataframes
         altDir = os.path.join(self.yearDir, "alt")
         if not (os.path.exists(altDir)):
@@ -1643,11 +1545,7 @@ class FieldingData(Stats):
             )
 
     def org_fielding(self):
-        """Organize the fielding stat csv and adds new stats (TZR, TZR/143)
-
-        Parameters: N/A
-
-        Returns: N/A"""
+        """Organize the fielding stat csv and adds new stats (TZR, TZR/143)"""
         # Drop empty last column and convert column names
         self.df = self.df.drop(self.df.columns[-1], axis=1)
         if self.suffix == "R":
@@ -1772,11 +1670,7 @@ class TeamFieldingData(Stats):
         return self.df.to_string()
 
     def output_final(self):
-        """Outputs final files using the team fielding dataframes
-        
-        Parameters: N/A
-        
-        Returns: N/A"""
+        """Outputs final files using the team fielding dataframes"""
         # Make dir that will store alt views of the dataframes
         altDir = os.path.join(self.yearDir, "alt")
         if not (os.path.exists(altDir)):
@@ -1832,16 +1726,12 @@ class TeamFieldingData(Stats):
             )
             print(
                 "The final organized farm team fielding results will be stored"
-                " in: "+ newCsvFinal
+                " in: " + newCsvFinal
             )
 
     def org_team_fielding(self):
         """Organize the team fielding stat csv using the individual fielding
-        stats
-        
-        Parameters: N/A
-        
-        Returns: N/A"""
+        stats"""
         # Convert cols that are numeric to float
         cols = self.fieldingDf.columns.drop(["Team", "League"])
         self.fieldingDf[cols] = self.fieldingDf[cols].apply(
@@ -1951,11 +1841,7 @@ class TeamSummaryData(Stats):
         return self.df.to_string()
 
     def output_final(self):
-        """Outputs final files using the team summary dataframes
-
-        Parameters: N/A
-
-        Returns: N/A"""
+        """Outputs final files using the team summary dataframes"""
         # Make dir that will store alt views of the dataframes
         altDir = os.path.join(self.yearDir, "alt")
         if not (os.path.exists(altDir)):
@@ -2015,11 +1901,7 @@ class TeamSummaryData(Stats):
             )
 
     def org_team_summary(self):
-        """Organize the team summary stat csv using the various team stat dfs
-
-        Parameters: N/A
-
-        Returns: N/A"""
+        """Organize the team summary stat csv using the various team stat dfs"""
         # Group stats by team and append to team dataframe
         self.df["Team"] = self.teamFieldingDf["Team"].tolist()
         self.df = pd.merge(
@@ -2106,9 +1988,7 @@ def get_stats(yearDir, suffix, year):
     "PR" = reg season pitching stat URLs passed in
     "BF" = farm batting stat URLs passed in
     "PF" = farm pitching stat URLs passed in
-    year (string): The desired npb year to scrape
-
-    Returns: N/A"""
+    year (string): The desired npb year to scrape"""
     # Make output file
     outputFile = make_raw_player_file(yearDir, suffix, year)
     # Grab URLs to scrape
@@ -2222,9 +2102,7 @@ def get_standings(yearDir, suffix, year):
     "P" = pacific league reg season standing URLs passed in
     "E" = eastern league farm standing URLs passed in
     "W" = western league farm standing URLs passed in
-    year (string):The desired standings stat year
-
-    Returns: N/A"""
+    year (string):The desired standings stat year"""
     outputFile = make_raw_standings_file(yearDir, suffix, year)
     # Get URL to scrape
     urlBase = "https://npb.jp/bis/eng/{0}/stats/std_{1}.html"
@@ -2274,16 +2152,14 @@ def get_standings(yearDir, suffix, year):
 
 def get_fielding(yearDir, suffix, year):
     """Scrapes the fielding stats for the desired year and suffix
-    
+
     Parameters:
     yearDir (string): The directory to store relevant year statistics
     suffix (string): Indicates URL being scraped:
     "R" = regular season fielding stats
     "F" = farm fielding stats
-    year (string): The desired fielding stat year
-
-    Return: N/A"""
-    # TODO: fielding urls change every year randomly, make a fieldingUrls.txt 
+    year (string): The desired fielding stat year"""
+    # TODO: fielding urls change every year randomly, make a fieldingUrls.txt
     # in input folder and integrate here
     if suffix == "R":
         fieldingUrl = "https://bo-no05.hatenadiary.org/entry/2024/04/21/212756"
@@ -2530,7 +2406,7 @@ def make_raw_standings_file(writeDir, suffix, year):
 
 
 def make_raw_fielding_file(writeDir, suffix, year):
-    """Opens a file to hold all fielding stats inside a relative /stats/ 
+    """Opens a file to hold all fielding stats inside a relative /stats/
     directory that is created before calling this function
 
     Parameters:
@@ -3043,7 +2919,7 @@ def assign_primary_or_utl(
     # Count how many positions >= our thresholds
     num_positions_10plus = (fractions >= pct_utl_thresholdHigh).sum()
     num_positions_5plus = (fractions >= pct_utl_thresholdLow).sum()
-    # Rule 0: If the player has 3 positions that are all in the outfield, the 
+    # Rule 0: If the player has 3 positions that are all in the outfield, the
     # largest OF pos is the primary
     if row["7"] > 0 and row["8"] > 0 and row["9"] > 0:
         return fractions.idxmax()
@@ -3176,9 +3052,7 @@ def make_zip(yearDir, year):
 
     Parameters:
     yearDir (string): The directory that stores the raw, scraped NPB stats
-    year (string): The year of npb stats to group together
-
-    Returns: N/A"""
+    year (string): The year of npb stats to group together"""
     tempDir = os.path.join(yearDir, "/stats/temp")
     tempDir = tempfile.mkdtemp()
     # Gather relevant dirs to put into temp
