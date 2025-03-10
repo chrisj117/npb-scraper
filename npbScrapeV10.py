@@ -2676,8 +2676,8 @@ def add_roster_data(df, suffix):
         .astype(str)
     )
     # Remove trailing zeroes from age
-    df['Age'] = df['Age'].astype(str)
-    df['Age'] = df['Age'].str.replace('.0', '')
+    df["Age"] = df["Age"].astype(str)
+    df["Age"] = df["Age"].str.replace(".0", "")
     return df
 
 
