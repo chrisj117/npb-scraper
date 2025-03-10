@@ -993,6 +993,7 @@ class TeamData(Stats):
         # Create park factors for any remaining team stats
         # Team OPS+ needs park factors
         self.df = select_park_factor(self.df, self.suffix, self.year)
+        print(self.df.to_string())
 
         # Total OPS of the teams / total OPS of the league
         self.df["OPS+"] = round(
@@ -2800,7 +2801,7 @@ def select_park_factor(df, suffix, year):
     pfDf.drop(["Year", "League"], axis=1, inplace=True)
     # Modifying all park factors for calculations
     pfDf["ParkF"] = (pfDf["ParkF"] + 1) / 2
-    df = df.merge(pfDf, on="Team")
+    df = df.merge(pfDf, on="Team", how="left")
     # For team files, league avg calculations have park factor as 1.000
     df.loc[df.Team == "League Average", "ParkF"] = 1.000
 
