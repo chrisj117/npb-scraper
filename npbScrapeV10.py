@@ -464,8 +464,6 @@ class PlayerData(Stats):
             self.df = self.df[
                 [
                     "Pitcher",
-                    "Age",
-                    "T",
                     "G",
                     "W",
                     "L",
@@ -496,6 +494,8 @@ class PlayerData(Stats):
                     "K%",
                     "BB%",
                     "K-BB%",
+                    "Age",
+                    "T",
                     "Team",
                 ]
             ]
@@ -503,8 +503,6 @@ class PlayerData(Stats):
             self.df = self.df[
                 [
                     "Pitcher",
-                    "Age",
-                    "T",
                     "G",
                     "W",
                     "L",
@@ -534,6 +532,8 @@ class PlayerData(Stats):
                     "K%",
                     "BB%",
                     "K-BB%",
+                    "Age",
+                    "T",
                     "Team",
                 ]
             ]
@@ -637,9 +637,6 @@ class PlayerData(Stats):
         self.df = self.df[
             [
                 "Player",
-                "Age",
-                "Pos",
-                "B",
                 "G",
                 "PA",
                 "AB",
@@ -670,6 +667,9 @@ class PlayerData(Stats):
                 "K%",
                 "BB%",
                 "BB/K",
+                "Age",
+                "Pos",
+                "B",
                 "Team",
             ]
         ]
@@ -993,7 +993,6 @@ class TeamData(Stats):
         # Create park factors for any remaining team stats
         # Team OPS+ needs park factors
         self.df = select_park_factor(self.df, self.suffix, self.year)
-        print(self.df.to_string())
 
         # Total OPS of the teams / total OPS of the league
         self.df["OPS+"] = round(
