@@ -57,12 +57,15 @@ def main():
         regScrapeYN = get_user_choice("R")
     if regScrapeYN == "Y":
         # Scrape regular season batting and pitching URLs
+        get_daily_scores(yearDir, "R", scrapeYear)
         get_stats(yearDir, "BR", scrapeYear)
         get_stats(yearDir, "PR", scrapeYear)
         get_standings(yearDir, "C", scrapeYear)
         get_standings(yearDir, "P", scrapeYear)
         get_fielding(yearDir, "R", scrapeYear)
 
+    # NPB Daily Scores
+    npbDailyScores = DailyScoresData(statsDir, yearDir, "R", scrapeYear)
     # NPB Individual Fielding
     # NOTE: fielding must be organized before any player stats to obtain player
     # positions
@@ -101,6 +104,7 @@ def main():
         scrapeYear,
     )
     # NPB output
+    npbDailyScores.output_final()
     regBatPlayerStats.output_final()
     regPitchPlayerStats.output_final()
     regBatTeamStats.output_final()
@@ -239,8 +243,8 @@ class PlayerData(Stats):
         # Make deep copy of original df to avoid HTML in df's team/player names
         finalDf = self.df.copy()
         # Convert player/team names to HTML that contains appropriate URLs
-        # if int(self.year) == datetime.now().year:
-        finalDf = convert_player_to_html(finalDf, self.suffix, self.year)
+        if int(self.year) == datetime.now().year:
+            finalDf = convert_player_to_html(finalDf, self.suffix, self.year)
         finalDf = convert_team_to_html(finalDf, "Abb")
         # Print final file with all players
         newCsvFinal = (
@@ -269,8 +273,10 @@ class PlayerData(Stats):
             leaderDf.drop(["GTeam"], axis=1, inplace=True)
 
             # Convert player/team names to HTML that contains appropriate URLs
-            # if int(self.year) == datetime.now().year:
-            leaderDf = convert_player_to_html(leaderDf, self.suffix, self.year)
+            if int(self.year) == datetime.now().year:
+                leaderDf = convert_player_to_html(
+                    leaderDf, self.suffix, self.year
+                )
             leaderDf = convert_team_to_html(leaderDf, "Abb")
             # Output leader file as a csv
             newCsvLeader = (
@@ -309,8 +315,10 @@ class PlayerData(Stats):
             leaderDf.drop(["GTeam"], axis=1, inplace=True)
 
             # Convert player/team names to HTML that contains appropriate URLs
-            # if int(self.year) == datetime.now().year:
-            leaderDf = convert_player_to_html(leaderDf, self.suffix, self.year)
+            if int(self.year) == datetime.now().year:
+                leaderDf = convert_player_to_html(
+                    leaderDf, self.suffix, self.year
+                )
             leaderDf = convert_team_to_html(leaderDf, "Abb")
             # Output leader file as a csv
             newCsvLeader = (
@@ -457,12 +465,7 @@ class PlayerData(Stats):
         self.df["Diff"] = self.df["Diff"].astype(str)
         self.df["Diff"] = self.df["Diff"].str.replace("nan", "")
         # Add age and throwing/batting arm columns
-        # if int(self.year) == datetime.now().year:
-        self.df = add_roster_data(self.df, self.suffix)
-        # Column reordering
-        if self.suffix == "PR":
-            self.df = self.df[
-                [
+        colOrder = [
                     "Pitcher",
                     "G",
                     "W",
@@ -494,53 +497,17 @@ class PlayerData(Stats):
                     "K%",
                     "BB%",
                     "K-BB%",
-                    "Age",
-                    "T",
                     "Team",
                 ]
-            ]
-        elif self.suffix == "PF":
-            self.df = self.df[
-                [
-                    "Pitcher",
-                    "G",
-                    "W",
-                    "L",
-                    "SV",
-                    "CG",
-                    "SHO",
-                    "BF",
-                    "IP",
-                    "H",
-                    "HR",
-                    "SO",
-                    "BB",
-                    "IBB",
-                    "HB",
-                    "WP",
-                    "R",
-                    "ER",
-                    "ERA",
-                    "FIP",
-                    "kwERA",
-                    "WHIP",
-                    "ERA+",
-                    "FIP-",
-                    "kwERA-",
-                    "Diff",
-                    "HR%",
-                    "K%",
-                    "BB%",
-                    "K-BB%",
-                    "Age",
-                    "T",
-                    "Team",
-                ]
-            ]
+        if int(self.year) == datetime.now().year:
+            self.df = add_roster_data(self.df, self.suffix)
+            colOrder.insert(-3, "Age")
+            colOrder.insert(-2, "T")
+        if self.suffix == "PF":
+            colOrder.remove("HLD")
+        self.df = self.df[colOrder]
         # Changing .33 to .1 and .66 to .2 in the IP column
         self.df["IP"] = convert_ip_column_out(self.df)
-
-        # Add "League" column
         self.df = select_league(self.df, self.suffix)
 
     def org_bat(self):
@@ -630,12 +597,8 @@ class PlayerData(Stats):
         # Replace BB/K infs with '1.00' (same format as MLB website)
         self.df["BB/K"] = self.df["BB/K"].str.replace("inf", "1.00")
         # Add age, (temp) position, and throwing/batting arm columns
-        # if int(self.year) == datetime.now().year:
-        self.df = add_roster_data(self.df, self.suffix)
         self.df["Pos"] = np.nan
-        # Column reordering
-        self.df = self.df[
-            [
+        colOrder =  [
                 "Player",
                 "G",
                 "PA",
@@ -667,14 +630,14 @@ class PlayerData(Stats):
                 "K%",
                 "BB%",
                 "BB/K",
-                "Age",
                 "Pos",
-                "B",
                 "Team",
             ]
-        ]
-
-        # Add "League" column
+        if int(self.year) == datetime.now().year:
+            self.df = add_roster_data(self.df, self.suffix)
+            colOrder.insert(-4, "Age")
+            colOrder.insert(-2, "B")
+        self.df = self.df[colOrder]
         self.df = select_league(self.df, self.suffix)
 
     def get_team_games(self):
@@ -1511,8 +1474,8 @@ class FieldingData(Stats):
         # Make deep copy of original df to avoid HTML in df's team/player names
         finalDf = self.df.copy()
         # Convert player/team names to HTML that contains appropriate URLs
-        # if int(self.year) == datetime.now().year:
-        finalDf = convert_player_to_html(finalDf, self.suffix, self.year)
+        if int(self.year) == datetime.now().year:
+            finalDf = convert_player_to_html(finalDf, self.suffix, self.year)
         finalDf = convert_team_to_html(finalDf, "Abb")
         # Print final file with all players
         newCsvFinal = (
@@ -1953,6 +1916,74 @@ class TeamSummaryData(Stats):
             self.df[key] = self.df[key].apply(value.format)
 
 
+class DailyScoresData(Stats):
+    def __init__(self, statsDir, yearDir, suffix, year):
+        """DailyScores new variables:
+        df (pandas dataframe): Holds the scores of the games"""
+        super().__init__(statsDir, yearDir, suffix, year)
+        # Initialize dataframe to store scores
+        self.df = pd.read_csv(
+            self.yearDir + "/" + year + "DailyScoresRaw" + suffix + ".csv"
+        )
+        # Modify df for correct stats
+        self.org_daily_scores()
+
+    def __str__(self):
+        """Outputs the Alt view of the associated dataframe (no HTML
+        team or player names, no csv formatting)"""
+        return self.df.to_string()
+    
+    def output_final(self):
+        """Outputs final files using the daily score dataframes"""
+        # Make dir that will store alt views of the dataframes
+        altDir = os.path.join(self.yearDir, "alt")
+        if not (os.path.exists(altDir)):
+            os.mkdir(altDir)
+        # Make dirs that will store files uploaded to yakyucosmo.com
+        uploadDir = self.yearDir
+        if self.suffix == "R":
+            uploadDir = os.path.join(self.yearDir, "npb")
+            if not (os.path.exists(uploadDir)):
+                os.mkdir(uploadDir)
+        elif self.suffix == "F":
+            uploadDir = os.path.join(self.yearDir, "farm")
+            if not (os.path.exists(uploadDir)):
+                os.mkdir(uploadDir)
+
+        # Print organized dataframe to file
+        newCsvAlt = (
+            altDir + "/" + self.year + "DailyScoresAlt" + self.suffix + ".csv"
+        )
+        self.df.to_string(newCsvAlt)
+        # Make deep copy of original df to avoid HTML in df's team/player names
+        finalDf = self.df.copy()
+        # Convert team names to HTML that contains appropriate URLs
+        finalDf = convert_team_to_html(finalDf, None)
+        # Print final file with all players
+        newCsvFinal = (
+            uploadDir
+            + "/"
+            + self.year
+            + "DailyScoresFinal"
+            + self.suffix
+            + ".csv"
+        )
+        finalDf.to_csv(newCsvFinal, index=False)
+
+        print(
+                "An alternative view of the daily game scores will be stored "
+                "in: " + newCsvAlt
+            )
+        print(
+                "The final organized daily game scores will be stored in: " 
+                + newCsvFinal
+            )
+
+    def org_daily_scores(self):
+        """Organize the daily score csv"""
+        pass
+        
+
 def get_url(tryUrl):
     """Attempts a GET request from the passed in URL
 
@@ -1974,11 +2005,37 @@ def get_url(tryUrl):
     return response
 
 
+def get_daily_scores(yearDir, suffix, year):
+    """The main daily scores scraping function that produces Raw daily scores
+    files"""
+    # Make output file
+    outputFile = make_raw_daily_scores_file(yearDir, suffix, year)
+    outputFile.write("HomeTeam,RunsHome,RunsAway,AwayTeam\n")
+    # Grab URLs to scrape
+    url = "https://npb.jp/bis/eng/2024/games/"
+    # Make GET request
+    r = get_url(url)
+    # Create the soup for parsing the html content
+    soup = BeautifulSoup(r.content, "html.parser")
+    gameDivs = soup.find_all("div", class_="contentsgame")
+    # Extract table rows from npb.jp daily game stats
+    for result in gameDivs:
+        teams = result.find_all(class_="contentsTeam")
+        runs = result.find_all(class_="contentsRuns")
+        i = 0
+        while (i < len(teams)):
+            team1 = teams[i].get_text()
+            team1Runs = runs[i].get_text()
+            team2 = teams[i+1].get_text()
+            team2Runs = runs[i+1].get_text()
+            i += 2
+            outputFile.write(team1 + "," + team1Runs + "," + team2Runs + "," + team2 + "\n")
+
+
 def get_stats(yearDir, suffix, year):
     """The main stat scraping function that produces Raw stat files.
     Saving Raw stat files allows for scraping and stat organization to be
-    independent of each other. No scraping should be needed to make changes to
-    final files
+    independent of each other
 
     Parameters:
     yearDir (string): The directory that stores the raw, scraped NPB stats
@@ -1989,6 +2046,18 @@ def get_stats(yearDir, suffix, year):
     "BF" = farm batting stat URLs passed in
     "PF" = farm pitching stat URLs passed in
     year (string): The desired npb year to scrape"""
+    """
+    # PITCHING TYPES SCRAPING CODE (move into a new function get_pitch_types)
+    pitchTypesFile = yearDir + "/" + year + "PitchTypesRaw" + suffix + ".csv"
+    print("Raw pitching types will be stored in: " + pitchTypesFile)
+    #newFile = open(pitchTypesFile, "w")
+    # Make GET request
+    url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS6W2zDr6OWslGU0QSLhvw4xi-NpnjWEqO16OvLnU2OCJoMbKFH-Z3FYL1sGxIFKb8flYQFgH9wphPU/pub?gid=1691151132&single=true&output=csv'
+    #r = get_url(url)
+    testDf = pd.read_csv(url,index_col=0)
+    print(testDf.to_string())
+    """
+    
     # Make output file
     outputFile = make_raw_player_file(yearDir, suffix, year)
     # Grab URLs to scrape
@@ -2363,6 +2432,23 @@ def make_raw_player_file(writeDir, suffix, year):
     return newFile
 
 
+def make_raw_daily_scores_file(writeDir,suffix , year):
+    """Opens a file to hold all player stats inside a relative /stats/
+    directory that is created before calling this function
+
+    Parameters:
+    writeDir (string): The directory that stores the scraped NPB stats
+    year (string): The desired npb year to scrape
+
+    Returns:
+    newFile (file stream object): An opened file in /stats/ named
+    "[Year]DailyScoresRaw[Suffix].csv"""
+    # Open and return the file object in write mode
+    newCsvName = writeDir + "/" + year + "DailyScoresRaw" + suffix + ".csv"
+    print("Raw daily scores will be stored in: " + newCsvName)
+    newFile = open(newCsvName, "w")
+    return newFile
+
 def make_raw_standings_file(writeDir, suffix, year):
     """Opens a file to hold all player stats inside a relative /stats/
     directory that is created before calling this function
@@ -2544,7 +2630,7 @@ def get_user_choice(suffix):
     return userIn
 
 
-def convert_team_to_html(df, mode):
+def convert_team_to_html(df, mode=None):
     """Formats the team names to include links to their npb.jp pages
 
     Parameters:
@@ -2570,6 +2656,11 @@ def convert_team_to_html(df, mode):
     if mode == "Full":
         # Update Link col to have <a> tags
         linkDf["Link"] = linkDf.apply(build_html, axis=1)
+        # Create dict of Team Name:Complete HTML tag and convert
+        teamDict = dict(linkDf.values)
+        df["Team"] = (
+            df["Team"].map(teamDict).infer_objects().fillna(df["Team"]).astype(str)
+        )
     elif mode == "Abb":
         # Contains 2020-2024 reg/farm baseball team abbrieviations
         abbrDict = {
@@ -2607,12 +2698,21 @@ def convert_team_to_html(df, mode):
         linkDf = linkDf._append(newRow, ignore_index=True)
         newRow = {"Team": "HAYATE Ventures", "Link": "HAYATE"}
         linkDf = linkDf._append(newRow, ignore_index=True)
+        # Create dict of Team Name:Complete HTML tag and convert
+        teamDict = dict(linkDf.values)
+        df["Team"] = (
+            df["Team"].map(teamDict).infer_objects().fillna(df["Team"]).astype(str)
+        )
+    # Default mode links any team names it finds in the dataframe
+    if mode == None:
+        linkDf["Link"] = linkDf.apply(build_html, axis=1)
+        # Create dict of Team Name:Complete HTML tag and convert
+        teamDict = dict(linkDf.values)
+        for col in df.columns:
+            df[col] = (
+                df[col].map(teamDict).infer_objects().fillna(df[col]).astype(str)
+            )
 
-    # Create dict of Team Name:Complete HTML tag and convert
-    teamDict = dict(linkDf.values)
-    df["Team"] = (
-        df["Team"].map(teamDict).infer_objects().fillna(df["Team"]).astype(str)
-    )
     return df
 
 
@@ -2690,10 +2790,7 @@ def calculate_age(birthdate):
 
     Returns:
     npbAge (int): The age of the player at the start of the NPB season"""
-    # READD ONCE 2025 SEASON STARTS
-    # cutoff = datetime(datetime.today().year, 6, 30)
-    # REMOVE ONCE 2025 SEASON STARTS
-    cutoff = datetime(2024, 6, 30)
+    cutoff = datetime(datetime.today().year, 6, 30)
     npbAge = (
         cutoff.year
         - birthdate.year
