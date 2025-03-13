@@ -1969,7 +1969,7 @@ class DailyScoresData(Stats):
             },
             inplace=True,
         )
-        # Print final file with all players
+        # Print final file with most recent game scores
         newCsvFinal = (
             uploadDir
             + "/"
@@ -2022,7 +2022,8 @@ class DailyScoresData(Stats):
         for col in runsCols:
             self.df[col] = self.df[col].astype(str)
             self.df[col] = self.df[col].str.replace(".0", "")
-
+            self.df[col] = self.df[col].str.replace("nan", "*")
+        
 
 def get_url(tryUrl):
     """Attempts a GET request from the passed in URL
@@ -2052,7 +2053,7 @@ def get_daily_scores(yearDir, suffix, year):
     outputFile = make_raw_daily_scores_file(yearDir, suffix, year)
     outputFile.write("HomeTeam,RunsHome,RunsAway,AwayTeam\n")
     # Grab URLs to scrape
-    url = "https://npb.jp/bis/eng/2024/games/"
+    url = "https://npb.jp/bis/eng/" + year + "/games/"
     # Make GET request
     r = get_url(url)
     # Create the soup for parsing the html content
