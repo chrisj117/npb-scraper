@@ -1959,6 +1959,16 @@ class DailyScoresData(Stats):
         finalDf = self.df.copy()
         # Convert team names to HTML that contains appropriate URLs
         finalDf = convert_team_to_html(finalDf, None)
+        # Blank out score column names, rename team columns
+        finalDf.rename(
+            columns={
+                "HomeTeam": "Home",
+                "RunsHome": "",
+                "RunsAway": "",
+                "AwayTeam": "Away",
+            },
+            inplace=True,
+        )
         # Print final file with all players
         newCsvFinal = (
             uploadDir
