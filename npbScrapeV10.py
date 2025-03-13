@@ -466,39 +466,39 @@ class PlayerData(Stats):
         self.df["Diff"] = self.df["Diff"].str.replace("nan", "")
         # Add age and throwing/batting arm columns
         colOrder = [
-                    "Pitcher",
-                    "G",
-                    "W",
-                    "L",
-                    "SV",
-                    "HLD",
-                    "CG",
-                    "SHO",
-                    "BF",
-                    "IP",
-                    "H",
-                    "HR",
-                    "SO",
-                    "BB",
-                    "IBB",
-                    "HB",
-                    "WP",
-                    "R",
-                    "ER",
-                    "ERA",
-                    "FIP",
-                    "kwERA",
-                    "WHIP",
-                    "ERA+",
-                    "FIP-",
-                    "kwERA-",
-                    "Diff",
-                    "HR%",
-                    "K%",
-                    "BB%",
-                    "K-BB%",
-                    "Team",
-                ]
+            "Pitcher",
+            "G",
+            "W",
+            "L",
+            "SV",
+            "HLD",
+            "CG",
+            "SHO",
+            "BF",
+            "IP",
+            "H",
+            "HR",
+            "SO",
+            "BB",
+            "IBB",
+            "HB",
+            "WP",
+            "R",
+            "ER",
+            "ERA",
+            "FIP",
+            "kwERA",
+            "WHIP",
+            "ERA+",
+            "FIP-",
+            "kwERA-",
+            "Diff",
+            "HR%",
+            "K%",
+            "BB%",
+            "K-BB%",
+            "Team",
+        ]
         if int(self.year) == datetime.now().year:
             self.df = add_roster_data(self.df, self.suffix)
             colOrder.insert(-3, "Age")
@@ -598,41 +598,41 @@ class PlayerData(Stats):
         self.df["BB/K"] = self.df["BB/K"].str.replace("inf", "1.00")
         # Add age, (temp) position, and throwing/batting arm columns
         self.df["Pos"] = np.nan
-        colOrder =  [
-                "Player",
-                "G",
-                "PA",
-                "AB",
-                "R",
-                "H",
-                "2B",
-                "3B",
-                "HR",
-                "TB",
-                "RBI",
-                "SB",
-                "CS",
-                "SH",
-                "SF",
-                "SO",
-                "BB",
-                "IBB",
-                "HP",
-                "GDP",
-                "AVG",
-                "OBP",
-                "SLG",
-                "OPS",
-                "OPS+",
-                "ISO",
-                "BABIP",
-                "TTO%",
-                "K%",
-                "BB%",
-                "BB/K",
-                "Pos",
-                "Team",
-            ]
+        colOrder = [
+            "Player",
+            "G",
+            "PA",
+            "AB",
+            "R",
+            "H",
+            "2B",
+            "3B",
+            "HR",
+            "TB",
+            "RBI",
+            "SB",
+            "CS",
+            "SH",
+            "SF",
+            "SO",
+            "BB",
+            "IBB",
+            "HP",
+            "GDP",
+            "AVG",
+            "OBP",
+            "SLG",
+            "OPS",
+            "OPS+",
+            "ISO",
+            "BABIP",
+            "TTO%",
+            "K%",
+            "BB%",
+            "BB/K",
+            "Pos",
+            "Team",
+        ]
         if int(self.year) == datetime.now().year:
             self.df = add_roster_data(self.df, self.suffix)
             colOrder.insert(-4, "Age")
@@ -1932,7 +1932,7 @@ class DailyScoresData(Stats):
         """Outputs the Alt view of the associated dataframe (no HTML
         team or player names, no csv formatting)"""
         return self.df.to_string()
-    
+
     def output_final(self):
         """Outputs final files using the daily score dataframes"""
         # Make dir that will store alt views of the dataframes
@@ -1971,18 +1971,48 @@ class DailyScoresData(Stats):
         finalDf.to_csv(newCsvFinal, index=False)
 
         print(
-                "An alternative view of the daily game scores will be stored "
-                "in: " + newCsvAlt
-            )
+            "An alternative view of the daily game scores will be stored "
+            "in: " + newCsvAlt
+        )
         print(
-                "The final organized daily game scores will be stored in: " 
-                + newCsvFinal
-            )
+            "The final organized daily game scores will be stored in: "
+            + newCsvFinal
+        )
 
     def org_daily_scores(self):
         """Organize the daily score csv"""
-        pass
-        
+        # Convert abbrieviated names to full team names
+        abbrDict = {
+            "Hanshin": "Hanshin Tigers",
+            "Hiroshima": "Hiroshima Carp",
+            "DeNA": "DeNA BayStars",
+            "Yomiuri": "Yomiuri Giants",
+            "Yakult": "Yakult Swallows",
+            "Chunichi": "Chunichi Dragons",
+            "ORIX": "ORIX Buffaloes",
+            "Lotte": "Lotte Marines",
+            "SoftBank": "SoftBank Hawks",
+            "Rakuten": "Rakuten Eagles",
+            "Seibu": "Seibu Lions",
+            "Nippon-Ham": "Nipponham Fighters",
+            "Oisix": "Oisix Albirex",
+            "HAYATE": "HAYATE Ventures",
+        }
+        teamCols = ["HomeTeam", "AwayTeam"]
+        for col in teamCols:
+            self.df[col] = (
+                self.df[col]
+                .map(abbrDict)
+                .infer_objects()
+                .fillna(self.df[col])
+                .astype(str)
+            )
+        # Remove trailing zeroes from scores
+        runsCols = ["RunsHome", "RunsAway"]
+        for col in runsCols:
+            self.df[col] = self.df[col].astype(str)
+            self.df[col] = self.df[col].str.replace(".0", "")
+
 
 def get_url(tryUrl):
     """Attempts a GET request from the passed in URL
@@ -2023,13 +2053,15 @@ def get_daily_scores(yearDir, suffix, year):
         teams = result.find_all(class_="contentsTeam")
         runs = result.find_all(class_="contentsRuns")
         i = 0
-        while (i < len(teams)):
+        while i < len(teams):
             team1 = teams[i].get_text()
             team1Runs = runs[i].get_text()
-            team2 = teams[i+1].get_text()
-            team2Runs = runs[i+1].get_text()
+            team2 = teams[i + 1].get_text()
+            team2Runs = runs[i + 1].get_text()
             i += 2
-            outputFile.write(team1 + "," + team1Runs + "," + team2Runs + "," + team2 + "\n")
+            outputFile.write(
+                team1 + "," + team1Runs + "," + team2Runs + "," + team2 + "\n"
+            )
 
 
 def get_stats(yearDir, suffix, year):
@@ -2057,7 +2089,7 @@ def get_stats(yearDir, suffix, year):
     testDf = pd.read_csv(url,index_col=0)
     print(testDf.to_string())
     """
-    
+
     # Make output file
     outputFile = make_raw_player_file(yearDir, suffix, year)
     # Grab URLs to scrape
@@ -2432,7 +2464,7 @@ def make_raw_player_file(writeDir, suffix, year):
     return newFile
 
 
-def make_raw_daily_scores_file(writeDir,suffix , year):
+def make_raw_daily_scores_file(writeDir, suffix, year):
     """Opens a file to hold all player stats inside a relative /stats/
     directory that is created before calling this function
 
@@ -2448,6 +2480,7 @@ def make_raw_daily_scores_file(writeDir,suffix , year):
     print("Raw daily scores will be stored in: " + newCsvName)
     newFile = open(newCsvName, "w")
     return newFile
+
 
 def make_raw_standings_file(writeDir, suffix, year):
     """Opens a file to hold all player stats inside a relative /stats/
@@ -2635,8 +2668,9 @@ def convert_team_to_html(df, mode=None):
 
     Parameters:
     df (pandas dataframe): A dataframe containing entries with NPB teams
-    mode (string): Indicates whether to preserve full team names (pass in
-    "Full") or also insert short names in the <a> tags (pass in "Abb")
+    mode (string): Indicates whether to preserve full team names ("Full"),
+    abbrieviate names in the <a> tags ("Abb"), or convert any team names
+    found in the dataframe to linked names (None)
 
     Returns:
     df (pandas dataframe): The dataframe with correct links and abbrieviations
@@ -2659,7 +2693,11 @@ def convert_team_to_html(df, mode=None):
         # Create dict of Team Name:Complete HTML tag and convert
         teamDict = dict(linkDf.values)
         df["Team"] = (
-            df["Team"].map(teamDict).infer_objects().fillna(df["Team"]).astype(str)
+            df["Team"]
+            .map(teamDict)
+            .infer_objects()
+            .fillna(df["Team"])
+            .astype(str)
         )
     elif mode == "Abb":
         # Contains 2020-2024 reg/farm baseball team abbrieviations
@@ -2701,16 +2739,25 @@ def convert_team_to_html(df, mode=None):
         # Create dict of Team Name:Complete HTML tag and convert
         teamDict = dict(linkDf.values)
         df["Team"] = (
-            df["Team"].map(teamDict).infer_objects().fillna(df["Team"]).astype(str)
+            df["Team"]
+            .map(teamDict)
+            .infer_objects()
+            .fillna(df["Team"])
+            .astype(str)
         )
-    # Default mode links any team names it finds in the dataframe
-    if mode == None:
+    # Default mode links any team names it finds (assumes full  team names are
+    # present in the dataframe)
+    elif mode == None:
         linkDf["Link"] = linkDf.apply(build_html, axis=1)
         # Create dict of Team Name:Complete HTML tag and convert
         teamDict = dict(linkDf.values)
         for col in df.columns:
             df[col] = (
-                df[col].map(teamDict).infer_objects().fillna(df[col]).astype(str)
+                df[col]
+                .map(teamDict)
+                .infer_objects()
+                .fillna(df[col])
+                .astype(str)
             )
 
     return df
