@@ -2975,7 +2975,6 @@ def select_park_factor(df, suffix, year):
     df = df.merge(pfDf, on="Team", how="left")
     # For team files, league avg calculations have park factor as 1.000
     df.loc[df.Team == "League Average", "ParkF"] = 1.000
-
     return df
 
 
@@ -3100,23 +3099,23 @@ def assign_primary_or_utl(
     # Count how many positions >= our thresholds
     num_positions_10plus = (fractions >= pct_utl_thresholdHigh).sum()
     num_positions_5plus = (fractions >= pct_utl_thresholdLow).sum()
-    # Rule 1: For 2 way players, if they appear on the pitching stat file
+    # Rule 3: For 2 way players, if they appear on the pitching stat file
     # with at least 2.0 IP and at least 2.0 Inn fielded, label them as a 2 way
     # player (TWP)
     posCols.remove("1")
     if any(row[posCols] > 2.0) and (row["1"] > 2.0):
         return "TWP"
-    # Rule 2: If the player has 3 positions that are all in the outfield, the
+    # Rule 4: If the player has 3 positions that are all in the outfield, the
     # largest OF pos is the primary
     if row["7"] > 0 and row["8"] > 0 and row["9"] > 0:
         return fractions.idxmax()
-    # Rule 3: If any position >= 50%, that is primary
+    # Rule 5: If any position >= 50%, that is primary
     if any(fractions >= pct_primary_threshold):
         return fractions.idxmax()
-    # Rule 4: If 3 or more positions are >= our thresholds, label UTL
+    # Rule 6: If 3 or more positions are >= our thresholds, label UTL
     if num_positions_10plus >= 3 or num_positions_5plus >= 4:
         return "UTL"
-    # Rule 6: If none of the above, pick the position with the largest fraction
+    # Rule 7: If none of the above, pick the position with the largest fraction
     return fractions.idxmax()
 
 
