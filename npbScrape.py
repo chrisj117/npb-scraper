@@ -83,7 +83,7 @@ def main():
     regBatPlayerStats = PlayerData(statsDir, yearDir, "BR", scrapeYear)
     regPitchPlayerStats = PlayerData(statsDir, yearDir, "PR", scrapeYear)
     # Adding positions to batting stats
-    regBatPlayerStats.append_positions(npbFielding.df)
+    regBatPlayerStats.append_positions(npbFielding.df, regPitchPlayerStats.df)
     # NPB Team stats
     regBatTeamStats = TeamData(
         regBatPlayerStats.df, statsDir, yearDir, "BR", scrapeYear
@@ -139,7 +139,9 @@ def main():
     farmBatPlayerStats = PlayerData(statsDir, yearDir, "BF", scrapeYear)
     farmPitchPlayerStats = PlayerData(statsDir, yearDir, "PF", scrapeYear)
     # Adding positions to batting stats
-    farmBatPlayerStats.append_positions(farmFielding.df)
+    farmBatPlayerStats.append_positions(
+        farmFielding.df, farmPitchPlayerStats.df
+    )
     # Farm Team stats
     farmBatTeamStats = TeamData(
         farmBatPlayerStats.df, statsDir, yearDir, "BF", scrapeYear
@@ -674,14 +676,13 @@ class PlayerData(Stats):
         # constFile = ipPaDf.to_string(newCsvName)
         return ipPaDf
 
-    def append_positions(self, fieldDf):
+    def append_positions(self, fieldDf, pitchDf):
         """Adds the primary position of a player to the player dataframe
 
         Parameters:
-        fieldDf (pandas dataframe): Holds an entire NPB league's individual
-        fielding stats"""
-        # Fielding df has all positions a player is in, but we want the
-        # primary position only for the batting Pos column
+        fieldDf (pandas dataframe): Holds an entire NPB league's fielding stats
+        pitchDf (pandas dataframe): Holds an entire NPB league's individual
+        pitching stats"""
         # Create a temp df with players as rows and all pos they play as cols
         dfPivot = fieldDf.pivot_table(
             index="Player",
@@ -690,17 +691,30 @@ class PlayerData(Stats):
             aggfunc="sum",
             fill_value=0,
         )
+        # Append IP for position 1 (pitchers) as a new column "1"
+        dfPivot = pd.merge(
+            dfPivot,
+            pitchDf[["Pitcher", "IP"]].rename(
+                columns={"Pitcher": "Player", "IP": "1"}
+            ),
+            on="Player",
+            how="outer",
+        )
+        # Fill NaN values in all colums with 0 (if needed)
+        dfPivot = dfPivot.fillna(0)
+        # Get primary positions
         dfPivot["Pos"] = dfPivot.apply(assign_primary_or_utl, axis=1)
         # Extract only the player_id and primary_position:
-        tempPrimaryDf = dfPivot[["Pos"]].reset_index()
+        tempPrimaryDf = dfPivot[["Player", "Pos"]]
         # Then merge if needed:
         self.df = pd.merge(self.df, tempPrimaryDf, on="Player", how="left")
         # Swap temp Pos with updated Pos, drop placeholder Pos, rename
         self.df["Pos_x"], self.df["Pos_y"] = self.df["Pos_y"], self.df["Pos_x"]
         self.df = self.df.drop("Pos_y", axis=1)
         self.df = self.df.rename(columns={"Pos_x": "Pos"})
-        # NaN means player was not on fielding dataframe, and is thus a pitcher
-        self.df["Pos"] = self.df["Pos"].fillna("1")
+        # NaN means player wasn't on fielding df or pitching df (N/A data) OR
+        # was a pinch hitter (TODO: wtf)
+        self.df["Pos"] = self.df["Pos"].fillna("")
         return
 
 
@@ -2023,7 +2037,7 @@ class DailyScoresData(Stats):
             self.df[col] = self.df[col].astype(str)
             self.df[col] = self.df[col].str.replace(".0", "")
             self.df[col] = self.df[col].str.replace("nan", "*")
-        
+
 
 def get_url(tryUrl):
     """Attempts a GET request from the passed in URL
@@ -3066,28 +3080,40 @@ def assign_primary_or_utl(
     primary at a position if they have >= this value
 
     Returns:
-    df (pandas dataframe): The final stat dataframe with valid HTML in the
-    player/pitcher columns"""
-    total_innings = row.sum()
+    fractions.idmax (int): The player's most prominent position"""
+    posCols = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "DH"]
+    total_innings = row[posCols].sum()
     if total_innings == 0:
         return "No Data"
 
+    # Rule 1: Grab all players that are solely DH and pitchers
+    if (total_innings - row["DH"]) == 0:
+        return "DH"
+    # Rule 2: Grab all players that are solely pitchers
+    if (total_innings - row["1"]) == 0:
+        return "1"
     # Calculate fraction for each position
-    fractions = row / (total_innings - row["DH"])
+    fractions = row[posCols] / (total_innings - row["DH"])
     # Count how many positions >= our thresholds
     num_positions_10plus = (fractions >= pct_utl_thresholdHigh).sum()
     num_positions_5plus = (fractions >= pct_utl_thresholdLow).sum()
-    # Rule 0: If the player has 3 positions that are all in the outfield, the
+    # Rule 1: For 2 way players, if they appear on the pitching stat file
+    # with at least 2.0 IP and at least 2.0 Inn fielded, label them as a 2 way
+    # player (TWP)
+    posCols.remove("1")
+    if any(row[posCols] > 2.0) and (row["1"] > 2.0):
+        return "TWP"
+    # Rule 2: If the player has 3 positions that are all in the outfield, the
     # largest OF pos is the primary
     if row["7"] > 0 and row["8"] > 0 and row["9"] > 0:
         return fractions.idxmax()
-    # Rule 1: If any position >= 50%, that is primary
+    # Rule 3: If any position >= 50%, that is primary
     if any(fractions >= pct_primary_threshold):
         return fractions.idxmax()
-    # Rule 2: If 3 or more positions are >= our thresholds, label UTL
+    # Rule 4: If 3 or more positions are >= our thresholds, label UTL
     if num_positions_10plus >= 3 or num_positions_5plus >= 4:
         return "UTL"
-    # Otherwise, pick whichever position is the largest fraction
+    # Rule 6: If none of the above, pick the position with the largest fraction
     return fractions.idxmax()
 
 
