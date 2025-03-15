@@ -2804,11 +2804,11 @@ def add_roster_data(df, suffix):
     arms and ages"""
     # Check for the team link file, if missing, tell user and return
     relDir = os.path.dirname(__file__)
-    rosterDataFile = relDir + "/input/playerUrls.csv"
+    rosterDataFile = relDir + "/input/rosterData.csv"
     if not (os.path.exists(rosterDataFile)):
         print(
             "\nERROR: No player link file found, table entries will not "
-            "have links...\nProvide a playerUrls.csv file in the /input/ "
+            "have links...\nProvide a rosterData.csv file in the /input/ "
             "directory to fix this.\n"
         )
         return df
@@ -3135,11 +3135,11 @@ def convert_player_to_html(df, suffix, year):
     df (pandas dataframe): The final stat dataframe with valid HTML in the
     player/pitcher columns"""
     relDir = os.path.dirname(__file__)
-    playerLinkFile = relDir + "/input/playerUrls.csv"
+    playerLinkFile = relDir + "/input/rosterData.csv"
     if not (os.path.exists(playerLinkFile)):
         print(
             "\nERROR: No player link file found, table entries will not "
-            "have links...\nProvide a playerUrls.csv file in the /input/ "
+            "have links...\nProvide a rosterData.csv file in the /input/ "
             "directory to fix this.\n"
         )
         return df
