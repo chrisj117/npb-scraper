@@ -1878,7 +1878,7 @@ class TeamSummaryData(Stats):
             )
 
     def org_team_summary(self):
-        """Organize the team summary stat csv using the various team stat dfs"""
+        """Organize the team summary stat csv using the team stat dfs"""
         # Group stats by team and append to team dataframe
         self.df["Team"] = self.teamFieldingDf["Team"].tolist()
         self.df = pd.merge(
@@ -2089,6 +2089,20 @@ def get_daily_scores(yearDir, suffix, year):
             )
 
 
+def get_pitch_types(yearDir, year, suffix):
+    # PITCHING TYPES SCRAPING CODE (move into a new function get_pitch_types)
+    pitchTypesFile = yearDir + "/" + year + "PitchTypesRaw" + suffix + ".csv"
+    print("Raw pitching types will be stored in: " + pitchTypesFile)
+    # newFile = open(pitchTypesFile, "w")
+    # Make GET request
+    url = ("https://docs.google.com/spreadsheets/d/e/2PACX-" +
+    "1vS6W2zDr6OWslGU0QSLhvw4xi-NpnjWEqO16OvLnU2OCJoMbKFH-" +
+    "Z3FYL1sGxIFKb8flYQFgH9wphPU/pub?gid=1691151132&single=true&output=csv")
+    # r = get_url(url)
+    testDf = pd.read_csv(url, index_col=0)
+    print(testDf.to_string())
+
+
 def get_stats(yearDir, suffix, year):
     """The main stat scraping function that produces Raw stat files.
     Saving Raw stat files allows for scraping and stat organization to be
@@ -2103,17 +2117,6 @@ def get_stats(yearDir, suffix, year):
     "BF" = farm batting stat URLs passed in
     "PF" = farm pitching stat URLs passed in
     year (string): The desired npb year to scrape"""
-    """
-    # PITCHING TYPES SCRAPING CODE (move into a new function get_pitch_types)
-    pitchTypesFile = yearDir + "/" + year + "PitchTypesRaw" + suffix + ".csv"
-    print("Raw pitching types will be stored in: " + pitchTypesFile)
-    #newFile = open(pitchTypesFile, "w")
-    # Make GET request
-    url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS6W2zDr6OWslGU0QSLhvw4xi-NpnjWEqO16OvLnU2OCJoMbKFH-Z3FYL1sGxIFKb8flYQFgH9wphPU/pub?gid=1691151132&single=true&output=csv'
-    #r = get_url(url)
-    testDf = pd.read_csv(url,index_col=0)
-    print(testDf.to_string())
-    """
 
     # Make output file
     outputFile = make_raw_player_file(yearDir, suffix, year)
