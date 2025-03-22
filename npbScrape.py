@@ -10,6 +10,7 @@ from random import randint
 from datetime import datetime
 from bs4 import BeautifulSoup
 from urllib.error import HTTPError, URLError
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -43,18 +44,18 @@ def main():
         # Give user control if a year argument isn't passed in
         argBypass = False
 
-    # Get requested NPB stat year from user
+    # Determine whether to scrape and/or generate player percentiles
     if argBypass is False:
         scrapeYear = get_scrape_year()
+        regScrapeYN = get_user_choice("R")
+        farmScrapeYN = get_user_choice("F")
+        # TODO: ask user if they want to generate player percentiles
 
     # Create year directory
     yearDir = os.path.join(statsDir, scrapeYear)
     if not (os.path.exists(yearDir)):
         os.mkdir(yearDir)
 
-    # Regular season statistics
-    if argBypass is False:
-        regScrapeYN = get_user_choice("R")
     if regScrapeYN == "Y":
         # Scrape regular season batting and pitching URLs
         get_daily_scores(yearDir, "R", scrapeYear)
@@ -63,7 +64,6 @@ def main():
         get_standings(yearDir, "C", scrapeYear)
         get_standings(yearDir, "P", scrapeYear)
         get_fielding(yearDir, "R", scrapeYear)
-
     # NPB Daily Scores
     npbDailyScores = DailyScoresData(statsDir, yearDir, "R", scrapeYear)
     # NPB Individual Fielding
@@ -116,16 +116,12 @@ def main():
     regTeamSummary.output_final()
     print("Regular season statistics finished!\n")
 
-    # Farm statistics
-    if argBypass is False:
-        farmScrapeYN = get_user_choice("F")
     if farmScrapeYN == "Y":
         get_stats(yearDir, "BF", scrapeYear)
         get_stats(yearDir, "PF", scrapeYear)
         get_standings(yearDir, "E", scrapeYear)
         get_standings(yearDir, "W", scrapeYear)
         get_fielding(yearDir, "F", scrapeYear)
-
     # Farm Fielding
     farmFielding = FieldingData(statsDir, yearDir, "F", scrapeYear)
     # NPB Team Fielding
@@ -159,6 +155,13 @@ def main():
     farmFielding.output_final()
     farmTeamFielding.output_final()
     print("Farm statistics finished!\n")
+
+    # Generate player percentile plots
+    # TODO: argBypass implement, add zip option (seperate from upload)
+    regBatPlayerStats.generate_plots(yearDir, npbFielding.df)
+    regPitchPlayerStats.generate_plots(yearDir)
+    farmBatPlayerStats.generate_plots(yearDir, farmFielding.df)
+    farmPitchPlayerStats.generate_plots(yearDir)
 
     # Asking user to make an upload zip for manual uploads
     if argBypass is False:
@@ -712,10 +715,110 @@ class PlayerData(Stats):
         self.df["Pos_x"], self.df["Pos_y"] = self.df["Pos_y"], self.df["Pos_x"]
         self.df = self.df.drop("Pos_y", axis=1)
         self.df = self.df.rename(columns={"Pos_x": "Pos"})
-        # NaN means player wasn't on fielding df or pitching df (N/A data) OR
-        # was a pinch hitter (TODO: wtf)
+        # NaN means player wasn't on fielding df and pitching df (N/A data) OR
+        # was a pinch hitter
         self.df["Pos"] = self.df["Pos"].fillna("")
         return
+
+    def generate_plots(self, storeDir, fieldDf=None):
+        """TODO: docs"""
+        # Create dir for plots
+        plotDir = os.path.join(storeDir, "plots")
+        if not (os.path.exists(plotDir)):
+            os.mkdir(plotDir)
+        plotDir = os.path.join(plotDir, self.suffix)
+        if not (os.path.exists(plotDir)):
+            os.mkdir(plotDir)
+
+        # TODO: Better output msg
+        print("GENERATING " + self.suffix + " PERCENTILES")
+
+        # Suffix determines stats to be put into percentiles
+        # Players must meet IP criteria to avoid skewing percentiles
+        if self.suffix == "PR" or self.suffix == "PF":
+            nameCol = "Pitcher"
+            plotCols = ["WHIP", "ERA+", "FIP-", "HR%", "K%", "BB%", "K-BB%"]
+            invertCols = ["HR%", "WHIP", "FIP-", "BB%"]
+            plotDf = self.df[self.df.IP > 25.0].copy()
+        elif self.suffix == "BR" or self.suffix == "BF":
+            nameCol = "Player"
+            plotCols = ["OPS+", "ISO", "BABIP", "K%", "BB%", "BB/K", "Defense"]
+            invertCols = ["K%"]
+            plotDf = self.df[self.df.PA > 50.0].copy()
+
+            # Defense stat calculation
+            tempDf = fieldDf[nameCol].drop_duplicates()
+            # Each TZR in fielding must have Pos Adj applied to it
+            fieldDf["TZR"] = fieldDf["TZR"].apply(
+                pd.to_numeric, errors="coerce"
+            )
+            fieldDf["TZR"] = fieldDf["TZR"].fillna(0)
+            fieldDf["Pos Adj"] = fieldDf["Pos Adj"].apply(
+                pd.to_numeric, errors="coerce"
+            )
+            fieldDf["TZR"] = fieldDf["TZR"] + fieldDf["Pos Adj"]
+            # Combine all TZRs and Inn per player
+            tempDf = pd.merge(
+                tempDf,
+                fieldDf.groupby(nameCol, as_index=False)["TZR"].sum(),
+                on=nameCol,
+            )
+            tempDf = pd.merge(
+                tempDf,
+                fieldDf.groupby(nameCol, as_index=False)["Inn"].sum(),
+                on=nameCol,
+            )
+            # Calculate Defense (similar to TZR/143) and prep for plotting
+            tempDf["Defense"] = (tempDf["TZR"] / tempDf["Inn"]) * 1287
+            plotDf = pd.merge(
+                plotDf, tempDf[[nameCol, "Defense"]], on=nameCol, how="inner"
+            )
+
+        # Generate percentiles for given cols
+        for col in plotCols:
+            # Standardize all stat cols as floats
+            if "%" in col:
+                plotDf[col] = (
+                    plotDf[col].str.rstrip("%").astype("float") / 100.0
+                )
+            else:
+                plotDf[col] = plotDf[col].astype("float")
+            plotDf[col] = plotDf[col].rank(pct=True)
+            # Percentile adjustment (I.E. 0th percentile = lowest)
+            plotDf[col] = (plotDf[col] - plotDf[col].min()) / (
+                plotDf[col].max() - plotDf[col].min()
+            )
+            # invertCols are stats where lower = better
+            if col in invertCols:
+                plotDf[col] = 1.0 - plotDf[col]
+            plotDf[col] = plotDf[col] * 100
+            # Convert to whole numbers for display on bar
+            plotDf[col] = plotDf[col].astype("int")
+
+        # Generate percentile graphs for each player
+        for player in plotDf[nameCol]:
+            playerData = plotDf[plotDf[nameCol] == player][plotCols].T
+            plt.figure(figsize=(8, 5))
+            # TODO: look into "label" option?
+            plt.barh(
+                playerData.index,
+                playerData[plotDf[plotDf[nameCol] == player].index[0]],
+                color="royalblue",
+                alpha=0.7,
+            )
+            plt.xlabel("Percentile Rank")
+            plt.title(f"{player} - Stat Percentiles")
+            plt.xlim(0, 100)
+            plt.grid(axis="x", linestyle="--", alpha=0.7)
+            plt.savefig(
+                plotDir
+                + "/"
+                + self.year
+                + player.replace(" ", "")
+                + self.suffix
+                + ".png"
+            )
+            plt.close()
 
 
 class TeamData(Stats):
@@ -1724,6 +1827,7 @@ class TeamFieldingData(Stats):
             self.df,
             self.fieldingDf.groupby("Team", as_index=False)["Inn"].sum(),
         )
+        # TODO: REMOVE (DEBUG?)
         # self.df['Inn'] = convert_ip_column_in(self.df)
         self.df["TZR/143"] = (self.df["TZR"] / self.df["Inn"]) * 1287
         self.df = pd.merge(
@@ -2095,9 +2199,11 @@ def get_pitch_types(yearDir, year, suffix):
     print("Raw pitching types will be stored in: " + pitchTypesFile)
     # newFile = open(pitchTypesFile, "w")
     # Make GET request
-    url = ("https://docs.google.com/spreadsheets/d/e/2PACX-" +
-    "1vS6W2zDr6OWslGU0QSLhvw4xi-NpnjWEqO16OvLnU2OCJoMbKFH-" +
-    "Z3FYL1sGxIFKb8flYQFgH9wphPU/pub?gid=1691151132&single=true&output=csv")
+    url = (
+        "https://docs.google.com/spreadsheets/d/e/2PACX-"
+        + "1vS6W2zDr6OWslGU0QSLhvw4xi-NpnjWEqO16OvLnU2OCJoMbKFH-"
+        + "Z3FYL1sGxIFKb8flYQFgH9wphPU/pub?gid=1691151132&single=true&output=csv"
+    )
     # r = get_url(url)
     testDf = pd.read_csv(url, index_col=0)
     print(testDf.to_string())
@@ -2288,12 +2394,26 @@ def get_fielding(yearDir, suffix, year):
     "R" = regular season fielding stats
     "F" = farm fielding stats
     year (string): The desired fielding stat year"""
-    # TODO: fielding urls change every year randomly, make a fieldingUrls.txt
-    # in input folder and integrate here
-    if suffix == "R":
-        fieldingUrl = "https://bo-no05.hatenadiary.org/entry/2024/04/21/212756"
-    elif suffix == "F":
-        fieldingUrl = "https://bo-no05.hatenadiary.org/entry/2024/04/21/171840"
+    # Check for the fielding URL file, if nothing is there tell user and return
+    relDir = os.path.dirname(__file__)
+    urlFile = relDir + "/input/fieldingUrls.csv"
+    if not (os.path.exists(urlFile)):
+        print(
+            "\nERROR: No fielding URL file found, raw fielding files will not "
+            "be produced...\nProvide a valid fieldingUrls.csv file in the "
+            "/input/ directory to fix this.\n"
+        )
+        return
+
+    # Grab singular fielding URL from file
+    df = pd.read_csv(urlFile)
+    df = df.drop(df[df.Year.astype(str) != year].index)
+    if "R" in suffix:
+        fieldLeague = "NPB"
+    else:
+        fieldLeague = "Farm"
+    df = df.drop(df[df.League != fieldLeague].index)
+    fieldingUrl = df["Link"].iloc[0]
 
     outputFile = make_raw_fielding_file(yearDir, suffix, year)
     r = get_url(fieldingUrl)
