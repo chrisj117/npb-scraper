@@ -36,7 +36,9 @@ def main():
         argBypass = True
         regScrapeYN = "Y"
         farmScrapeYN = "Y"
-        zipYN = "Y"
+        percentileYN = "Y"
+        statZipYN = "Y"
+        percentileZipYN = "Y"
     elif len(sys.argv) > 2:
         print("Too many arguments. Try passing in the desired stat year.")
         sys.exit("Exiting...")
@@ -49,7 +51,9 @@ def main():
         scrapeYear = get_scrape_year()
         regScrapeYN = get_user_choice("R")
         farmScrapeYN = get_user_choice("F")
-        # TODO: ask user if they want to generate player percentiles
+        percentileYN = get_user_choice("P")
+        statZipYN = get_user_choice("Z")
+        percentileZipYN = get_user_choice("PZ")
 
     # Create year directory
     yearDir = os.path.join(statsDir, scrapeYear)
@@ -157,20 +161,20 @@ def main():
     print("Farm statistics finished!\n")
 
     # Generate player percentile plots
-    # TODO: argBypass implement, add zip option (seperate from upload)
-    regBatPlayerStats.generate_plots(yearDir, npbFielding.df)
-    regPitchPlayerStats.generate_plots(yearDir)
-    farmBatPlayerStats.generate_plots(yearDir, farmFielding.df)
-    farmPitchPlayerStats.generate_plots(yearDir)
+    if percentileYN == "Y":
+        regBatPlayerStats.generate_plots(yearDir, npbFielding.df)
+        regPitchPlayerStats.generate_plots(yearDir)
+        farmBatPlayerStats.generate_plots(yearDir, farmFielding.df)
+        farmPitchPlayerStats.generate_plots(yearDir)
 
-    # Asking user to make an upload zip for manual uploads
+    # Make upload zips for manual uploads
+    if statZipYN == "Y":
+        make_zip(yearDir, "S", scrapeYear)
+    if percentileZipYN == "Y":
+        make_zip(yearDir, "P", scrapeYear)
+
     if argBypass is False:
-        zipYN = get_user_choice("Z")
-        if zipYN == "Y":
-            make_zip(yearDir, scrapeYear)
         input("Press Enter to exit. ")
-    else:
-        make_zip(yearDir, scrapeYear)
 
 
 class Stats:
@@ -729,9 +733,7 @@ class PlayerData(Stats):
         plotDir = os.path.join(plotDir, self.suffix)
         if not (os.path.exists(plotDir)):
             os.mkdir(plotDir)
-
-        # TODO: Better output msg
-        print("GENERATING " + self.suffix + " PERCENTILES")
+        print("Generating " + self.suffix + " player percentile plots...")
 
         # Suffix determines stats to be put into percentiles
         # Players must meet IP criteria to avoid skewing percentiles
@@ -819,6 +821,8 @@ class PlayerData(Stats):
                 + ".png"
             )
             plt.close()
+
+        print(self.suffix + " player percentile plots can be found at: " + plotDir)
 
 
 class TeamData(Stats):
@@ -2767,7 +2771,8 @@ def get_user_choice(suffix):
 
     Parameters:
     suffix (string): Indicates the option being asked about (can be farm
-    scraping "F", regular season scraping "R", or zip file creation "Z")
+    scraping "F", regular season scraping "R", stat zip file creation "Z",
+    player percentile creation "P", or percentile zip file creation "PZ")
 
     Returns:
     userIn (string): Returns "Y" or "N" (if "Q" is chosen, program terminates)
@@ -2789,9 +2794,12 @@ def get_user_choice(suffix):
             )
             userIn = input("Scrape regular season stats stats? (Y/N): ")
         elif suffix == "Z":
+            userIn = input("Output stats in a zip file? (Y/N): ")
+        elif suffix == "P":
+            userIn = input("Output player percentile plots? (Y/N): ")
+        elif suffix == "PZ":
             userIn = input(
-                "Output these stats in a zip file for manual "
-                "upload? (Y/N): "
+                "Output player percentile plots in a zip file? (Y/N): "
             )
 
         if userIn == "Q":
@@ -3352,29 +3360,47 @@ def build_html(row):
     return htmlLine
 
 
-def make_zip(yearDir, year):
-    """Groups a year's farm and npb directories in to a single zip for
-    uploading/sending
+def make_zip(yearDir, suffix, year):
+    """Groups key directories into a single zip for uploading/sending
 
     Parameters:
     yearDir (string): The directory that stores the raw, scraped NPB stats
+    suffix (string): Types of files being zipped
+        "S" = a given year's farm and npb directories
+        "P" = a given year's plots directories
     year (string): The year of npb stats to group together"""
-    tempDir = os.path.join(yearDir, "/stats/temp")
-    tempDir = tempfile.mkdtemp()
-    # Gather relevant dirs to put into temp
-    shutil.copytree(
-        yearDir + "/farm", tempDir + "/stats/farm", dirs_exist_ok=True
-    )
-    shutil.copytree(
-        yearDir + "/npb", tempDir + "/stats/npb", dirs_exist_ok=True
-    )
-    # Create upload zip
-    outputFilename = yearDir + "/" + year + "upload"
-    dirName = tempDir
-    shutil.make_archive(outputFilename, "zip", dirName)
+    if suffix == "S":
+        tempDir = os.path.join(yearDir, "/stats/temp")
+        tempDir = tempfile.mkdtemp()
+        # Gather all stat dirs to put into temp
+        shutil.copytree(
+            yearDir + "/farm", tempDir + "/stats/farm", dirs_exist_ok=True
+        )
+        shutil.copytree(
+            yearDir + "/npb", tempDir + "/stats/npb", dirs_exist_ok=True
+        )
+        outputFilename = yearDir + "/" + year + "upload"
+    elif suffix == "P":
+        tempDir = os.path.join(yearDir, "/plots/temp")
+        tempDir = tempfile.mkdtemp()
+        # Gather all percentile dirs to put into temp
+        shutil.copytree(
+            yearDir + "/plots/BF", tempDir + "/plots/BF", dirs_exist_ok=True
+        )
+        shutil.copytree(
+            yearDir + "/plots/BR", tempDir + "/plots/BR", dirs_exist_ok=True
+        )
+        shutil.copytree(
+            yearDir + "/plots/PF", tempDir + "/plots/PF", dirs_exist_ok=True
+        )
+        shutil.copytree(
+            yearDir + "/plots/PR", tempDir + "/plots/PR", dirs_exist_ok=True
+        )
+        outputFilename = yearDir + "/" + year + "playerPercentiles"
+
+    shutil.make_archive(outputFilename, "zip", tempDir)
     shutil.rmtree(tempDir)
-    # Output name of upload zip
-    print("Upload zip can be found at: " + outputFilename + ".zip")
+    print("Zip created at: " + outputFilename + ".zip")
 
 
 if __name__ == "__main__":
