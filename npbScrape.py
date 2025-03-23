@@ -725,7 +725,40 @@ class PlayerData(Stats):
         return
 
     def generate_plots(self, storeDir, fieldDf=None):
-        """TODO: docs"""
+        """Generates percentile plots for player statistics and saves them as 
+        PNG files.
+
+        Parameters:
+        storeDir (string): The directory where the generated plots will be 
+        stored.
+        fieldDf (pandas dataframe, optional): Holds an entire NPB league's 
+        fielding stats. Required for calculating defensive metrics when 
+        generating batting percentile plots.
+
+        Functionality:
+        - Determines the relevant statistics to plot based on the suffix 
+        (e.g., batting or pitching).
+        - Filters players based on minimum thresholds for plate appearances 
+        (batters) or innings pitched (pitchers).
+        - Calculates percentiles for selected statistics and adjusts for 
+        metrics where lower values are better.
+        - For batters, calculates a "Defense" metric using fielding stats 
+        if `fieldDf` is provided.
+        - Creates horizontal bar plots for each player, showing their 
+        percentile ranks across the selected statistics.
+        - Saves the plots as PNG files in a directory structure based on the 
+        suffix and year.
+
+        Notes:
+        - Requires matplotlib for generating plots.
+        - Percentile calculations normalize values between 0 and 100.
+        - Defensive metrics are only included for batters if `fieldDf` is 
+        provided.
+
+        Output:
+        - PNG files for each player's percentile plot are saved in the 
+        specified directory.
+        - Prints the location of the generated plots to the console."""
         # Create dir for plots
         plotDir = os.path.join(storeDir, "plots")
         if not (os.path.exists(plotDir)):
