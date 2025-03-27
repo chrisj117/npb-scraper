@@ -61,6 +61,7 @@ def main():
         os.mkdir(yearDir)
 
     if regScrapeYN == "Y":
+        # TODO: refactor and put raw files in their own directory
         # Scrape regular season batting and pitching URLs
         get_daily_scores(yearDir, "R", scrapeYear)
         get_stats(yearDir, "BR", scrapeYear)
@@ -168,6 +169,7 @@ def main():
         farmPitchPlayerStats.generate_plots(yearDir)
 
     # Make upload zips for manual uploads
+    # TODO: refactor and put zip files in their own directory
     if statZipYN == "Y":
         make_zip(yearDir, "S", scrapeYear)
     if percentileZipYN == "Y":
@@ -725,38 +727,38 @@ class PlayerData(Stats):
         return
 
     def generate_plots(self, storeDir, fieldDf=None):
-        """Generates percentile plots for player statistics and saves them as 
+        """Generates percentile plots for player statistics and saves them as
         PNG files.
 
         Parameters:
-        storeDir (string): The directory where the generated plots will be 
+        storeDir (string): The directory where the generated plots will be
         stored.
-        fieldDf (pandas dataframe, optional): Holds an entire NPB league's 
-        fielding stats. Required for calculating defensive metrics when 
+        fieldDf (pandas dataframe, optional): Holds an entire NPB league's
+        fielding stats. Required for calculating defensive metrics when
         generating batting percentile plots.
 
         Functionality:
-        - Determines the relevant statistics to plot based on the suffix 
+        - Determines the relevant statistics to plot based on the suffix
         (e.g., batting or pitching).
-        - Filters players based on minimum thresholds for plate appearances 
+        - Filters players based on minimum thresholds for plate appearances
         (batters) or innings pitched (pitchers).
-        - Calculates percentiles for selected statistics and adjusts for 
+        - Calculates percentiles for selected statistics and adjusts for
         metrics where lower values are better.
-        - For batters, calculates a "Defense" metric using fielding stats 
+        - For batters, calculates a "Defense" metric using fielding stats
         if `fieldDf` is provided.
-        - Creates horizontal bar plots for each player, showing their 
+        - Creates horizontal bar plots for each player, showing their
         percentile ranks across the selected statistics.
-        - Saves the plots as PNG files in a directory structure based on the 
+        - Saves the plots as PNG files in a directory structure based on the
         suffix and year.
 
         Notes:
         - Requires matplotlib for generating plots.
         - Percentile calculations normalize values between 0 and 100.
-        - Defensive metrics are only included for batters if `fieldDf` is 
+        - Defensive metrics are only included for batters if `fieldDf` is
         provided.
 
         Output:
-        - PNG files for each player's percentile plot are saved in the 
+        - PNG files for each player's percentile plot are saved in the
         specified directory.
         - Prints the location of the generated plots to the console."""
         # Create dir for plots
@@ -772,12 +774,12 @@ class PlayerData(Stats):
         # Players must meet IP criteria to avoid skewing percentiles
         if self.suffix == "PR" or self.suffix == "PF":
             nameCol = "Pitcher"
-            plotCols = ["WHIP", "ERA+", "FIP-", "HR%", "K%", "BB%", "K-BB%"]
+            plotCols = ["K-BB%", "BB%", "K%", "HR%", "WHIP", "FIP-", "ERA+"]
             invertCols = ["HR%", "WHIP", "FIP-", "BB%"]
             plotDf = self.df[self.df.IP > 25.0].copy()
         elif self.suffix == "BR" or self.suffix == "BF":
             nameCol = "Player"
-            plotCols = ["OPS+", "ISO", "BABIP", "K%", "BB%", "BB/K", "Defense"]
+            plotCols = ["Defense", "BB/K", "BB%", "K%", "BABIP", "ISO", "OPS+"]
             invertCols = ["K%"]
             plotDf = self.df[self.df.PA > 50.0].copy()
 
@@ -834,13 +836,66 @@ class PlayerData(Stats):
         for player in plotDf[nameCol]:
             playerData = plotDf[plotDf[nameCol] == player][plotCols].T
             plt.figure(figsize=(8, 5))
-            # TODO: look into "label" option?
-            plt.barh(
+            # Generate colors based on value
+            colorVals = []
+            for value in playerData[plotDf[plotDf[nameCol] == player].index[0]]:
+                if value < 10:
+                    color = '#000066'
+                elif value < 20:
+                    color = '#0000CC'
+                elif value < 30:
+                    color = '#4D4DFF'
+                elif value < 40:
+                    color = '#B3B3FF'
+                elif value < 50:
+                    color = '#4A4A4A'
+                elif value < 60:
+                    color = '#4A2121'
+                elif value < 70:
+                    color = '#CC5C5A'
+                elif value < 80:
+                    color = '#8C2929'
+                elif value < 90:
+                    color = '#8C1212'
+                elif value < 100:
+                    color = '#660000'
+                colorVals.append(color)
+            barContainer = plt.barh(
                 playerData.index,
                 playerData[plotDf[plotDf[nameCol] == player].index[0]],
-                color="royalblue",
+                color=colorVals,
                 alpha=0.7,
             )
+            # Display data values on the bars
+            for bar in barContainer:
+                # Determine where and how data appears on bar graph
+                # 0 displays at edge of bar graph along with 1 and 2 (min 
+                # offset is -2)
+                if bar.get_width() <= 2:
+                    width = 0
+                    dataVal = bar.get_width()
+                # Never display 100 in percentiles, max is 99
+                elif bar.get_width() >= 100:
+                    width = bar.get_width() - 3
+                    dataVal = 99
+                # Smallest values should be closer to edge of bar
+                elif bar.get_width() < 10:
+                    width = bar.get_width() - 2
+                    dataVal = bar.get_width()
+                # Display values for double digit values
+                else:
+                    width = bar.get_width() - 3
+                    dataVal = bar.get_width()
+                plt.text(
+                    width,  # Position the text relative to the bar
+                    bar.get_y() + bar.get_height() / 2,  # Center vertically
+                    f"{int(dataVal)}",
+                    va="center",  # Align the text vertically
+                    ha="left",  # Align the text horizontally
+                    fontsize=9,
+                    color="black",
+                )
+            # Graph and axis names, styles
             plt.xlabel("Percentile Rank")
             plt.title(f"{player} - Stat Percentiles")
             plt.xlim(0, 100)
@@ -855,7 +910,11 @@ class PlayerData(Stats):
             )
             plt.close()
 
-        print(self.suffix + " player percentile plots can be found at: " + plotDir)
+        print(
+            self.suffix
+            + " player percentile plots can be found at: "
+            + plotDir
+        )
 
 
 class TeamData(Stats):
