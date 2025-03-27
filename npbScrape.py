@@ -838,27 +838,29 @@ class PlayerData(Stats):
             plt.figure(figsize=(8, 5))
             # Generate colors based on value
             colorVals = []
-            for value in playerData[plotDf[plotDf[nameCol] == player].index[0]]:
+            for value in playerData[
+                plotDf[plotDf[nameCol] == player].index[0]
+            ]:
                 if value < 10:
-                    color = '#000066'
+                    color = "#000066"
                 elif value < 20:
-                    color = '#0000CC'
+                    color = "#0000CC"
                 elif value < 30:
-                    color = '#4D4DFF'
+                    color = "#4D4DFF"
                 elif value < 40:
-                    color = '#B3B3FF'
+                    color = "#B3B3FF"
                 elif value < 50:
-                    color = '#4A4A4A'
+                    color = "#4A4A4A"
                 elif value < 60:
-                    color = '#4A2121'
+                    color = "#4A2121"
                 elif value < 70:
-                    color = '#CC5C5A'
+                    color = "#CC5C5A"
                 elif value < 80:
-                    color = '#8C2929'
+                    color = "#8C2929"
                 elif value < 90:
-                    color = '#8C1212'
+                    color = "#8C1212"
                 elif value < 100:
-                    color = '#660000'
+                    color = "#660000"
                 colorVals.append(color)
             barContainer = plt.barh(
                 playerData.index,
@@ -869,7 +871,7 @@ class PlayerData(Stats):
             # Display data values on the bars
             for bar in barContainer:
                 # Determine where and how data appears on bar graph
-                # 0 displays at edge of bar graph along with 1 and 2 (min 
+                # 0 displays at edge of bar graph along with 1 and 2 (min
                 # offset is -2)
                 if bar.get_width() <= 2:
                     width = 0
