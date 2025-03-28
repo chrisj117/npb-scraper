@@ -31,7 +31,7 @@ def main():
     # TODO: merge npbPlayoffScraper.py functionality
     # TODO: standardize variable names with underscores
     # TODO: generate requirements.txt
-    # TODO: unit tests
+    # TODO: unit tests, linting, auto commit new scrapes
     # TODO: add arg "a" to always scrape newest year
 
     # Check for input files (all except playerUrlsFix.csv are required)
