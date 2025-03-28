@@ -21,7 +21,25 @@ def main():
     if not (os.path.exists(statsDir)):
         os.mkdir(statsDir)
 
-    # Check for command line args
+    # TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
+    # TODO: docs
+    # TODO: combine translations and rosterData
+    # TODO: add checking raw file existence in init() (also remove warnings)
+    # TODO: merge and updated npbPlayerUrlScraper roster scraping to update
+    # rosterData.csv
+    # TODO: more robust error checking in init()s if empty Raw data comes in
+    # TODO: merge npbPlayoffScraper.py functionality
+    # TODO: standardize variable names with underscores
+    # TODO: generate requirements.txt
+    # TODO: unit tests
+    # TODO: add arg "a" to always scrape newest year
+
+    # Check for input files (all except playerUrlsFix.csv are required)
+    if check_input_files(relDir) is False:
+        print("Missing needed input file(s), exiting...")
+        return -1
+
+    # Check for scrapeYear command line arg
     if len(sys.argv) == 2:
         print(
             "ARGUMENTS DETECTED: "
@@ -34,7 +52,7 @@ def main():
         print("\nProgram will scrape and create upload zip for given year.")
         # Bypass all user input functions and set flags for scraping
         argBypass = True
-        regScrapeYN = "Y"
+        npbScrapeYN = "Y"
         farmScrapeYN = "Y"
         percentileYN = "Y"
         statZipYN = "Y"
@@ -49,7 +67,7 @@ def main():
     # Determine whether to scrape and/or generate player percentiles
     if argBypass is False:
         scrapeYear = get_scrape_year()
-        regScrapeYN = get_user_choice("R")
+        npbScrapeYN = get_user_choice("R")
         farmScrapeYN = get_user_choice("F")
         percentileYN = get_user_choice("P")
         statZipYN = get_user_choice("Z")
@@ -60,7 +78,7 @@ def main():
     if not (os.path.exists(yearDir)):
         os.mkdir(yearDir)
 
-    if regScrapeYN == "Y":
+    if npbScrapeYN == "Y":
         # TODO: refactor and put raw files in their own directory
         # Scrape regular season batting and pitching URLs
         get_daily_scores(yearDir, "R", scrapeYear)
@@ -85,24 +103,24 @@ def main():
     centralStandings = StandingsData(statsDir, yearDir, "C", scrapeYear)
     pacificStandings = StandingsData(statsDir, yearDir, "P", scrapeYear)
     # NPB Player stats
-    regBatPlayerStats = PlayerData(statsDir, yearDir, "BR", scrapeYear)
-    regPitchPlayerStats = PlayerData(statsDir, yearDir, "PR", scrapeYear)
+    npbBatPlayerStats = PlayerData(statsDir, yearDir, "BR", scrapeYear)
+    npbPitchPlayerStats = PlayerData(statsDir, yearDir, "PR", scrapeYear)
     # Adding positions to batting stats
-    regBatPlayerStats.append_positions(npbFielding.df, regPitchPlayerStats.df)
+    npbBatPlayerStats.append_positions(npbFielding.df, npbPitchPlayerStats.df)
     # NPB Team stats
-    regBatTeamStats = TeamData(
-        regBatPlayerStats.df, statsDir, yearDir, "BR", scrapeYear
+    npbBatTeamStats = TeamData(
+        npbBatPlayerStats.df, statsDir, yearDir, "BR", scrapeYear
     )
-    regPitchTeamStats = TeamData(
-        regPitchPlayerStats.df, statsDir, yearDir, "PR", scrapeYear
+    npbPitchTeamStats = TeamData(
+        npbPitchPlayerStats.df, statsDir, yearDir, "PR", scrapeYear
     )
     # NPB team summary
-    regTeamSummary = TeamSummaryData(
+    npbTeamSummary = TeamSummaryData(
         npbTeamFielding.df,
         centralStandings.df,
         pacificStandings.df,
-        regBatTeamStats.df,
-        regPitchTeamStats.df,
+        npbBatTeamStats.df,
+        npbPitchTeamStats.df,
         statsDir,
         yearDir,
         "R",
@@ -110,15 +128,15 @@ def main():
     )
     # NPB output
     npbDailyScores.output_final()
-    regBatPlayerStats.output_final()
-    regPitchPlayerStats.output_final()
-    regBatTeamStats.output_final()
-    regPitchTeamStats.output_final()
-    centralStandings.output_final(regBatTeamStats.df, regPitchTeamStats.df)
-    pacificStandings.output_final(regBatTeamStats.df, regPitchTeamStats.df)
+    npbBatPlayerStats.output_final()
+    npbPitchPlayerStats.output_final()
+    npbBatTeamStats.output_final()
+    npbPitchTeamStats.output_final()
+    centralStandings.output_final(npbBatTeamStats.df, npbPitchTeamStats.df)
+    pacificStandings.output_final(npbBatTeamStats.df, npbPitchTeamStats.df)
     npbFielding.output_final()
     npbTeamFielding.output_final()
-    regTeamSummary.output_final()
+    npbTeamSummary.output_final()
     print("Regular season statistics finished!\n")
 
     if farmScrapeYN == "Y":
@@ -163,8 +181,8 @@ def main():
 
     # Generate player percentile plots
     if percentileYN == "Y":
-        regBatPlayerStats.generate_plots(yearDir, npbFielding.df)
-        regPitchPlayerStats.generate_plots(yearDir)
+        npbBatPlayerStats.generate_plots(yearDir, npbFielding.df)
+        npbPitchPlayerStats.generate_plots(yearDir)
         farmBatPlayerStats.generate_plots(yearDir, farmFielding.df)
         farmPitchPlayerStats.generate_plots(yearDir)
 
@@ -512,8 +530,8 @@ class PlayerData(Stats):
         ]
         if int(self.year) == datetime.now().year:
             self.df = add_roster_data(self.df, self.suffix)
-            colOrder.insert(-3, "Age")
-            colOrder.insert(-2, "T")
+            colOrder.insert(-1, "Age")
+            colOrder.insert(-1, "T")
         if self.suffix == "PF":
             colOrder.remove("HLD")
         self.df = self.df[colOrder]
@@ -646,8 +664,8 @@ class PlayerData(Stats):
         ]
         if int(self.year) == datetime.now().year:
             self.df = add_roster_data(self.df, self.suffix)
-            colOrder.insert(-4, "Age")
-            colOrder.insert(-2, "B")
+            colOrder.insert(-2, "Age")
+            colOrder.insert(-1, "B")
         self.df = self.df[colOrder]
         self.df = select_league(self.df, self.suffix)
 
@@ -2291,22 +2309,6 @@ def get_daily_scores(yearDir, suffix, year):
             )
 
 
-def get_pitch_types(yearDir, year, suffix):
-    # PITCHING TYPES SCRAPING CODE (move into a new function get_pitch_types)
-    pitchTypesFile = yearDir + "/" + year + "PitchTypesRaw" + suffix + ".csv"
-    print("Raw pitching types will be stored in: " + pitchTypesFile)
-    # newFile = open(pitchTypesFile, "w")
-    # Make GET request
-    url = (
-        "https://docs.google.com/spreadsheets/d/e/2PACX-"
-        + "1vS6W2zDr6OWslGU0QSLhvw4xi-NpnjWEqO16OvLnU2OCJoMbKFH-"
-        + "Z3FYL1sGxIFKb8flYQFgH9wphPU/pub?gid=1691151132&single=true&output=csv"
-    )
-    # r = get_url(url)
-    testDf = pd.read_csv(url, index_col=0)
-    print(testDf.to_string())
-
-
 def get_stats(yearDir, suffix, year):
     """The main stat scraping function that produces Raw stat files.
     Saving Raw stat files allows for scraping and stat organization to be
@@ -2321,7 +2323,6 @@ def get_stats(yearDir, suffix, year):
     "BF" = farm batting stat URLs passed in
     "PF" = farm pitching stat URLs passed in
     year (string): The desired npb year to scrape"""
-
     # Make output file
     outputFile = make_raw_player_file(yearDir, suffix, year)
     # Grab URLs to scrape
@@ -2445,7 +2446,15 @@ def get_standings(yearDir, suffix, year):
     soup = BeautifulSoup(r.content, "html.parser")
 
     # Grab all rows in the first subtable on the page
-    table = soup.find_all("table")[1].find_all("tr")
+    if len(soup.find_all("table")) >= 2:
+        table = soup.find_all("table")[1].find_all("tr")
+    # Stop running if no table is available
+    else:
+        # Close request and output file
+        r.close()
+        outputFile.close()
+        return
+
     # Create header row
     iterTable = iter(table)
     tr = next(iterTable)
@@ -2492,17 +2501,8 @@ def get_fielding(yearDir, suffix, year):
     "R" = regular season fielding stats
     "F" = farm fielding stats
     year (string): The desired fielding stat year"""
-    # Check for the fielding URL file, if nothing is there tell user and return
     relDir = os.path.dirname(__file__)
     urlFile = relDir + "/input/fieldingUrls.csv"
-    if not (os.path.exists(urlFile)):
-        print(
-            "\nERROR: No fielding URL file found, raw fielding files will not "
-            "be produced...\nProvide a valid fieldingUrls.csv file in the "
-            "/input/ directory to fix this.\n"
-        )
-        return
-
     # Grab singular fielding URL from file
     df = pd.read_csv(urlFile)
     df = df.drop(df[df.Year.astype(str) != year].index)
@@ -2928,14 +2928,6 @@ def convert_team_to_html(df, mode=None):
     # Check for the team link file, if missing, tell user and return
     relDir = os.path.dirname(__file__)
     teamLinkFile = relDir + "/input/teamUrls.csv"
-    if not (os.path.exists(teamLinkFile)):
-        print(
-            "\nWARNING: No team link file found, table entries will not have "
-            "links...\nProvide a teamUrls.csv file in the /input/ directory to"
-            " fix this to fix this.\n"
-        )
-        return df
-
     linkDf = pd.read_csv(teamLinkFile)
     if mode == "Full":
         # Update Link col to have <a> tags
@@ -2995,7 +2987,7 @@ def convert_team_to_html(df, mode=None):
             .fillna(df["Team"])
             .astype(str)
         )
-    # Default mode links any team names it finds (assumes full  team names are
+    # Default mode links any team names it finds (assumes full team names are
     # present in the dataframe)
     elif mode == None:
         linkDf["Link"] = linkDf.apply(build_html, axis=1)
@@ -3027,16 +3019,8 @@ def add_roster_data(df, suffix):
     Returns:
     df (pandas dataframe): The inputted dataframe with the appended throwing
     arms and ages"""
-    # Check for the team link file, if missing, tell user and return
     relDir = os.path.dirname(__file__)
     rosterDataFile = relDir + "/input/rosterData.csv"
-    if not (os.path.exists(rosterDataFile)):
-        print(
-            "\nERROR: No player link file found, table entries will not "
-            "have links...\nProvide a rosterData.csv file in the /input/ "
-            "directory to fix this.\n"
-        )
-        return df
 
     # Player throwing/batting arms
     rosterDf = pd.read_csv(rosterDataFile)
@@ -3172,15 +3156,6 @@ def select_park_factor(df, suffix, year):
     # Check for the park factor file, if nothing is there tell user and return
     relDir = os.path.dirname(__file__)
     pfFile = relDir + "/input/parkFactors.csv"
-    if not (os.path.exists(pfFile)):
-        print(
-            "\nERROR: No park factor file found, calculations using park "
-            "factors will be inaccurate...\nProvide a valid parkFactors.csv "
-            "file in the /input/ directory to fix this.\n"
-        )
-        df["ParkF"] = np.nan
-        return df
-
     pfDf = pd.read_csv(pfFile)
     # Drop all rows that are not the df's year
     pfDf = pfDf.drop(pfDf[pfDf.Year.astype(str) != year].index)
@@ -3210,18 +3185,8 @@ def select_fip_const(suffix, year):
     Returns:
     fipConst (float): The correct FIP const according to year and farm/NPB reg
     season"""
-    # Check for the player link file, if nothing is there tell user and return
     relDir = os.path.dirname(__file__)
     fipFile = relDir + "/input/fipConst.csv"
-    if not (os.path.exists(fipFile)):
-        print(
-            "\nERROR: No FIP constant file found, calculations using FIP will "
-            "be inaccurate...\nProvide a valid fipConst.csv file in the "
-            "/input/ directory to fix this.\n"
-        )
-        fipConst = np.nan
-        return fipConst
-
     fipDf = pd.read_csv(fipFile)
     # Drop all rows that are not the df's year
     fipDf = fipDf.drop(fipDf[fipDf.Year.astype(str) != year].index)
@@ -3360,13 +3325,6 @@ def convert_player_to_html(df, suffix, year):
     player/pitcher columns"""
     relDir = os.path.dirname(__file__)
     playerLinkFile = relDir + "/input/rosterData.csv"
-    if not (os.path.exists(playerLinkFile)):
-        print(
-            "\nERROR: No player link file found, table entries will not "
-            "have links...\nProvide a rosterData.csv file in the /input/ "
-            "directory to fix this.\n"
-        )
-        return df
 
     linkDf = pd.read_csv(playerLinkFile)
     # Create new HTML code column
@@ -3415,13 +3373,6 @@ def translate_players(df):
     df (pandas dataframe): The final stat dataframe with translated names"""
     relDir = os.path.dirname(__file__)
     translationFile = relDir + "/input/nameTranslations.csv"
-    if not (os.path.exists(translationFile)):
-        print(
-            "\nERROR: No player name translation file found, player names "
-            "will not be translated...\nProvide a nameTranslations.csv file in"
-            " the /input/ directory to fix this.\n"
-        )
-        return df
 
     # Read in csv that contains player name and their personal page link
     translateDf = pd.read_csv(translationFile)
@@ -3495,6 +3446,87 @@ def make_zip(yearDir, suffix, year):
     shutil.make_archive(outputFilename, "zip", tempDir)
     shutil.rmtree(tempDir)
     print("Zip created at: " + outputFilename + ".zip")
+
+
+def check_input_files(relDir):
+    """TODO: docs"""
+    # Optional files
+    playerLinkFixFile = relDir + "/input/playerUrlsFix.csv"
+    if not os.path.exists(playerLinkFixFile):
+        print(
+            "\nWARNING: No optional player link fix file detected. Provide a "
+            "playerUrlsFix.csv file in the /input/ directory to fix this.\n"
+        )
+    # Required files (returns False if file is missing)
+    translationFile = relDir + "/input/nameTranslations.csv"
+    if not (os.path.exists(translationFile)):
+        print(
+            "\nERROR: No player name translation file found, player names "
+            "can't be translated...\nProvide a nameTranslations.csv file in"
+            " the /input/ directory to fix this.\n"
+        )
+        return False
+    playerLinkFile = relDir + "/input/rosterData.csv"
+    if not (os.path.exists(playerLinkFile)):
+        print(
+            "\nERROR: No player link file found, table entries will not "
+            "have links...\nProvide a rosterData.csv file in the /input/ "
+            "directory to fix this.\n"
+        )
+        return False
+    fipFile = relDir + "/input/fipConst.csv"
+    if not (os.path.exists(fipFile)):
+        print(
+            "\nERROR: No FIP constant file found, calculations using FIP will "
+            "be inaccurate...\nProvide a valid fipConst.csv file in the "
+            "/input/ directory to fix this.\n"
+        )
+        return False
+    pfFile = relDir + "/input/parkFactors.csv"
+    if not (os.path.exists(pfFile)):
+        print(
+            "\nERROR: No park factor file found, calculations using park "
+            "factors will be inaccurate...\nProvide a valid parkFactors.csv "
+            "file in the /input/ directory to fix this.\n"
+        )
+        return False
+    teamLinkFile = relDir + "/input/teamUrls.csv"
+    if not (os.path.exists(teamLinkFile)):
+        print(
+            "\nWARNING: No team link file found, table entries will not have "
+            "links...\nProvide a teamUrls.csv file in the /input/ directory to"
+            " fix this to fix this.\n"
+        )
+        return False
+    fieldUrlFile = relDir + "/input/fieldingUrls.csv"
+    if not (os.path.exists(fieldUrlFile)):
+        print(
+            "\nERROR: No fielding URL file found, raw fielding files will not "
+            "be produced...\nProvide a valid fieldingUrls.csv file in the "
+            "/input/ directory to fix this.\n"
+        )
+        return False
+
+    # Print confirmation files exist
+    print("All needed input files present, continuing...")
+    return True
+
+
+def get_pitch_types(yearDir, year, suffix):
+    # TODO: discuss scrapping this with mr yakyu
+    # PITCHING TYPES SCRAPING CODE (move into a new function get_pitch_types)
+    pitchTypesFile = yearDir + "/" + year + "PitchTypesRaw" + suffix + ".csv"
+    print("Raw pitching types will be stored in: " + pitchTypesFile)
+    # newFile = open(pitchTypesFile, "w")
+    # Make GET request
+    url = (
+        "https://docs.google.com/spreadsheets/d/e/2PACX-"
+        + "1vS6W2zDr6OWslGU0QSLhvw4xi-NpnjWEqO16OvLnU2OCJoMbKFH-"
+        + "Z3FYL1sGxIFKb8flYQFgH9wphPU/pub?gid=1691151132&single=true&output=csv"
+    )
+    # r = get_url(url)
+    testDf = pd.read_csv(url, index_col=0)
+    print(testDf.to_string())
 
 
 if __name__ == "__main__":
