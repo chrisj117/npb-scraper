@@ -22,41 +22,43 @@ def main():
         os.mkdir(statsDir)
 
     # TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
-    # TODO: docs
     # TODO: combine translations and rosterData
     # TODO: add checking raw file existence in init() (also remove warnings)
     # TODO: merge and updated npbPlayerUrlScraper roster scraping to update
     # rosterData.csv
+    # TODO: refactor and put raw files in their own directory
     # TODO: more robust error checking in init()s if empty Raw data comes in
     # TODO: merge npbPlayoffScraper.py functionality
     # TODO: standardize variable names with underscores
-    # TODO: generate requirements.txt
     # TODO: unit tests, linting, auto commit new scrapes
-    # TODO: add arg "a" to always scrape newest year
+    # TODO: multithread scrape, org, and percentiles
+    # TODO: better color grading for percentile plots
+    # TODO: update fipConsts, parkFactors (need mr yakyu)
 
     # Check for input files (all except playerUrlsFix.csv are required)
     if check_input_files(relDir) is False:
         print("Missing needed input file(s), exiting...")
+        input("Press Enter to exit. ")
         return -1
 
     # Check for scrapeYear command line arg
     if len(sys.argv) == 2:
-        print(
-            "ARGUMENTS DETECTED: "
-            + str(sys.argv)
-            + "\nSetting year to: "
-            + str(sys.argv[1])
-        )
-        # Check year given
-        scrapeYear = get_scrape_year(sys.argv[1])
+        print("ARGUMENTS DETECTED: " + str(sys.argv))
+        # "A" scrapes current year, else scrape for given year
+        if sys.argv[1] == "A":
+            print("Setting year to: " + str(datetime.now().year))
+            scrapeYear = get_scrape_year(str(datetime.now().year))
+        else:
+            print("Setting year to: " + str(sys.argv[1]))
+            scrapeYear = get_scrape_year(sys.argv[1])
         print("\nProgram will scrape and create upload zip for given year.")
         # Bypass all user input functions and set flags for scraping
         argBypass = True
         npbScrapeYN = "Y"
         farmScrapeYN = "Y"
-        percentileYN = "Y"
+        percentileYN = "N"
         statZipYN = "Y"
-        percentileZipYN = "Y"
+        percentileZipYN = "N"
     elif len(sys.argv) > 2:
         print("Too many arguments. Try passing in the desired stat year.")
         sys.exit("Exiting...")
@@ -79,7 +81,6 @@ def main():
         os.mkdir(yearDir)
 
     if npbScrapeYN == "Y":
-        # TODO: refactor and put raw files in their own directory
         # Scrape regular season batting and pitching URLs
         get_daily_scores(yearDir, "R", scrapeYear)
         get_stats(yearDir, "BR", scrapeYear)
@@ -187,7 +188,6 @@ def main():
         farmPitchPlayerStats.generate_plots(yearDir)
 
     # Make upload zips for manual uploads
-    # TODO: refactor and put zip files in their own directory
     if statZipYN == "Y":
         make_zip(yearDir, "S", scrapeYear)
     if percentileZipYN == "Y":
@@ -3406,7 +3406,8 @@ def build_html(row):
 
 
 def make_zip(yearDir, suffix, year):
-    """Groups key directories into a single zip for uploading/sending
+    """Groups key directories into a single zip for uploading/sending and
+    makes a /zip/ directory to store the zip
 
     Parameters:
     yearDir (string): The directory that stores the raw, scraped NPB stats
@@ -3414,6 +3415,10 @@ def make_zip(yearDir, suffix, year):
         "S" = a given year's farm and npb directories
         "P" = a given year's plots directories
     year (string): The year of npb stats to group together"""
+    zipDir = os.path.join(yearDir, "zip")
+    if not (os.path.exists(zipDir)):
+        os.mkdir(zipDir)
+
     if suffix == "S":
         tempDir = os.path.join(yearDir, "/stats/temp")
         tempDir = tempfile.mkdtemp()
@@ -3424,7 +3429,7 @@ def make_zip(yearDir, suffix, year):
         shutil.copytree(
             yearDir + "/npb", tempDir + "/stats/npb", dirs_exist_ok=True
         )
-        outputFilename = yearDir + "/" + year + "upload"
+        outputFilename = zipDir + "/" + year + "upload"
     elif suffix == "P":
         tempDir = os.path.join(yearDir, "/plots/temp")
         tempDir = tempfile.mkdtemp()
@@ -3441,7 +3446,7 @@ def make_zip(yearDir, suffix, year):
         shutil.copytree(
             yearDir + "/plots/PR", tempDir + "/plots/PR", dirs_exist_ok=True
         )
-        outputFilename = yearDir + "/" + year + "playerPercentiles"
+        outputFilename = zipDir + "/" + year + "playerPercentiles"
 
     shutil.make_archive(outputFilename, "zip", tempDir)
     shutil.rmtree(tempDir)
@@ -3449,7 +3454,13 @@ def make_zip(yearDir, suffix, year):
 
 
 def check_input_files(relDir):
-    """TODO: docs"""
+    """Checks that all input files are in the /input/ folder
+
+    Parameters:
+    relDir (string): The relative directory holding the project
+
+    Returns:
+    (bool): If needed files are missing, this returns False, else True"""
     # Optional files
     playerLinkFixFile = relDir + "/input/playerUrlsFix.csv"
     if not os.path.exists(playerLinkFixFile):
@@ -3507,7 +3518,7 @@ def check_input_files(relDir):
         )
         return False
 
-    # Print confirmation files exist
+    # Print confirmation files exist, return True
     print("All needed input files present, continuing...")
     return True
 
