@@ -21,7 +21,6 @@ def main():
     if not (os.path.exists(statsDir)):
         os.mkdir(statsDir)
 
-    # TODO: combine nameTranslations and rosterData *
     # TODO: merge and update npbPlayerUrlScraper roster scraping to update
     # rosterData.csv *
     # TODO: refactor and put raw files in their own directory *
@@ -2797,7 +2796,7 @@ def make_raw_fielding_file(writeDir, suffix, year):
         )
     if suffix == "F":
         print("Raw farm fielding results will be stored in: " + newCsvName)
-    newFile = open(newCsvName, "w")
+    newFile = open(newCsvName, "w", encoding="utf-8")
     return newFile
 
 
