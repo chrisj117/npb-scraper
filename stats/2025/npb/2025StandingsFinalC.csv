@@ -1,7 +1,7 @@
-#,Team,G,W,L,T,PCT,GB,RS,RA,Diff,XPCT,Home,Road,vs G,vs T,vs DB,vs C,vs S,vs D
-,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri Giants</a>,1,1,0,0,1.000,--,6,5,1,0.583,1-0,--,--,--,--,--,1-0,--
-,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin Tigers</a>,1,1,0,0,1.000,--,4,0,4,1.000,--,1-0,--,--,--,1-0,--,--
-,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA BayStars</a>,1,1,0,0,1.000,--,5,0,5,1.000,1-0,--,--,--,--,--,--,1-0
-,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima Carp</a>,1,0,1,0,0.000,1.0,0,4,-4,0.000,0-1,--,--,0-1,--,--,--,--
-,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult Swallows</a>,1,0,1,0,0.000,1.0,5,6,-1,0.417,--,0-1,0-1,--,--,--,--,--
-,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi Dragons</a>,1,0,1,0,0.000,1.0,0,5,-5,0.000,--,0-1,--,--,0-1,--,--,--
+#,Team,G,W,L,T,PCT,GB,RS,RA,Diff,XPCT,Home,Road,vs G,vs T,vs DB,vs D,vs C,vs S
+,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri Giants</a>,2,2,0,0,1.000,--,18,5,13,0.912,2-0,--,--,--,--,--,--,2-0
+,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin Tigers</a>,2,2,0,0,1.000,--,7,2,5,0.908,--,2-0,--,--,--,--,2-0,--
+,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA BayStars</a>,2,1,1,0,0.500,1.0,5,1,4,0.950,1-1,--,--,--,--,1-1,--,--
+,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi Dragons</a>,2,1,1,0,0.500,1.0,1,5,-4,0.050,--,1-1,--,--,1-1,--,--,--
+,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima Carp</a>,2,0,2,0,0.000,2.0,2,7,-5,0.092,0-2,--,--,0-2,--,--,--,--
+,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult Swallows</a>,2,0,2,0,0.000,2.0,5,18,-13,0.088,--,0-2,0-2,--,--,--,--,--
