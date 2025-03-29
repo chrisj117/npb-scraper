@@ -21,12 +21,15 @@ def main():
     if not (os.path.exists(statsDir)):
         os.mkdir(statsDir)
 
+    # TODO: combine nameTranslations and rosterData *
+    # TODO: merge and update npbPlayerUrlScraper roster scraping to update
+    # rosterData.csv *
+    # TODO: refactor and put raw files in their own directory *
+
+    # TODO: readme github
     # TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
-    # TODO: combine translations and rosterData
-    # TODO: add checking raw file existence in init() (also remove warnings)
-    # TODO: merge and updated npbPlayerUrlScraper roster scraping to update
-    # rosterData.csv
-    # TODO: refactor and put raw files in their own directory
+    # TODO: add checking raw file existence in init() (also remove user output
+    # warnings)
     # TODO: more robust error checking in init()s if empty Raw data comes in
     # TODO: merge npbPlayoffScraper.py functionality
     # TODO: standardize variable names with underscores
@@ -262,6 +265,9 @@ class PlayerData(Stats):
             if not (os.path.exists(uploadDir)):
                 os.mkdir(uploadDir)
 
+        # For batting, remove all players with PA <= 0
+        if self.suffix == "BF" or self.suffix == "BR":
+            self.df = self.df.drop(self.df[self.df.PA == 0].index)
         # Print organized dataframe to file
         newCsvAlt = altDir + "/" + self.year + "AltView" + self.suffix + ".csv"
         self.df.to_string(newCsvAlt)
@@ -541,9 +547,6 @@ class PlayerData(Stats):
 
     def org_bat(self):
         """Organize the raw batting stat csv and add additional stats"""
-        # Unnecessary data removal
-        # Remove all players if their PA is 0
-        self.df = self.df.drop(self.df[self.df.PA == 0].index)
         # Drop last column
         self.df.drop(
             self.df.columns[len(self.df.columns) - 1], axis=1, inplace=True
