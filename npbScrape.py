@@ -2639,8 +2639,8 @@ def get_stat_urls(suffix, year):
             # Hokkaido Nippon-Ham Fighters
             "https://npb.jp/bis/eng/2024/stats/idb2_f.html",
         ]
-        # Append new farm teams for 2024
-        if year == "2024":
+        # Append new farm teams for 2024 and beyond
+        if int(year) >= 2024:
             # Oisix Niigata Albirex BC
             urlArrBase.append("https://npb.jp/bis/eng/2024/stats/idb2_a.html")
             # Kufu HAYATE Ventures Shizuoka
@@ -2673,8 +2673,8 @@ def get_stat_urls(suffix, year):
             # Hokkaido Nippon-Ham Fighters
             "https://npb.jp/bis/eng/2024/stats/idp2_f.html",
         ]
-        # Append new farm teams for 2024
-        if year == "2024":
+        # Append new farm teams for 2024 and beyond
+        if int(year) >= 2024:
             # Oisix Niigata Albirex BC
             urlArrBase.append("https://npb.jp/bis/eng/2024/stats/idp2_a.html")
             # Kufu HAYATE Ventures Shizuoka
