@@ -149,7 +149,7 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,Urushihara Genta,22,8,3.0,0.3,128.7,0.3,0.0,,0.0,0.0,,,Oisix,EL
 ,<a href=https://npb.jp/bis/eng/players/63565155.html>Watanabe Haruto</a>,25,7,8.0,-1.0,-160.9,-1.1,0.1,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,WL
 ,<a href=https://npb.jp/bis/eng/players/63565155.html>Watanabe Haruto</a>,25,8,34.1,2.0,75.0,1.9,0.1,,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,WL
-,Fukuda Shuhei,32,9,5.0,-0.2,-51.5,-0.2,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,WL
+,<a href=https://npb.jp/bis/eng/players/01605136.html>Fukuda Shuhei</a>,32,9,5.0,-0.2,-51.5,-0.2,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,WL
 ,<a href=https://npb.jp/bis/eng/players/51955153.html>Kita Ryoto</a>,22,7,33.0,1.2,46.8,1.2,0.0,,0.0,-0.3,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,WL
 ,<a href=https://npb.jp/bis/eng/players/51955153.html>Kita Ryoto</a>,22,9,12.1,-1.0,-104.6,-0.9,-0.1,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,WL
 ,<a href=https://npb.jp/bis/eng/players/51955153.html>Kita Ryoto</a>,22,DH,9.0,,,,,,,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,WL
@@ -319,9 +319,9 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/91895155.html>Furuichi Takeru</a>,23,2,42.0,0.6,18.4,,0.9,,-0.3,0.6,1.2,0.3,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/81385130.html>Ohta Kengo</a>,28,7,3.0,-0.7,-300.3,-0.7,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/81385130.html>Ohta Kengo</a>,28,8,5.0,0.0,0.0,0.0,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,EL
-,<a href=https://npb.jp/bis/eng/players/93195153.html>Matsumoto Ryunosuke</a>,20,2,14.0,0.4,36.8,,0.3,,0.0,0.2,-0.9,-0.1,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,EL
-,<a href=https://npb.jp/bis/eng/players/93195153.html>Matsumoto Ryunosuke</a>,20,8,6.1,-0.7,-143.0,-0.5,-0.2,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,EL
-,<a href=https://npb.jp/bis/eng/players/93195153.html>Matsumoto Ryunosuke</a>,20,DH,2.0,,,,,,,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,EL
+,<a href=https://npb.jp/bis/eng/players/61865150.html>Matsumoto Ryunosuke</a>,20,2,14.0,0.4,36.8,,0.3,,0.0,0.2,-0.9,-0.1,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,EL
+,<a href=https://npb.jp/bis/eng/players/61865150.html>Matsumoto Ryunosuke</a>,20,8,6.1,-0.7,-143.0,-0.5,-0.2,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,EL
+,<a href=https://npb.jp/bis/eng/players/61865150.html>Matsumoto Ryunosuke</a>,20,DH,2.0,,,,,,,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/91495150.html>Tanai Manato</a>,18,5,2.0,0.0,0.0,0.0,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/91495150.html>Tanai Manato</a>,18,6,41.0,-2.2,-69.1,-2.2,,0.4,-0.3,0.3,,,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/33535150.html>Arnaez Jean</a>,22,3,18.0,0.6,42.9,0.4,,0.0,0.2,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,WL
@@ -580,8 +580,8 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,Uehara Hiroki,23,9,1.0,0.0,0.0,0.0,0.0,,0.0,0.0,,,Oisix,EL
 ,<a href=https://npb.jp/bis/eng/players/01205157.html>Nakata Ayumu</a>,21,6,1.0,0.1,128.7,0.1,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/31935153.html>Kita Ryusuke</a>,26,2,26.0,1.1,54.4,,0.8,,0.3,0.4,1.3,0.0,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,EL
-,<a href=https://npb.jp/bis/eng/players/91495138.html>Hamada Taiki</a>,19,3,17.0,-0.3,-22.7,0.2,,-0.1,-0.5,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,EL
-,<a href=https://npb.jp/bis/eng/players/91495138.html>Hamada Taiki</a>,19,6,17.0,-1.1,-83.3,-1.2,,0.0,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,EL
+,<a href=https://npb.jp/bis/eng/players/71675159.html>Hamada Taiki</a>,19,3,17.0,-0.3,-22.7,0.2,,-0.1,-0.5,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,EL
+,<a href=https://npb.jp/bis/eng/players/71675159.html>Hamada Taiki</a>,19,6,17.0,-1.1,-83.3,-1.2,,0.0,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/91695151.html>Fujita Kento</a>,23,2,28.0,1.0,46.0,,1.4,,-0.5,0.4,-0.2,-0.9,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,WL
 ,<a href=https://npb.jp/bis/eng/players/01705159.html>Kohno Hikaru</a>,21,DH,3.0,,,,,,,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/71675150.html>Nakamura Naiki</a>,18,5,25.0,1.7,87.5,1.0,,0.2,0.5,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,WL

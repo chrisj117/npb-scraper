@@ -21,6 +21,16 @@ def main():
     if not (os.path.exists(statsDir)):
         os.mkdir(statsDir)
 
+    # TODO: combine nameTranslations and rosterData * remove after merge is
+    # successful
+    # combine rosterdata and nametranslations to make ultimate file
+    rosterFile = relDir + "/input/rosterData.csv"
+    translationFile = relDir + "/input/nameTranslations.csv"
+    rosterDf = pd.read_csv(translationFile)
+    nameDf = pd.read_csv(translationFile)
+    nameDf["en_name"] = nameDf["en_name"].str.replace('"', "")
+    nameDf["en_name"] = nameDf["en_name"].str.replace(",", "")
+
     # TODO: merge and update npbPlayerUrlScraper roster scraping to update
     # rosterData.csv *
     # TODO: refactor and put raw files in their own directory *
@@ -2933,7 +2943,7 @@ def convert_team_to_html(df, mode=None):
     linkDf = pd.read_csv(teamLinkFile)
     if mode == "Full":
         # Update Link col to have <a> tags
-        linkDf["Link"] = linkDf.apply(build_html, axis=1)
+        linkDf["Link"] = linkDf.apply(build_html, args=("Team", ), axis=1)
         # Create dict of Team Name:Complete HTML tag and convert
         teamDict = dict(linkDf.values)
         df["Team"] = (
@@ -2971,7 +2981,7 @@ def convert_team_to_html(df, mode=None):
         )
         # Swap full name col with abb col to create HTML tags with abb names
         linkDf["Team"], linkDf["Temp"] = linkDf["Temp"], linkDf["Team"]
-        linkDf["Link"] = linkDf.apply(build_html, axis=1)
+        linkDf["Link"] = linkDf.apply(build_html, args=("Team", ), axis=1)
         # Swap full name col back to original spot and delete temp col
         linkDf["Temp"], linkDf["Team"] = linkDf["Team"], linkDf["Temp"]
         linkDf = linkDf.drop("Temp", axis=1)
@@ -2992,7 +3002,7 @@ def convert_team_to_html(df, mode=None):
     # Default mode links any team names it finds (assumes full team names are
     # present in the dataframe)
     elif mode == None:
-        linkDf["Link"] = linkDf.apply(build_html, axis=1)
+        linkDf["Link"] = linkDf.apply(build_html, args=("Team", ), axis=1)
         # Create dict of Team Name:Complete HTML tag and convert
         teamDict = dict(linkDf.values)
         for col in df.columns:
@@ -3327,27 +3337,35 @@ def convert_player_to_html(df, suffix, year):
     player/pitcher columns"""
     relDir = os.path.dirname(__file__)
     playerLinkFile = relDir + "/input/rosterData.csv"
-
+    # Read in csv that contains player name and their personal page link
     linkDf = pd.read_csv(playerLinkFile)
-    # Create new HTML code column
-    linkDf["Link"] = linkDf.apply(build_html, axis=1)
-    # Create dict of Player Name:Complete HTML tag
-    playerDict = dict(zip(linkDf["Player"], linkDf["Link"]))
 
-    # Replace all player entries with HTML that leads to their pages
+    # Create dict of (Name,Team):Link from roster data
+    playerDict = dict(
+        zip(
+            (zip(linkDf["Player"], linkDf["Team"])),
+            linkDf["Link"],
+        )
+    )
+    # Make keys from input df
     if suffix == "PR" or suffix == "PF":
         convertCol = "Pitcher"
     else:
         convertCol = "Player"
-    df[convertCol] = (
-        df[convertCol]
+    df["keys"] = list(zip(df[convertCol], df["Team"]))
+    df["Link"] = (
+        df["keys"]
         .map(playerDict)
         .infer_objects()
-        .fillna(df[convertCol])
         .astype(str)
     )
+    # Convert raw link column to HTML code column
+    df["Link"] = df.apply(build_html, args=(convertCol, ), axis=1)
+    # Swap HTML link col with original player name col, drop temp cols
+    df[convertCol] = df["Link"]
+    df = df.drop(["keys", "Link"], axis=1)
 
-    # Check for the player link fix file
+    # Check for the player link fix file (TODO: defunct?)
     playerLinkFixFile = relDir + "/input/playerUrlsFix.csv"
     if os.path.exists(playerLinkFixFile):
         fixDf = pd.read_csv(playerLinkFixFile)
@@ -3375,8 +3393,7 @@ def translate_players(df):
     df (pandas dataframe): The final stat dataframe with translated names"""
     relDir = os.path.dirname(__file__)
     translationFile = relDir + "/input/nameTranslations.csv"
-
-    # Read in csv that contains player name and their personal page link
+    # Read in csv that contains player and team names in JP and EN
     translateDf = pd.read_csv(translationFile)
     # Create dict of (JP name,EN team):Eng name
     playerDict = dict(
@@ -3398,12 +3415,23 @@ def translate_players(df):
     return df
 
 
-def build_html(row):
-    """Insert the link and text in a <a> tag, returns the tag as a string"""
-    if pd.isna(row["Link"]) == False:
-        htmlLine = "<a href=" "{0}" ">{1}</a>".format(row["Link"], row.iloc[0])
+def build_html(row, nameCol):
+    """Insert the link and text in a <a> tag, returns the tag
+
+    Parameters:
+    row (pandas series): A row of a dataframe
+    nameCol (str): The column name that contains the player/team names
+
+    Returns:
+    htmlLine (str): The <a> tag if there is a link, else just the team/player
+    name
+    """
+    if row["Link"] != "nan":
+        htmlLine = (
+            "<a href=" "{0}" ">{1}</a>".format(row["Link"], row[nameCol])
+        )
     else:
-        htmlLine = row.iloc[0]
+        htmlLine = row[nameCol]
     return htmlLine
 
 
