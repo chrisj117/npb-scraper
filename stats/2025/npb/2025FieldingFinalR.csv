@@ -15,8 +15,8 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/51255138.html>Nakagawa Keita</a>,29,9,11.2,-0.3,-33.0,-0.5,0.2,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/61965151.html>Kobukata Hiroto</a>,29,4,26.2,-1.4,-67.5,-1.4,,0.0,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/21925136.html>Shuto Ukyo</a>,29,8,28.0,-0.7,-32.2,-0.5,-0.2,,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
-,西川 史礁,西川 史礁,7,14.0,1.3,119.5,0.3,1.0,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
-,西川 史礁,西川 史礁,9,8.0,-0.3,-48.3,-0.3,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
+,<a href=https://npb.jp/bis/eng/players/21625150.html>Nishikawa Misho</a>,22,7,14.0,1.3,119.5,0.3,1.0,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
+,<a href=https://npb.jp/bis/eng/players/21625150.html>Nishikawa Misho</a>,22,9,8.0,-0.3,-48.3,-0.3,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/33335136.html>Wada Koshiro</a>,26,7,3.0,0.6,257.4,0.6,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/33335136.html>Wada Koshiro</a>,26,9,3.0,0.0,0.0,0.0,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/11815136.html>Masuda Shu</a>,26,3,1.0,0.2,257.4,0.1,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,CL
@@ -35,7 +35,7 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,Fukuda Shuhei,32,DH,1.0,,,,,,,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/81385138.html>Ogoh Yuya</a>,28,9,26.2,0.0,0.0,0.0,0.0,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/11215151.html>Takabe Akito</a>,27,8,20.0,1.1,70.8,1.1,0.0,,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
-,キャベッジ,キャベッジ,9,28.0,0.8,36.8,0.5,0.3,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,CL
+,<a href=https://npb.jp/bis/eng/players/73575150.html>Cabbage Trey</a>,28,9,28.0,0.8,36.8,0.5,0.3,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/51355155.html>Iwata Yukihiro</a>,27,8,17.2,-0.7,-50.9,-0.4,-0.3,,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/13115153.html>Maki Shugo</a>,27,4,27.0,1.4,66.7,1.6,,-0.1,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/93195132.html>Yamamoto Yasuhiro</a>,31,4,8.0,0.2,32.2,0.0,,0.2,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
@@ -44,14 +44,14 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/51455136.html>Nishikawa Manaya</a>,26,8,28.0,1.6,73.5,1.0,0.6,,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/41545136.html>Kiyomiya Kotaro</a>,26,5,28.0,-1.2,-55.2,-0.2,,0.1,-1.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/11815130.html>Mune Yuma</a>,29,5,19.0,0.2,13.5,0.1,,0.0,0.1,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
-,宗山 塁,宗山 塁,6,26.2,-0.4,-19.3,0.0,,0.0,-0.5,0.2,,,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,PL
+,<a href=https://npb.jp/bis/eng/players/53155150.html>Muneyama Rui</a>,22,6,26.2,-0.4,-19.3,0.0,,0.0,-0.5,0.2,,,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/41745135.html>Kondoh Kensuke</a>,31,9,19.0,0.1,6.8,0.5,-0.4,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/41745135.html>Kondoh Kensuke</a>,31,DH,9.0,,,,,,,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/41645136.html>Fujioka Yudai</a>,31,4,27.0,-1.5,-71.5,-1.2,,-0.3,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/71275157.html>Tomosugi Atsuki</a>,24,6,13.0,0.1,9.9,0.1,,-0.1,0.1,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/03105157.html>Muramatsu Kaito</a>,24,6,25.0,0.3,15.4,0.7,,0.2,-0.6,0.2,,,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/81885136.html>Yasuda Hisanori</a>,26,3,3.0,0.2,85.8,0.1,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
-,駿太,駿太,9,9.0,0.4,57.2,0.4,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
+,<a href=https://npb.jp/bis/eng/players/81785133.html>Gotoh Shunta</a>,32,9,9.0,0.4,57.2,0.4,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/21625157.html>Higuchi Seishu</a>,26,4,1.0,0.0,0.0,0.0,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/91395138.html>Ohta Ryo</a>,24,3,4.0,-1.1,-353.9,-1.1,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/91395138.html>Ohta Ryo</a>,24,4,24.0,0.3,16.1,0.2,,0.1,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
@@ -63,7 +63,7 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/71575136.html>Kamizato Kazuki</a>,31,7,2.0,0.0,0.0,0.0,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/01705138.html>Kozono Kaito</a>,25,5,27.0,-0.2,-9.5,-0.5,,0.2,0.1,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/41045153.html>Sato Teruaki</a>,26,5,26.0,-0.6,-29.7,-0.7,,-0.1,0.2,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,CL
-,ネビン,ネビン,3,28.0,1.5,68.9,1.1,,0.2,0.2,-0.3,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
+,<a href=https://npb.jp/bis/eng/players/53755150.html>Nevin Tyler</a>,28,3,28.0,1.5,68.9,1.1,,0.2,0.2,-0.3,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/73075159.html>Reyes Franmil</a>,29,DH,26.0,,,,,,,-0.3,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/91995151.html>Kurebayashi Kotaro</a>,23,6,28.0,0.5,23.0,0.0,,0.3,0.1,0.2,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/31835133.html>Yanagita Yuki</a>,36,7,9.0,-0.1,-14.3,0.0,0.0,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
@@ -85,9 +85,9 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/73375151.html>Austin Tyler</a>,33,3,17.0,-0.1,-7.6,-0.2,,0.0,0.1,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/91195151.html>Ishikawa Takaya</a>,24,5,25.0,0.4,20.6,0.2,,0.0,0.2,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/41945132.html>Shibata Tatsuhiro</a>,31,5,1.0,0.0,0.0,0.0,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,CL
-,モンテロ,モンテロ,3,25.0,0.2,10.3,0.1,,0.0,0.1,-0.3,,,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
+,<a href=https://npb.jp/bis/eng/players/53955150.html>Montero Elehuris</a>,26,3,25.0,0.2,10.3,0.1,,0.0,0.1,-0.3,,,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/43145157.html>Morishita Shota</a>,24,9,26.0,0.5,24.8,0.6,-0.1,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,CL
-,セデーニョ,セデーニョ,DH,18.0,,,,,,,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
+,<a href=https://npb.jp/bis/eng/players/13915157.html>Cedeno Leandro</a>,26,DH,18.0,,,,,,,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/31435138.html>Nomura Yuki</a>,25,3,22.0,-0.4,-23.4,-0.5,,0.0,0.1,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/31435138.html>Nomura Yuki</a>,25,7,6.0,-0.2,-42.9,-0.2,0.0,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/61965132.html>Sugimoto Yutaro</a>,34,9,16.0,-0.4,-32.2,0.2,-0.5,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
@@ -111,7 +111,7 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/81585134.html>Kyoda Yota</a>,31,3,1.0,0.0,0.0,0.0,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/31135133.html>Akiyama Shogo</a>,37,8,22.0,0.1,5.9,0.3,-0.3,,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/21325134.html>Ohyama Yusuke</a>,30,3,26.0,-0.2,-9.9,-0.3,,0.0,0.1,-0.3,,,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,CL
-,渡部 聖弥,渡部 聖弥,7,28.0,0.4,18.4,0.7,-0.4,,0.0,-0.3,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
+,<a href=https://npb.jp/bis/eng/players/83385150.html>Watanabe Seiya</a>,22,7,28.0,0.4,18.4,0.7,-0.4,,0.0,-0.3,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/51055138.html>Tamiya Yua</a>,25,2,18.0,-0.1,-7.2,,0.1,,-0.2,0.3,-0.5,0.0,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/51155118.html>Asamura Hideto</a>,34,3,21.2,0.0,0.0,0.0,,0.0,0.0,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/81885155.html>Masaki Tomoya</a>,25,7,19.0,0.8,54.2,0.8,0.0,,0.0,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
@@ -130,7 +130,7 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/51955114.html>Sakamoto Hayato</a>,36,5,18.0,0.1,7.2,-0.1,,0.0,0.2,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/51555151.html>Ebina Tatsuo</a>,27,9,27.0,-0.3,-14.3,-0.6,0.3,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/61065116.html>Nakata Sho</a>,36,3,8.0,0.0,0.0,0.0,,0.0,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
-,ファビアン,ファビアン,7,26.0,0.7,34.6,0.7,0.0,,0.0,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
+,<a href=https://npb.jp/bis/eng/players/43745150.html>Fabian Sandro</a>,27,7,26.0,0.7,34.6,0.7,0.0,,0.0,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/21825155.html>Maegawa Ukyo</a>,22,7,24.0,-1.6,-85.8,-0.9,-0.7,,0.0,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/41245130.html>Tonosaki Shuta</a>,32,5,28.0,-1.1,-50.6,-0.6,,0.0,-0.5,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/41845132.html>Murabayashi Itsuki</a>,27,5,8.0,0.5,80.4,0.4,,0.0,0.1,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,PL
@@ -148,14 +148,14 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/21125134.html>Ishii Kazunari</a>,31,4,9.0,-0.2,-28.6,-0.2,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/81085138.html>Tongu Yuma</a>,28,3,24.0,0.1,5.4,0.0,,0.0,0.1,-0.3,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/11515132.html>Ohshiro Koji</a>,32,4,4.0,-0.3,-96.5,-0.3,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
-,甲斐 拓也,甲斐 拓也,2,25.0,0.1,5.1,,0.0,,0.1,0.4,0.6,0.2,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,CL
-,茂木 栄五郎,茂木 栄五郎,5,24.2,1.2,62.5,0.7,,0.2,0.3,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,CL
+,<a href=https://npb.jp/bis/eng/players/91595133.html>Kai Takuya</a>,32,2,25.0,0.1,5.1,,0.0,,0.1,0.4,0.6,0.2,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,CL
+,<a href=https://npb.jp/bis/eng/players/61865132.html>Mogi Eigoro</a>,31,5,24.2,1.2,62.5,0.7,,0.2,0.3,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/61565135.html>Kikuchi Ryosuke</a>,35,4,27.0,-0.1,-4.8,-0.2,,0.1,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/11915132.html>Sakamoto Seishiro</a>,31,2,18.0,0.0,0.0,,0.0,,0.0,0.3,0.3,0.0,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/71775134.html>Genda Sosuke</a>,32,6,27.0,1.0,47.7,0.7,,0.1,0.3,0.2,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/01505155.html>Kamikawabata Daigo</a>,28,4,19.0,-0.8,-54.2,-1.0,,0.1,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/01505155.html>Kamikawabata Daigo</a>,28,6,9.0,-0.3,-42.9,-0.3,,0.0,0.0,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
-,オリバレス,オリバレス,DH,18.0,,,,,,,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
+,<a href=https://npb.jp/bis/eng/players/43945150.html>Olivares Edward</a>,29,DH,18.0,,,,,,,-0.2,,,<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/43245159.html>Downs Jeter</a>,26,4,18.0,0.6,42.9,0.6,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/43245159.html>Downs Jeter</a>,26,5,1.0,-0.3,-386.1,-0.3,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/93195138.html>Watanabe Riku</a>,24,2,1.0,0.0,0.0,,0.0,,0.0,0.0,0.0,0.0,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
@@ -167,14 +167,14 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/73175138.html>Watanabe Yoshiaki</a>,28,7,5.0,0.3,77.2,0.3,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/51455130.html>Nakamura Shogo</a>,33,5,13.0,0.7,69.3,0.6,,0.0,0.1,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/21325139.html>Umeno Ryutaro</a>,34,2,8.0,0.0,0.0,,0.0,,0.0,0.1,0.3,0.0,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,CL
-,吉田 賢吾,吉田 賢吾,7,5.0,0.0,0.0,0.0,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
+,<a href=https://npb.jp/bis/eng/players/13515157.html>Yoshida Kengo</a>,24,7,5.0,0.0,0.0,0.0,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/21325153.html>Imagawa Yuma</a>,28,7,2.2,-0.6,-286.0,-0.6,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/61465133.html>Makihara Taisei</a>,32,4,10.0,0.0,0.0,-0.1,,0.1,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/11515157.html>Kadowaki Makoto</a>,24,6,27.0,0.5,23.8,0.1,,0.3,0.1,0.2,,,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/51255118.html>Nakamura Yuhei</a>,35,2,12.2,-0.1,-10.1,,-0.1,,0.0,0.2,-0.8,-0.1,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/33135151.html>Mori Keito</a>,23,6,26.0,-0.8,-39.6,-0.9,,0.0,0.0,0.2,,,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/31735132.html>Kinoshita Takuya</a>,33,2,22.0,-0.1,-5.9,,-0.2,,0.1,0.3,-0.8,-0.1,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
-,石伊 雄太,石伊 雄太,2,1.0,0.0,0.0,,0.0,,0.0,0.0,-0.1,0.0,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
+,<a href=https://npb.jp/bis/eng/players/21125150.html>Ishii Yuta</a>,24,2,1.0,0.0,0.0,,0.0,,0.0,0.0,-0.1,0.0,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/31735138.html>Kinami Seiya</a>,31,6,26.0,1.0,49.5,0.9,,0.0,0.2,0.2,,,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/21125151.html>Ishihara Tomoki</a>,27,2,18.0,0.0,0.0,,0.0,,0.0,0.3,1.1,0.1,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/81785155.html>Koga Yuto</a>,25,2,24.0,0.3,16.1,,0.3,,0.1,0.3,0.1,0.0,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
@@ -184,7 +184,7 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/11015136.html>Sunagawa Richard</a>,26,5,27.0,0.2,9.5,0.1,,0.0,0.1,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/71375159.html>Ueda Kyuto</a>,23,5,15.0,-0.5,-42.9,0.1,,-0.1,-0.5,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/51855136.html>Matsumoto Naoki</a>,31,2,13.0,-0.2,-19.8,,0.0,,-0.2,0.2,0.2,-0.1,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,CL
-,浦田 俊輔,浦田 俊輔,6,1.0,0.0,0.0,0.0,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,CL
+,<a href=https://npb.jp/bis/eng/players/81385150.html>Urata Shunsuke</a>,22,6,1.0,0.0,0.0,0.0,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/41245132.html>Tobashira Yasutaka</a>,35,2,1.0,0.0,0.0,,0.0,,0.0,0.0,0.0,0.0,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/31135114.html>Aizawa Tsubasa</a>,37,2,9.0,0.0,0.0,,0.0,,0.0,0.1,-0.9,0.0,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/63965157.html>Franco Maikel</a>,32,5,8.0,0.2,32.2,0.2,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,PL
@@ -201,7 +201,7 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/11715153.html>Ogawa Ryusei</a>,27,6,15.0,0.2,17.2,0.9,,-0.2,-0.5,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/91595136.html>Kishida Yukinori</a>,28,2,3.0,0.0,0.0,,0.0,,0.0,0.0,0.0,0.0,<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/91995136.html>Shimada Kairi</a>,29,7,2.0,-0.5,-321.8,-0.5,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,CL
-,仲田 慶介,仲田 慶介,4,10.0,-0.3,-38.6,-0.4,,0.1,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
+,<a href=https://npb.jp/bis/eng/players/91495155.html>Nakata Keisuke</a>,25,4,10.0,-0.3,-38.6,-0.4,,0.1,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/81385151.html>Umino Takashi</a>,27,2,18.0,-0.1,-7.2,,-0.2,,0.0,0.3,-0.2,-0.2,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,PL
 ,<a href=https://npb.jp/bis/eng/players/01305131.html>Ohshima Yohei</a>,39,7,1.0,-0.5,-643.5,-0.5,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>,CL
 ,<a href=https://npb.jp/bis/eng/players/21325138.html>Ohmori Minoru</a>,28,8,1.0,0.0,0.0,0.0,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>,CL
