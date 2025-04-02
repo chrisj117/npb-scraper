@@ -453,7 +453,7 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/03505150.html>Consuegra Stanley</a>,24,DH,5.0,,,,,,,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,WL
 ,<a href=https://npb.jp/bis/eng/players/93195138.html>Watanabe Riku</a>,24,2,9.0,-0.1,-14.3,,-0.1,,0.0,0.1,0.0,0.0,<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>,WL
 ,<a href=https://npb.jp/bis/eng/players/93395159.html>Murata Reon</a>,23,3,99.0,-0.1,-1.3,0.0,,0.0,0.0,-1.1,,,<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>,EL
-,Ohkawa Yodai,Ohkawa Yodai,7,85.1,-2.5,-37.7,-3.3,0.6,,0.1,-0.8,,,Oisix,EL
+,Okawa Yodai,25,7,85.1,-2.5,-37.7,-3.3,0.6,,0.1,-0.8,,,Oisix,EL
 ,<a href=https://npb.jp/bis/eng/players/01105155.html>Arizono Naoki</a>,22,5,79.0,0.3,4.9,-0.2,,0.2,0.3,-0.3,,,<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/41545114.html>Kakunaka Katsuya</a>,38,7,9.0,-0.1,-14.3,-0.1,0.0,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/21325135.html>Okajima Takero</a>,35,7,15.0,0.8,68.6,0.8,0.0,,0.0,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,EL
@@ -618,8 +618,8 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/33335136.html>Wada Koshiro</a>,26,8,5.0,-0.2,-51.5,-0.2,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/33335136.html>Wada Koshiro</a>,26,9,5.0,0.0,0.0,0.0,0.0,,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/13515159.html>Waters RikaiJyumile</a>,19,6,60.1,-2.8,-59.8,-1.7,,-0.7,-0.4,0.5,,,<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>,EL
-,Chan Hyonjin,Chan Hyonjin,5,5.0,-0.8,-205.9,-0.2,,0.0,-0.7,0.0,,,HAYATE,WL
-,Chan Hyonjin,Chan Hyonjin,7,3.0,0.0,0.0,0.0,0.0,,0.0,0.0,,,HAYATE,WL
+,Jang Hyeon-Jin,21,5,5.0,-0.8,-205.9,-0.2,,0.0,-0.7,0.0,,,HAYATE,WL
+,Jang Hyeon-Jin,21,7,3.0,0.0,0.0,0.0,0.0,,0.0,0.0,,,HAYATE,WL
 ,<a href=https://npb.jp/bis/eng/players/01405150.html>Tanaka Haruto</a>,19,6,17.1,0.1,7.4,-0.2,,0.0,0.3,0.1,,,<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/11215159.html>Takamizawa Ikumi</a>,19,4,0.1,0.0,0.0,0.0,,0.0,0.0,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,EL
 ,<a href=https://npb.jp/bis/eng/players/11215159.html>Takamizawa Ikumi</a>,19,5,16.0,0.8,64.4,0.6,,0.0,0.2,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>,EL
@@ -628,4 +628,4 @@ Rank,Player,Age,Pos,Inn,TZR,TZR/143,RngR,ARM,DPR,ErrR,Pos Adj,Framing,Blocking,T
 ,<a href=https://npb.jp/bis/eng/players/13715150.html>Duplantier Jon</a>,30,DH,4.0,,,,,,,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,WL
 ,<a href=https://npb.jp/bis/eng/players/71375153.html>Itoh Masashi</a>,29,DH,4.0,,,,,,,0.0,,,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,WL
 ,<a href=https://npb.jp/bis/eng/players/71275118.html>Nishi Yuki</a>,34,DH,5.0,,,,,,,-0.1,,,<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>,WL
-,Satoh Kei,Satoh Kei,6,9.0,0.6,85.8,0.2,,0.1,0.2,0.1,,,Oisix,EL
+,Sato Kei,22,6,9.0,0.6,85.8,0.2,,0.1,0.2,0.1,,,Oisix,EL
