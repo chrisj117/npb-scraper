@@ -1,209 +1,286 @@
                   Player Age Pos   Inn   TZR TZR/143  RngR   ARM   DPR  ErrR  Pos Adj Framing Blocking                Team League
-0     Wakabayashi Gakuto  27   7  27.0  -0.1    -4.8  -0.5   0.4         0.0     -0.3                       Yomiuri Giants     CL
-1       Nishikawa Haruki  33   7   2.2  -1.4  -667.3  -1.1  -0.4         0.0      0.0                      Yakult Swallows     CL
-2       Nishikawa Haruki  33   8   8.0  -1.0  -160.9  -1.0   0.0         0.0      0.0                      Yakult Swallows     CL
-3       Nishikawa Haruki  33   9  12.0   0.8    85.8   0.2   0.6         0.0      0.0                      Yakult Swallows     CL
-4         Kajiwara Kouki  25   8  27.0  -0.7   -33.4  -1.0   0.3         0.0      0.1                        DeNA BayStars     CL
-5        Okabayashi Yuki  23   8  25.0  -0.1    -5.1   0.1  -0.3         0.0      0.1                     Chunichi Dragons     CL
-6       Futamata Shoichi  22   8   4.0   0.5   160.9   0.3   0.2         0.0      0.0                       Hiroshima Carp     CL
-7       Futamata Shoichi  22   9  23.0   0.7    39.2   0.7   0.0         0.0     -0.1                       Hiroshima Carp     CL
-8         Chikamoto Koji  30   8  26.0  -0.4   -19.8  -0.2  -0.1         0.0      0.1                       Hanshin Tigers     CL
-9        Hasegawa Shinya  23   9  28.0   0.9    41.4   0.6   0.3         0.0     -0.1                          Seibu Lions     PL
-10           Yazawa Kota  24   7  12.1   2.1   219.7   1.5   0.6         0.0     -0.1                   Nipponham Fighters     PL
-11           Yazawa Kota  24   8   7.2  -0.2   -33.4  -0.5   0.3         0.0      0.0                   Nipponham Fighters     PL
-12        Nakagawa Keita  29   8  16.1   0.7    55.3   0.7   0.0         0.0      0.1                       ORIX Buffaloes     PL
-13        Nakagawa Keita  29   9  11.2  -0.3   -33.0  -0.5   0.2         0.0      0.0                       ORIX Buffaloes     PL
-14       Kobukata Hiroto  29   4  26.2  -1.4   -67.5  -1.4         0.0   0.0      0.1                       Rakuten Eagles     PL
-15            Shuto Ukyo  29   8  28.0  -0.7   -32.2  -0.5  -0.2         0.0      0.1                       SoftBank Hawks     PL
-16       Nishikawa Misho  22   7  14.0   1.3   119.5   0.3   1.0         0.0     -0.1                        Lotte Marines     PL
-17       Nishikawa Misho  22   9   8.0  -0.3   -48.3  -0.3   0.0         0.0      0.0                        Lotte Marines     PL
-18          Wada Koshiro  26   7   3.0   0.6   257.4   0.6   0.0         0.0      0.0                        Lotte Marines     PL
-19          Wada Koshiro  26   9   3.0   0.0     0.0   0.0   0.0         0.0      0.0                        Lotte Marines     PL
-20            Masuda Shu  26   3   1.0   0.2   257.4   0.1         0.0   0.0      0.0                      Yakult Swallows     CL
-21        Mannami Chusei  25   9  28.0   0.1     4.6   0.3  -0.2         0.0     -0.1                   Nipponham Fighters     PL
-22            Oka Hiromi  33   7   3.0   0.0     0.0   0.0   0.0         0.0      0.0                        Lotte Marines     PL
-23            Oka Hiromi  33   8   8.0  -0.3   -48.3  -0.3   0.0         0.0      0.0                        Lotte Marines     PL
-24            Oka Hiromi  33   9   2.0   0.0     0.0   0.0   0.0         0.0      0.0                        Lotte Marines     PL
-25     Akahane Yoshihiro  25   4  23.2  -1.1   -59.7  -1.2         0.1   0.0      0.1                      Yakult Swallows     CL
-26     Akahane Yoshihiro  25   9   2.0   0.0     0.0   0.0   0.0         0.0      0.0                      Yakult Swallows     CL
-27           Okoye Louis  27   7   1.0   0.0     0.0   0.0   0.0         0.0      0.0                       Yomiuri Giants     CL
-28           Okoye Louis  27   8   2.0  -0.3  -193.0  -0.3   0.0         0.0      0.0                       Yomiuri Giants     CL
-29          Matsumoto Go  31   7   2.0   0.0     0.0   0.0   0.0         0.0      0.0                   Nipponham Fighters     PL
-30          Matsumoto Go  31   8   9.0   0.9   128.7   0.9   0.0         0.0      0.0                   Nipponham Fighters     PL
-31         Fukuda Shuhei  32   7   1.1   0.0     0.0   0.0   0.0         0.0      0.0                       ORIX Buffaloes     PL
-32         Fukuda Shuhei  32   8   7.2  -0.2   -33.4  -0.2   0.0         0.0      0.0                       ORIX Buffaloes     PL
-33         Fukuda Shuhei  32  DH   1.0                                            0.0                       ORIX Buffaloes     PL
-34             Ogoh Yuya  28   9  26.2   0.0     0.0   0.0   0.0         0.0     -0.1                       Rakuten Eagles     PL
-35          Takabe Akito  27   8  20.0   1.1    70.8   1.1   0.0         0.0      0.1                        Lotte Marines     PL
-36          Cabbage Trey  28   9  28.0   0.8    36.8   0.5   0.3         0.0     -0.1                       Yomiuri Giants     CL
-37        Iwata Yukihiro  27   8  17.2  -0.7   -50.9  -0.4  -0.3         0.0      0.1                      Yakult Swallows     CL
-38            Maki Shugo  27   4  27.0   1.4    66.7   1.6        -0.1   0.0      0.1                        DeNA BayStars     CL
-39     Yamamoto Yasuhiro  31   4   8.0   0.2    32.2   0.0         0.2   0.0      0.0                     Chunichi Dragons     CL
-40           Yano Masaya  26   6  27.0   0.3    14.3   0.2        -0.2   0.3      0.2                       Hiroshima Carp     CL
-41         Nakano Takumu  29   4  26.0   0.3    14.8   0.6        -0.3   0.0      0.1                       Hanshin Tigers     CL
-42      Nishikawa Manaya  26   8  28.0   1.6    73.5   1.0   0.6         0.0      0.1                          Seibu Lions     PL
-43       Kiyomiya Kotaro  26   5  28.0  -1.2   -55.2  -0.2         0.1  -1.0     -0.1                   Nipponham Fighters     PL
-44             Mune Yuma  29   5  19.0   0.2    13.5   0.1         0.0   0.1     -0.1                       ORIX Buffaloes     PL
-45          Muneyama Rui  22   6  26.2  -0.4   -19.3   0.0         0.0  -0.5      0.2                       Rakuten Eagles     PL
-46        Kondoh Kensuke  31   9  19.0   0.1     6.8   0.5  -0.4         0.0     -0.1                       SoftBank Hawks     PL
-47        Kondoh Kensuke  31  DH   9.0                                           -0.1                       SoftBank Hawks     PL
-48         Fujioka Yudai  31   4  27.0  -1.5   -71.5  -1.2        -0.3   0.0      0.1                        Lotte Marines     PL
-49       Tomosugi Atsuki  24   6  13.0   0.1     9.9   0.1        -0.1   0.1      0.1                        Lotte Marines     PL
-50       Muramatsu Kaito  24   6  25.0   0.3    15.4   0.7         0.2  -0.6      0.2                     Chunichi Dragons     CL
-51       Yasuda Hisanori  26   3   3.0   0.2    85.8   0.1         0.0   0.0      0.0                        Lotte Marines     PL
-52          Gotoh Shunta  32   9   9.0   0.4    57.2   0.4   0.0         0.0      0.0                     Chunichi Dragons     CL
-53        Higuchi Seishu  26   4   1.0   0.0     0.0   0.0         0.0   0.0      0.0                     Chunichi Dragons     CL
-54              Ohta Ryo  24   3   4.0  -1.1  -353.9  -1.1         0.0   0.0      0.0                       ORIX Buffaloes     PL
-55              Ohta Ryo  24   4  24.0   0.3    16.1   0.2         0.1   0.0      0.1                       ORIX Buffaloes     PL
-56       Yoshikawa Naoki  30   4  28.0   1.6    73.5   1.4         0.2   0.0      0.1                       Yomiuri Giants     CL
-57        Nagaoka Hideki  23   6  25.2  -1.1   -55.1  -1.2        -0.1   0.2      0.2                      Yakult Swallows     CL
-58   Tsutsugoh Yoshitomo  33   7  25.0   0.5    25.7   0.4   0.1         0.0     -0.2                        DeNA BayStars     CL
-59       Calixte Orlando  33   3  17.0  -0.3   -22.7  -0.3         0.0   0.1     -0.2                     Chunichi Dragons     CL
-60       Calixte Orlando  33   7   8.0  -1.0  -160.9  -1.0   0.0         0.0     -0.1                     Chunichi Dragons     CL
-61       Kamizato Kazuki  31   7   2.0   0.0     0.0   0.0   0.0         0.0      0.0                        DeNA BayStars     CL
-62          Kozono Kaito  25   5  27.0  -0.2    -9.5  -0.5         0.2   0.1     -0.1                       Hiroshima Carp     CL
-63          Sato Teruaki  26   5  26.0  -0.6   -29.7  -0.7        -0.1   0.2     -0.1                       Hanshin Tigers     CL
-64           Nevin Tyler  28   3  28.0   1.5    68.9   1.1         0.2   0.2     -0.3                          Seibu Lions     PL
-65         Reyes Franmil  29  DH  26.0                                           -0.3                   Nipponham Fighters     PL
-66    Kurebayashi Kotaro  23   6  28.0   0.5    23.0   0.0         0.3   0.1      0.2                       ORIX Buffaloes     PL
-67         Yanagita Yuki  36   7   9.0  -0.1   -14.3   0.0   0.0         0.0     -0.1                       SoftBank Hawks     PL
-68         Yanagita Yuki  36  DH  19.0                                           -0.2                       SoftBank Hawks     PL
-69        Fujiwara Kyota  25   9  15.0  -1.5  -128.7  -1.1  -0.3         0.0     -0.1                        Lotte Marines     PL
-70       Uebayashi Seiji  29   7  16.0   1.5   120.7   1.5   0.0         0.0     -0.2                     Chunichi Dragons     CL
-71       Uebayashi Seiji  29   9   1.0   0.0     0.0   0.0   0.0         0.0      0.0                     Chunichi Dragons     CL
-72       Santana Domingo  32   7  21.0  -3.1  -190.0  -3.0  -0.1         0.0     -0.2                      Yakult Swallows     CL
-73            Sano Keita  30   3   9.0   0.2    28.6   0.1         0.0   0.0     -0.1                        DeNA BayStars     CL
-74          Narama Taiki  25  DH   2.0                                            0.0                   Nipponham Fighters     PL
-75       Nishikawa Ryoma  30   7  26.2   0.8    38.6   0.8   0.0         0.0     -0.3                       ORIX Buffaloes     PL
-76         Suzuki Daichi  35   3   1.0   0.0     0.0   0.0         0.0   0.0      0.0                       Rakuten Eagles     PL
-77         Suzuki Daichi  35   5   8.0  -0.1   -16.1  -0.3         0.0   0.1      0.0                       Rakuten Eagles     PL
-78        Hirooka Taishi  28   8   4.0  -1.2  -386.1  -1.3   0.1         0.0      0.0                       ORIX Buffaloes     PL
-79        Hirooka Taishi  28   9   0.1   0.0     0.0   0.0   0.0         0.0      0.0                       ORIX Buffaloes     PL
-80           Itoh Yukiya  28   5   1.0   0.0     0.0   0.0         0.0   0.0      0.0                       Rakuten Eagles     PL
-81           Itoh Yukiya  28  DH   8.2                                           -0.1                       Rakuten Eagles     PL
-82        Okamoto Kazuma  29   3  26.0  -0.2    -9.9   0.4         0.0  -0.6     -0.3                       Yomiuri Giants     CL
-83          Austin Tyler  33   3  17.0  -0.1    -7.6  -0.2         0.0   0.1     -0.2                        DeNA BayStars     CL
-84       Ishikawa Takaya  24   5  25.0   0.4    20.6   0.2         0.0   0.2     -0.1                     Chunichi Dragons     CL
-85     Shibata Tatsuhiro  31   5   1.0   0.0     0.0   0.0         0.0   0.0      0.0                        DeNA BayStars     CL
-86      Montero Elehuris  26   3  25.0   0.2    10.3   0.1         0.0   0.1     -0.3                       Hiroshima Carp     CL
-87       Morishita Shota  24   9  26.0   0.5    24.8   0.6  -0.1         0.0     -0.1                       Hanshin Tigers     CL
-88        Cedeno Leandro  26  DH  18.0                                           -0.2                          Seibu Lions     PL
-89           Nomura Yuki  25   3  22.0  -0.4   -23.4  -0.5         0.0   0.1     -0.2                   Nipponham Fighters     PL
-90           Nomura Yuki  25   7   6.0  -0.2   -42.9  -0.2   0.0         0.0     -0.1                   Nipponham Fighters     PL
-91       Sugimoto Yutaro  34   9  16.0  -0.4   -32.2   0.2  -0.5         0.0     -0.1                       ORIX Buffaloes     PL
-92       Sugimoto Yutaro  34  DH   9.0                                           -0.1                       ORIX Buffaloes     PL
-93       Tatsumi Ryosuke  28   8  26.2   0.5    24.1   0.4   0.1         0.0      0.1                       Rakuten Eagles     PL
-94       Yamakawa Hotaka  33   3  28.0   1.3    59.8   1.1        -0.1   0.3     -0.3                       SoftBank Hawks     PL
-95       Polanco Gregory  33   7   8.0   0.5    80.4   0.9  -0.4         0.0     -0.1                        Lotte Marines     PL
-96       Polanco Gregory  33  DH  18.0                                           -0.2                        Lotte Marines     PL
-97        Takeoka Ryusei  24   4   2.0   0.3   193.0   0.3         0.0   0.0      0.0                      Yakult Swallows     CL
-98       Nakamura Takeya  41  DH   8.0                                           -0.1                          Seibu Lions     PL
-99         Motoyama Hiyu  26   4   8.0   0.2    32.2   0.2         0.0   0.0      0.0                          Seibu Lions     PL
-100        Motoyama Hiyu  26   6   1.0   0.0     0.0   0.0         0.0   0.0      0.0                          Seibu Lions     PL
-101        Motoyama Hiyu  26  DH   2.0                                            0.0                          Seibu Lions     PL
-102         Soto Neftali  36   3  16.0  -0.5   -40.2  -0.5         0.0   0.1     -0.2                        Lotte Marines     PL
-103         Soto Neftali  36  DH  10.0                                           -0.1                        Lotte Marines     PL
-104           Osuna Jose  32   3  24.2  -0.5   -26.1   0.1         0.0  -0.6     -0.3                      Yakult Swallows     CL
-105     Dohbayashi Shota  33   3   2.0   0.0     0.0   0.0         0.0   0.0      0.0                       Hiroshima Carp     CL
-106      Hernandez Elier  30   8  26.0  -0.4   -19.8  -0.2  -0.3         0.0      0.1                       Yomiuri Giants     CL
-107     Miyazaki Toshiro  36   5  26.0   0.5    24.8   0.3        -0.1   0.3     -0.1                        DeNA BayStars     CL
-108       Hosokawa Seiya  26   9  15.0  -0.1    -8.6   0.3  -0.4         0.0     -0.1                     Chunichi Dragons     CL
-109           Kyoda Yota  31   3   1.0   0.0     0.0   0.0         0.0   0.0      0.0                        DeNA BayStars     CL
-110        Akiyama Shogo  37   8  22.0   0.1     5.9   0.3  -0.3         0.0      0.1                       Hiroshima Carp     CL
-111        Ohyama Yusuke  30   3  26.0  -0.2    -9.9  -0.3         0.0   0.1     -0.3                       Hanshin Tigers     CL
-112       Watanabe Seiya  22   7  28.0   0.4    18.4   0.7  -0.4         0.0     -0.3                          Seibu Lions     PL
-113           Tamiya Yua  25   2  18.0  -0.1    -7.2         0.1        -0.2      0.3    -0.5      0.0  Nipponham Fighters     PL
-114       Asamura Hideto  34   3  21.2   0.0     0.0   0.0         0.0   0.0     -0.2                       Rakuten Eagles     PL
-115        Masaki Tomoya  25   7  19.0   0.8    54.2   0.8   0.0         0.0     -0.2                       SoftBank Hawks     PL
-116        Masaki Tomoya  25   9   9.0   0.6    85.8   0.4   0.1         0.0      0.0                       SoftBank Hawks     PL
-117        Satoh Toshiya  27   2  19.0  -0.3   -20.3        -0.3         0.0      0.3     0.6      0.0       Lotte Marines     PL
-118        Satoh Toshiya  27   3   9.0  -0.5   -71.5  -0.5         0.0   0.0     -0.1                        Lotte Marines     PL
-119         Katoh Takuma  33   2   2.0   0.0     0.0         0.0         0.0      0.0    -0.2      0.0    Chunichi Dragons     CL
-120           Gunji Yuya  27   2   9.0  -0.1   -14.3        -0.2         0.0      0.1     0.3      0.0  Nipponham Fighters     PL
-121        Fushimi Torai  35   2   1.0   0.0     0.0         0.0         0.0      0.0     0.1      0.0  Nipponham Fighters     PL
-122          Abe Toshiki  35   5   1.0   0.0     0.0   0.0         0.0   0.0      0.0                       Rakuten Eagles     PL
-123          Abe Toshiki  35   7   8.0  -0.8  -128.7  -0.3  -0.4         0.0     -0.1                       Rakuten Eagles     PL
-124          Abe Toshiki  35  DH  10.0                                           -0.1                       Rakuten Eagles     PL
-125       Itayama Yutaro  31   4  16.0   0.2    16.1   0.3        -0.1   0.0      0.0                     Chunichi Dragons     CL
-126      Tamura Shunsuke  21   7   1.0   0.0     0.0   0.0   0.0         0.0      0.0                       Hiroshima Carp     CL
-127      Tamura Shunsuke  21   9   4.0  -0.4  -128.7  -0.3  -0.1         0.0      0.0                       Hiroshima Carp     CL
-128      Sakamoto Hayato  36   5  18.0   0.1     7.2  -0.1         0.0   0.2     -0.1                       Yomiuri Giants     CL
-129         Ebina Tatsuo  27   9  27.0  -0.3   -14.3  -0.6   0.3         0.0     -0.1                        DeNA BayStars     CL
-130           Nakata Sho  36   3   8.0   0.0     0.0   0.0         0.0   0.0     -0.1                     Chunichi Dragons     CL
-131        Fabian Sandro  27   7  26.0   0.7    34.6   0.7   0.0         0.0     -0.2                       Hiroshima Carp     CL
-132         Maegawa Ukyo  22   7  24.0  -1.6   -85.8  -0.9  -0.7         0.0     -0.2                       Hanshin Tigers     CL
-133       Tonosaki Shuta  32   5  28.0  -1.1   -50.6  -0.6         0.0  -0.5     -0.1                          Seibu Lions     PL
-134   Murabayashi Itsuki  27   5   8.0   0.5    80.4   0.4         0.0   0.1      0.0                       Rakuten Eagles     PL
-135         Mutoh Atsuki  24   7   4.2   0.7   191.7   0.3   0.4         0.0      0.0                       Rakuten Eagles     PL
-136        Imamiya Kenta  33   6  27.0  -0.7   -33.4  -0.6        -0.2   0.2      0.2                       SoftBank Hawks     PL
-137        Kawase Hikaru  27   6   1.0   0.0     0.0   0.0         0.0   0.0      0.0                       SoftBank Hawks     PL
-138       Nakayama Raito  23   3   2.0   0.0     0.0   0.0         0.0   0.0      0.0                       Yomiuri Giants     CL
-139       Nakayama Raito  23   5   7.0   0.5    91.9   0.4         0.0   0.1      0.0                       Yomiuri Giants     CL
-140       Martinez Ariel  29   3   6.0   0.3    64.4   0.3         0.0   0.1     -0.1                   Nipponham Fighters     PL
-141        Isobata Ryota  26   8  11.1   0.9   102.5   0.9   0.0         0.0      0.0                   Nipponham Fighters     PL
-142         Hamada Taiki  24   7   2.0   0.0     0.0   0.0   0.0         0.0      0.0                      Yakult Swallows     CL
-143         Hamada Taiki  24   9   9.0  -1.5  -214.5  -1.5   0.0         0.0      0.0                      Yakult Swallows     CL
-144         Matsuo Shion  20   2   8.0   0.0     0.0         0.0         0.0      0.1    -0.2      0.0       DeNA BayStars     CL
-145      Yamamoto Yuudai  26   2  18.0   0.3    21.4         0.3         0.0      0.3    -0.2      0.0       DeNA BayStars     CL
-146       Ishii Kazunari  31   4   9.0  -0.2   -28.6  -0.2         0.0   0.0      0.0                   Nipponham Fighters     PL
-147           Tongu Yuma  28   3  24.0   0.1     5.4   0.0         0.0   0.1     -0.3                       ORIX Buffaloes     PL
-148         Ohshiro Koji  32   4   4.0  -0.3   -96.5  -0.3         0.0   0.0      0.0                       ORIX Buffaloes     PL
-149           Kai Takuya  32   2  25.0   0.1     5.1         0.0         0.1      0.4     0.6      0.2      Yomiuri Giants     CL
-150          Mogi Eigoro  31   5  24.2   1.2    62.5   0.7         0.2   0.3     -0.1                      Yakult Swallows     CL
-151      Kikuchi Ryosuke  35   4  27.0  -0.1    -4.8  -0.2         0.1   0.0      0.1                       Hiroshima Carp     CL
-152    Sakamoto Seishiro  31   2  18.0   0.0     0.0         0.0         0.0      0.3     0.3      0.0      Hanshin Tigers     CL
-153         Genda Sosuke  32   6  27.0   1.0    47.7   0.7         0.1   0.3      0.2                          Seibu Lions     PL
-154   Kamikawabata Daigo  28   4  19.0  -0.8   -54.2  -1.0         0.1   0.0      0.1                   Nipponham Fighters     PL
-155   Kamikawabata Daigo  28   6   9.0  -0.3   -42.9  -0.3         0.0   0.0      0.1                   Nipponham Fighters     PL
-156      Olivares Edward  29  DH  18.0                                           -0.2                       ORIX Buffaloes     PL
-157          Downs Jeter  26   4  18.0   0.6    42.9   0.6         0.0   0.0      0.0                       SoftBank Hawks     PL
-158          Downs Jeter  26   5   1.0  -0.3  -386.1  -0.3         0.0   0.0      0.0                       SoftBank Hawks     PL
-159        Watanabe Riku  24   2   1.0   0.0     0.0         0.0         0.0      0.0     0.0      0.0      SoftBank Hawks     PL
-160            Yuasa Dai  25   5   3.0   0.5   214.5   0.4         0.0   0.1      0.0                       Yomiuri Giants     CL
-161            Itoh Ryui  22   5   1.0   0.0     0.0   0.0         0.0   0.0      0.0                      Yakult Swallows     CL
-162       Hayashi Takuma  24   6   1.0  -0.1  -128.7   0.0        -0.1   0.0      0.0                        DeNA BayStars     CL
-163    Watanabe Yoshiaki  28   3   4.0   0.0     0.0   0.0         0.0   0.0      0.0                       Rakuten Eagles     PL
-164    Watanabe Yoshiaki  28   5   0.2  -0.5  -919.3  -0.5         0.0   0.0      0.0                       Rakuten Eagles     PL
-165    Watanabe Yoshiaki  28   7   5.0   0.3    77.2   0.3   0.0         0.0      0.0                       Rakuten Eagles     PL
-166       Nakamura Shogo  33   5  13.0   0.7    69.3   0.6         0.0   0.1      0.0                        Lotte Marines     PL
-167        Umeno Ryutaro  34   2   8.0   0.0     0.0         0.0         0.0      0.1     0.3      0.0      Hanshin Tigers     CL
-168        Yoshida Kengo  24   7   5.0   0.0     0.0   0.0   0.0         0.0      0.0                   Nipponham Fighters     PL
-169         Imagawa Yuma  28   7   2.2  -0.6  -286.0  -0.6   0.0         0.0      0.0                   Nipponham Fighters     PL
-170      Makihara Taisei  32   4  10.0   0.0     0.0  -0.1         0.1   0.0      0.0                       SoftBank Hawks     PL
-171      Kadowaki Makoto  24   6  27.0   0.5    23.8   0.1         0.3   0.1      0.2                       Yomiuri Giants     CL
-172       Nakamura Yuhei  35   2  12.2  -0.1   -10.1        -0.1         0.0      0.2    -0.8     -0.1     Yakult Swallows     CL
-173           Mori Keito  23   6  26.0  -0.8   -39.6  -0.9         0.0   0.0      0.2                        DeNA BayStars     CL
-174     Kinoshita Takuya  33   2  22.0  -0.1    -5.9        -0.2         0.1      0.3    -0.8     -0.1    Chunichi Dragons     CL
-175           Ishii Yuta  24   2   1.0   0.0     0.0         0.0         0.0      0.0    -0.1      0.0    Chunichi Dragons     CL
-176         Kinami Seiya  31   6  26.0   1.0    49.5   0.9         0.0   0.2      0.2                       Hanshin Tigers     CL
-177      Ishihara Tomoki  27   2  18.0   0.0     0.0         0.0         0.0      0.3     1.1      0.1      Hiroshima Carp     CL
-178            Koga Yuto  25   2  24.0   0.3    16.1         0.3         0.1      0.3     0.1      0.0         Seibu Lions     PL
-179       Mizuno Tatsuki  24   6  19.0  -0.6   -40.6  -0.6         0.0   0.1      0.2                   Nipponham Fighters     PL
-180          Ohta Hikaru  28   2  25.0   0.3    15.4         0.3         0.1      0.4    -0.1      0.0      Rakuten Eagles     PL
-181    Ishihara Tsuyoshi  26   2   1.2   0.0     0.0         0.0         0.0      0.0     0.1      0.0      Rakuten Eagles     PL
-182     Sunagawa Richard  26   5  27.0   0.2     9.5   0.1         0.0   0.1     -0.1                       SoftBank Hawks     PL
-183           Ueda Kyuto  23   5  15.0  -0.5   -42.9   0.1        -0.1  -0.5     -0.1                        Lotte Marines     PL
-184      Matsumoto Naoki  31   2  13.0  -0.2   -19.8         0.0        -0.2      0.2     0.2     -0.1     Yakult Swallows     CL
-185       Urata Shunsuke  22   6   1.0   0.0     0.0   0.0         0.0   0.0      0.0                       Yomiuri Giants     CL
-186   Tobashira Yasutaka  35   2   1.0   0.0     0.0         0.0         0.0      0.0     0.0      0.0       DeNA BayStars     CL
-187       Aizawa Tsubasa  37   2   9.0   0.0     0.0         0.0         0.0      0.1    -0.9      0.0      Hiroshima Carp     CL
-188        Franco Maikel  32   5   8.0   0.2    32.2   0.2         0.0   0.0      0.0                       Rakuten Eagles     PL
-189        Franco Maikel  32  DH   8.0                                           -0.1                       Rakuten Eagles     PL
-190        Tanaka Kazuki  30   7   9.0   0.1    14.3   0.1   0.0         0.0     -0.1                       Rakuten Eagles     PL
-191     Tamura Tatsuhiro  31   2   9.0   0.3    42.9         0.2         0.0      0.1     0.0      0.0       Lotte Marines     PL
-192         Makino Shoya  24   2   4.0  -0.3   -96.5         0.0        -0.3      0.1    -0.1      0.0         Seibu Lions     PL
-193     Nishino Masahiro  34   5   9.0  -0.4   -57.2  -0.4        -0.1   0.0      0.0                       ORIX Buffaloes     PL
-194     Tanigawara Kenta  28   2   9.0  -0.3   -42.9        -0.3         0.0      0.1    -0.3      0.0      SoftBank Hawks     PL
-195      Maruyama Kazuya  25   9   2.2  -0.1   -47.7  -0.3   0.2         0.0      0.0                      Yakult Swallows     CL
-196      Takizawa Natsuo  21   4   8.0   0.7   112.6   0.7         0.0   0.0      0.0                          Seibu Lions     PL
-197      Wakatsuki Kenya  29   2  22.0   0.1     5.9         0.1         0.1      0.3     0.7      0.1      ORIX Buffaloes     PL
-198         Ogawa Ryusei  27   4   1.0   0.0     0.0   0.0         0.0   0.0      0.0                        Lotte Marines     PL
-199         Ogawa Ryusei  27   6  15.0   0.2    17.2   0.9        -0.2  -0.5      0.1                        Lotte Marines     PL
-200     Kishida Yukinori  28   2   3.0   0.0     0.0         0.0         0.0      0.0     0.0      0.0      Yomiuri Giants     CL
-201        Shimada Kairi  29   7   2.0  -0.5  -321.8  -0.5   0.0         0.0      0.0                       Hanshin Tigers     CL
-202       Nakata Keisuke  25   4  10.0  -0.3   -38.6  -0.4         0.1   0.0      0.0                          Seibu Lions     PL
-203        Umino Takashi  27   2  18.0  -0.1    -7.2        -0.2         0.0      0.3    -0.2     -0.2      SoftBank Hawks     PL
-204        Ohshima Yohei  39   7   1.0  -0.5  -643.5  -0.5   0.0         0.0      0.0                     Chunichi Dragons     CL
-205        Ohmori Minoru  28   8   1.0   0.0     0.0   0.0   0.0         0.0      0.0                       Hiroshima Carp     CL
-206         Nomura Daiju  24   4   2.0  -0.1   -64.4   0.0        -0.1   0.0      0.0                          Seibu Lions     PL
-207         Fukunaga Sho  25   2   6.0   0.0     0.0         0.0         0.0      0.1    -0.1      0.0      ORIX Buffaloes     PL
+0     Wakabayashi Gakuto  27   7  56.0   0.2     4.6  -0.2   0.4         0.0     -0.5                       Yomiuri Giants     CL
+1       Nishikawa Haruki  33   7   3.2  -1.5  -521.8  -1.1  -0.4         0.0      0.0                      Yakult Swallows     CL
+2       Nishikawa Haruki  33   8  28.0  -0.1    -4.6  -0.1   0.0         0.0      0.1                      Yakult Swallows     CL
+3       Nishikawa Haruki  33   9  12.0   0.6    64.4   0.1   0.5         0.0      0.0                      Yakult Swallows     CL
+4         Kajiwara Kouki  25   8  83.0  -0.5    -7.8  -0.5   0.0         0.0      0.3                        DeNA BayStars     CL
+5        Okabayashi Yuki  23   8  81.0  -1.3   -20.7   0.1  -1.4         0.0      0.3                     Chunichi Dragons     CL
+6       Futamata Shoichi  22   5  10.0   0.3    38.6   0.6         0.2  -0.5      0.0                       Hiroshima Carp     CL
+7       Futamata Shoichi  22   8  29.0   2.2    97.6   0.9   1.3         0.0      0.1                       Hiroshima Carp     CL
+8       Futamata Shoichi  22   9  26.0   0.2     9.9   0.3  -0.1         0.0     -0.1                       Hiroshima Carp     CL
+9         Chikamoto Koji  30   8  83.0  -3.2   -49.6  -2.6  -0.6         0.0      0.3                       Hanshin Tigers     CL
+10       Hasegawa Shinya  23   9  61.0   0.0     0.0  -1.2   1.2         0.0     -0.2                          Seibu Lions     PL
+11           Yazawa Kota  24   7  14.1   2.2   198.0   1.5   0.7         0.0     -0.1                   Nipponham Fighters     PL
+12           Yazawa Kota  24   8  16.2  -0.1    -7.7  -1.0   0.9         0.0      0.1                   Nipponham Fighters     PL
+13        Nakagawa Keita  29   8  22.1  -0.6   -34.6  -0.6   0.0         0.0      0.1                       ORIX Buffaloes     PL
+14        Nakagawa Keita  29   9  41.2   0.2     6.2   0.1   0.1         0.0     -0.2                       ORIX Buffaloes     PL
+15       Kobukata Hiroto  29   4  47.2  -0.9   -24.3  -1.1         0.1   0.1      0.1                       Rakuten Eagles     PL
+16            Shuto Ukyo  29   8  70.0  -1.1   -20.2  -1.2   0.1         0.0      0.2                       SoftBank Hawks     PL
+17       Nishikawa Misho  22   7  50.0   2.0    51.5   1.0   1.1         0.0     -0.5                        Lotte Marines     PL
+18       Nishikawa Misho  22   9   8.0  -0.3   -48.3  -0.3   0.0         0.0      0.0                        Lotte Marines     PL
+19          Wada Koshiro  26   7   3.0   0.6   257.4   0.6   0.0         0.0      0.0                        Lotte Marines     PL
+20          Wada Koshiro  26   9   4.0   0.0     0.0   0.0   0.0         0.0      0.0                        Lotte Marines     PL
+21            Masuda Shu  26   3   1.0   0.2   257.4   0.2         0.0   0.0      0.0                      Yakult Swallows     CL
+22            Masuda Shu  26   9   2.0   0.0     0.0   0.0   0.0         0.0      0.0                      Yakult Swallows     CL
+23        Mannami Chusei  25   9  73.0   0.4     7.1   0.2   0.2         0.0     -0.3                   Nipponham Fighters     PL
+24            Oka Hiromi  33   7   4.0   0.0     0.0   0.0   0.0         0.0      0.0                        Lotte Marines     PL
+25            Oka Hiromi  33   8   8.0  -0.4   -64.4  -0.4   0.0         0.0      0.0                        Lotte Marines     PL
+26            Oka Hiromi  33   9  39.0  -0.4   -13.2  -0.2  -0.2         0.0     -0.2                        Lotte Marines     PL
+27     Akahane Yoshihiro  25   4  36.2  -1.3   -45.6  -1.5         0.1   0.1      0.1                      Yakult Swallows     CL
+28     Akahane Yoshihiro  25   5  11.0   0.7    81.9   0.5         0.0   0.1      0.0                      Yakult Swallows     CL
+29     Akahane Yoshihiro  25   8  25.0   1.7    87.5   1.8  -0.1         0.0      0.1                      Yakult Swallows     CL
+30     Akahane Yoshihiro  25   9   2.0   0.0     0.0   0.0   0.0         0.0      0.0                      Yakult Swallows     CL
+31           Okoye Louis  27   7   2.0   0.0     0.0   0.0   0.0         0.0      0.0                       Yomiuri Giants     CL
+32           Okoye Louis  27   8   8.0  -0.4   -64.4  -0.4   0.0         0.0      0.0                       Yomiuri Giants     CL
+33          Matsumoto Go  31   7   2.0   0.0     0.0   0.0   0.0         0.0      0.0                   Nipponham Fighters     PL
+34          Matsumoto Go  31   8  18.0   0.8    57.2   0.9  -0.2         0.0      0.1                   Nipponham Fighters     PL
+35         Fukuda Shuhei  32   7   7.1   0.1    17.6   0.1   0.0         0.0     -0.1                       ORIX Buffaloes     PL
+36         Fukuda Shuhei  32   8  28.2   1.4    62.8   0.4   1.0         0.0      0.1                       ORIX Buffaloes     PL
+37         Fukuda Shuhei  32  DH   1.0                                            0.0                       ORIX Buffaloes     PL
+38             Ogoh Yuya  28   9  57.2   1.5    33.5   1.8  -0.2         0.0     -0.2                       Rakuten Eagles     PL
+39          Takabe Akito  27   8  65.0   1.3    25.7   1.1   0.2         0.0      0.2                        Lotte Marines     PL
+40         Ohmori Minoru  28   8   9.1  -0.6   -83.0  -0.6   0.0         0.0      0.0                       Hiroshima Carp     CL
+41        Nakayama Raito  23   3   2.0   0.0     0.0   0.0         0.0   0.0      0.0                       Yomiuri Giants     CL
+42        Nakayama Raito  23   5  36.0   0.4    14.3  -0.1         0.2   0.3     -0.1                       Yomiuri Giants     CL
+43       Sakamoto Hayato  36   5  42.0   0.7    21.4   0.3         0.0   0.4     -0.2                       Yomiuri Giants     CL
+44         Yoshida Kengo  24   3   5.0   0.0     0.0   0.0         0.0   0.0     -0.1                   Nipponham Fighters     PL
+45         Yoshida Kengo  24   7  34.0  -2.4   -90.8  -2.2  -0.2         0.0     -0.3                   Nipponham Fighters     PL
+46         Fushimi Torai  35   2  20.0   0.3    19.3         0.3         0.0      0.3    -0.1      0.1  Nipponham Fighters     PL
+47          Muneyama Rui  22   6  59.2   0.3     6.5   0.8        -0.1  -0.5      0.5                       Rakuten Eagles     PL
+48            Tamiya Yua  25   2  36.0   0.2     7.2         0.4        -0.2      0.5    -1.4      0.0  Nipponham Fighters     PL
+49         Kawamura Yuto  25   8   2.0   0.0     0.0   0.0   0.0         0.0      0.0                       SoftBank Hawks     PL
+50         Kawamura Yuto  25   9   1.0   0.0     0.0   0.0   0.0         0.0      0.0                       SoftBank Hawks     PL
+51          Hagio Masaya  24   7  17.0   1.8   136.3   1.8   0.0         0.0     -0.2                       Yomiuri Giants     CL
+52        Noma Takayoshi  32   8  13.0  -0.4   -39.6  -0.4   0.0         0.0      0.0                       Hiroshima Carp     CL
+53        Noma Takayoshi  32   9   5.0  -0.1   -25.7  -0.1   0.0         0.0      0.0                       Hiroshima Carp     CL
+54            Gunji Yuya  27   2  17.0  -0.1    -7.6        -0.1         0.0      0.2    -0.1     -0.2  Nipponham Fighters     PL
+55            Gunji Yuya  27   3  18.0  -0.9   -64.4  -1.0         0.0   0.1     -0.2                   Nipponham Fighters     PL
+56             Mune Yuma  29   5  46.0   1.6    44.8   1.1         0.0   0.5     -0.2                       ORIX Buffaloes     PL
+57    Murabayashi Itsuki  27   4  14.0  -0.1    -9.2   0.0        -0.1   0.0      0.0                       Rakuten Eagles     PL
+58    Murabayashi Itsuki  27   5  11.0   0.5    58.5   0.4         0.0   0.1      0.0                       Rakuten Eagles     PL
+59    Murabayashi Itsuki  27   6   2.0   0.0     0.0   0.0         0.0   0.0      0.0                       Rakuten Eagles     PL
+60       Yamanobe Kakeru  31   4   1.0   0.0     0.0   0.0         0.0   0.0      0.0                          Seibu Lions     PL
+61          Cabbage Trey  28   9  81.0  -0.2    -3.2  -0.5   0.3         0.0     -0.3                       Yomiuri Giants     CL
+62        Iwata Yukihiro  27   7   5.0   0.3    77.2   0.3   0.0         0.0      0.0                      Yakult Swallows     CL
+63        Iwata Yukihiro  27   8  20.2  -1.0   -62.2  -1.2   0.3         0.0      0.1                      Yakult Swallows     CL
+64            Maki Shugo  27   3   1.0  -0.2  -257.4  -0.2         0.0   0.0      0.0                        DeNA BayStars     CL
+65            Maki Shugo  27   4  81.0  -0.7   -11.1  -0.1        -0.1  -0.5      0.2                        DeNA BayStars     CL
+66     Yamamoto Yasuhiro  31   4  17.0  -0.3   -22.7  -0.4         0.1   0.0      0.0                     Chunichi Dragons     CL
+67     Yamamoto Yasuhiro  31   5   2.0   0.5   321.8   0.4         0.0   0.1      0.0                     Chunichi Dragons     CL
+68           Yano Masaya  26   6  73.1  -0.1    -1.8  -0.2        -0.2   0.3      0.6                       Hiroshima Carp     CL
+69         Nakano Takumu  29   4  83.0   1.9    29.5   2.0        -0.3   0.3      0.2                       Hanshin Tigers     CL
+70      Nishikawa Manaya  26   8  62.0   0.9    18.7   0.8   0.2         0.0      0.2                          Seibu Lions     PL
+71       Kiyomiya Kotaro  26   5  73.0  -3.4   -59.9  -2.1         0.0  -1.3     -0.3                   Nipponham Fighters     PL
+72        Kondoh Kensuke  31   9  19.0   0.1     6.8   0.5  -0.4         0.0     -0.1                       SoftBank Hawks     PL
+73        Kondoh Kensuke  31  DH   9.0                                           -0.1                       SoftBank Hawks     PL
+74         Fujioka Yudai  31   4  54.0  -1.8   -42.9  -1.4        -0.5   0.1      0.1                        Lotte Marines     PL
+75       Tomosugi Atsuki  24   6  29.0  -0.2    -8.9  -0.1        -0.2   0.1      0.2                        Lotte Marines     PL
+76       Muramatsu Kaito  24   6  81.0  -0.6    -9.5  -0.2         0.1  -0.4      0.7                     Chunichi Dragons     CL
+77       Yasuda Hisanori  26   3   3.0   0.2    85.8   0.2         0.0   0.0      0.0                        Lotte Marines     PL
+78          Gotoh Shunta  32   7   6.0   0.3    64.4   0.3   0.0         0.0     -0.1                     Chunichi Dragons     CL
+79          Gotoh Shunta  32   9  10.0   0.9   115.8   0.9  -0.1         0.0      0.0                     Chunichi Dragons     CL
+80        Higuchi Seishu  26   4   1.0   0.0     0.0   0.0         0.0   0.0      0.0                     Chunichi Dragons     CL
+81              Ohta Ryo  24   3  10.0  -0.4   -51.5  -0.7         0.2   0.0     -0.1                       ORIX Buffaloes     PL
+82              Ohta Ryo  24   4  63.0   0.7    14.3   0.5         0.1   0.1      0.2                       ORIX Buffaloes     PL
+83        Nakamura Akira  35  DH  32.0                                           -0.4                       SoftBank Hawks     PL
+84        Nagaoka Hideki  23   6  74.2   0.6    10.3   0.5        -0.3   0.4      0.6                      Yakult Swallows     CL
+85       Uebayashi Seiji  29   7  43.0   0.7    21.0   0.6   0.1         0.0     -0.4                     Chunichi Dragons     CL
+86       Uebayashi Seiji  29   9  15.0   1.0    85.8   1.0   0.0         0.0     -0.1                     Chunichi Dragons     CL
+87          Katoh Takuma  33   2  20.0  -0.1    -6.4        -0.1         0.0      0.3    -0.3      0.1    Chunichi Dragons     CL
+88          Nomura Isami  28   6   2.0   0.1    64.4   0.1         0.0   0.0      0.0                       SoftBank Hawks     PL
+89          Nomura Isami  28  DH   2.0                                            0.0                       SoftBank Hawks     PL
+90         Suzuki Daichi  35   3   1.0   0.0     0.0   0.0         0.0   0.0      0.0                       Rakuten Eagles     PL
+91         Suzuki Daichi  35   5  25.0   0.5    25.7   0.2         0.0   0.3     -0.1                       Rakuten Eagles     PL
+92         Kawase Hikaru  27   3   3.0   0.0     0.0   0.0         0.0   0.0      0.0                       SoftBank Hawks     PL
+93         Kawase Hikaru  27   5   1.0   0.0     0.0   0.0         0.0   0.0      0.0                       SoftBank Hawks     PL
+94         Kawase Hikaru  27   6   8.0  -0.3   -48.3  -0.2        -0.1   0.0      0.1                       SoftBank Hawks     PL
+95           Downs Jeter  26   4  35.0  -0.4   -14.7  -0.2        -0.3   0.1      0.1                       SoftBank Hawks     PL
+96           Downs Jeter  26   5   2.0  -0.3  -193.0  -0.3         0.0   0.0      0.0                       SoftBank Hawks     PL
+97           Downs Jeter  26  DH   1.0                                            0.0                       SoftBank Hawks     PL
+98          Imagawa Yuma  28   7   7.2  -0.3   -50.1  -0.3   0.0         0.0     -0.1                   Nipponham Fighters     PL
+99          Imagawa Yuma  28   8  21.0   0.2    12.3   0.3  -0.2         0.0      0.1                   Nipponham Fighters     PL
+100        Isobata Ryota  26   8  17.1   0.7    52.1   0.7   0.0         0.0      0.1                   Nipponham Fighters     PL
+101     Kakunaka Katsuya  38   7   8.0   0.9   144.8   0.9   0.0         0.0     -0.1                        Lotte Marines     PL
+102          Itoh Yukiya  28   5  16.0  -0.3   -24.1  -0.3         0.0   0.0     -0.1                       Rakuten Eagles     PL
+103          Itoh Yukiya  28  DH   8.2                                           -0.1                       Rakuten Eagles     PL
+104          Mogi Eigoro  31   5  62.2   3.1    63.6   2.1         0.2   0.9     -0.2                      Yakult Swallows     CL
+105         Bright Kenta  26   7  10.0   0.1    12.9   0.1   0.0         0.0     -0.1                     Chunichi Dragons     CL
+106      Yoshikawa Naoki  30   4  81.0   3.3    52.4   2.7         0.4   0.2      0.2                       Yomiuri Giants     CL
+107  Tsutsugoh Yoshitomo  33   7  31.0   0.5    20.8   0.8  -0.3         0.0     -0.3                        DeNA BayStars     CL
+108      Calixte Orlando  33   3  46.0   0.1     2.8   0.0        -0.1   0.2     -0.5                     Chunichi Dragons     CL
+109      Calixte Orlando  33   7  15.0  -0.7   -60.1  -0.7   0.0         0.0     -0.1                     Chunichi Dragons     CL
+110      Kamizato Kazuki  31   7   4.0   0.6   193.0   0.6   0.0         0.0      0.0                        DeNA BayStars     CL
+111      Kamizato Kazuki  31   9   4.0   0.3    96.5   0.3   0.0         0.0      0.0                        DeNA BayStars     CL
+112         Kozono Kaito  25   4   9.0   0.1    14.3   0.7         0.1  -0.7      0.0                       Hiroshima Carp     CL
+113         Kozono Kaito  25   5  63.1  -1.2   -24.4  -1.9         0.2   0.5     -0.2                       Hiroshima Carp     CL
+114         Sato Teruaki  26   5  83.0   1.4    21.7   0.8        -0.2   0.8     -0.3                       Hanshin Tigers     CL
+115          Nevin Tyler  28   3  59.0   0.4     8.7   0.0         0.2   0.2     -0.7                          Seibu Lions     PL
+116        Reyes Franmil  29  DH  53.0                                           -0.6                   Nipponham Fighters     PL
+117   Kurebayashi Kotaro  23   6  46.0  -1.6   -44.8  -2.1         0.4   0.1      0.4                       ORIX Buffaloes     PL
+118        Yanagita Yuki  36   7  39.0   0.7    23.1   0.7   0.0         0.0     -0.4                       SoftBank Hawks     PL
+119        Yanagita Yuki  36  DH  28.0                                           -0.3                       SoftBank Hawks     PL
+120       Fujiwara Kyota  25   9  22.0  -2.0  -117.0  -1.4  -0.5         0.0     -0.1                        Lotte Marines     PL
+121      Santana Domingo  32   7  64.0  -3.3   -66.4  -2.8  -0.5         0.0     -0.6                      Yakult Swallows     CL
+122           Sano Keita  30   3  16.0   0.2    16.1   0.1         0.0   0.0     -0.2                        DeNA BayStars     CL
+123           Sano Keita  30   7  41.0  -3.0   -94.2  -3.0   0.0         0.0     -0.4                        DeNA BayStars     CL
+124         Narama Taiki  25   4   9.0   0.0     0.0   0.0         0.0   0.0      0.0                   Nipponham Fighters     PL
+125         Narama Taiki  25  DH   2.0                                            0.0                   Nipponham Fighters     PL
+126      Nishikawa Ryoma  30   7  53.2   1.4    33.6   2.2  -0.7         0.0     -0.5                       ORIX Buffaloes     PL
+127      Nishikawa Ryoma  30  DH   6.0                                           -0.1                       ORIX Buffaloes     PL
+128       Hirooka Taishi  28   3   3.0   0.0     0.0   0.0         0.0   0.0      0.0                       ORIX Buffaloes     PL
+129       Hirooka Taishi  28   5   3.0  -0.5  -214.5   0.2         0.0  -0.7      0.0                       ORIX Buffaloes     PL
+130       Hirooka Taishi  28   7   2.0  -0.5  -321.8  -0.5   0.0         0.0      0.0                       ORIX Buffaloes     PL
+131       Hirooka Taishi  28   8   6.0  -2.0  -429.0  -2.1   0.0         0.0      0.0                       ORIX Buffaloes     PL
+132       Hirooka Taishi  28   9   0.1   0.0     0.0   0.0   0.0         0.0      0.0                       ORIX Buffaloes     PL
+133       Hosokawa Seiya  26   9  56.0  -1.0   -23.0  -0.2  -0.9         0.0     -0.2                     Chunichi Dragons     CL
+134        Mimori Masaki  26   3  10.0  -0.8  -103.0  -0.8         0.0   0.0     -0.1                        DeNA BayStars     CL
+135        Mimori Masaki  26   9  34.0  -1.6   -60.6  -1.7   0.1         0.0     -0.1                        DeNA BayStars     CL
+136      Mugitani Yusuke  22   8  16.0   0.3    24.1   0.3   0.0         0.0      0.1                       ORIX Buffaloes     PL
+137        Motoyama Hiyu  26   3   3.0   0.0     0.0   0.0         0.0   0.0      0.0                          Seibu Lions     PL
+138        Motoyama Hiyu  26   4  15.0   0.3    25.7   0.2         0.0   0.0      0.0                          Seibu Lions     PL
+139        Motoyama Hiyu  26   6   3.0   0.0     0.0   0.0         0.0   0.0      0.0                          Seibu Lions     PL
+140        Motoyama Hiyu  26  DH   2.0                                            0.0                          Seibu Lions     PL
+141      Olivares Edward  29  DH  30.0                                           -0.4                       ORIX Buffaloes     PL
+142      Tatsumi Ryosuke  28   8  61.2   2.6    54.2   2.6   0.1         0.0      0.2                       Rakuten Eagles     PL
+143           Ogata Riku  26   7   5.0   0.1    25.7   0.1   0.0         0.0      0.0                       SoftBank Hawks     PL
+144      Takizawa Natsuo  21   4  11.0   1.0   117.0   1.0         0.0   0.1      0.0                          Seibu Lions     PL
+145      Takizawa Natsuo  21   5   2.0  -0.6  -386.1  -0.6         0.0   0.0      0.0                          Seibu Lions     PL
+146      Takizawa Natsuo  21   6   1.0   0.0     0.0   0.0         0.0   0.0      0.0                          Seibu Lions     PL
+147       Okamoto Kazuma  29   3  79.0   1.4    22.8   1.8         0.0  -0.3     -0.9                       Yomiuri Giants     CL
+148         Austin Tyler  33   3  53.0   0.2     4.9   0.0         0.0   0.2     -0.6                        DeNA BayStars     CL
+149      Ishikawa Takaya  24   5  79.0  -1.0   -16.3  -1.5        -0.2   0.7     -0.3                     Chunichi Dragons     CL
+150    Shibata Tatsuhiro  31   5   7.0   0.0     0.0   0.0         0.0   0.0      0.0                        DeNA BayStars     CL
+151     Montero Elehuris  26   3  25.0   0.5    25.7   0.4         0.0   0.1     -0.3                       Hiroshima Carp     CL
+152      Morishita Shota  24   9  83.0   0.5     7.8   0.7  -0.2         0.0     -0.3                       Hanshin Tigers     CL
+153       Cedeno Leandro  26  DH  52.0                                           -0.6                          Seibu Lions     PL
+154          Nomura Yuki  25   3  35.0  -0.2    -7.4  -0.3         0.0   0.1     -0.4                   Nipponham Fighters     PL
+155          Nomura Yuki  25   7  15.0   1.0    85.8   1.0   0.0         0.0     -0.1                   Nipponham Fighters     PL
+156          Nomura Yuki  25  DH   9.0                                           -0.1                   Nipponham Fighters     PL
+157      Sugimoto Yutaro  34   9  24.0  -0.5   -26.8   0.1  -0.6         0.0     -0.1                       ORIX Buffaloes     PL
+158      Sugimoto Yutaro  34  DH  36.0                                           -0.4                       ORIX Buffaloes     PL
+159      Yamakawa Hotaka  33   3  69.0   0.7    13.1   1.9        -0.1  -1.1     -0.8                       SoftBank Hawks     PL
+160      Polanco Gregory  33   7   8.0   0.8   128.7   0.9  -0.1         0.0     -0.1                        Lotte Marines     PL
+161      Polanco Gregory  33  DH  63.0                                           -0.8                        Lotte Marines     PL
+162       Takeoka Ryusei  24   4   3.0   0.4   171.6   0.4         0.0   0.0      0.0                      Yakult Swallows     CL
+163      Nakamura Takeya  41  DH   8.0                                           -0.1                          Seibu Lions     PL
+164         Soto Neftali  36   3  59.0  -1.6   -34.9  -1.7        -0.1   0.2     -0.7                        Lotte Marines     PL
+165         Soto Neftali  36  DH  10.0                                           -0.1                        Lotte Marines     PL
+166           Osuna Jose  32   3  73.2  -0.4    -7.0   0.2        -0.1  -0.5     -0.8                      Yakult Swallows     CL
+167     Dohbayashi Shota  33   3  35.1   0.1     3.6   0.1         0.0   0.1     -0.4                       Hiroshima Carp     CL
+168         Ebina Tatsuo  27   7   7.0   0.1    18.4   0.1   0.0         0.0     -0.1                        DeNA BayStars     CL
+169         Ebina Tatsuo  27   9  45.0  -0.3    -8.6  -0.6   0.3         0.0     -0.2                        DeNA BayStars     CL
+170     Yamaashi Tatsuya  31   3   6.0   0.0     0.0  -0.1         0.0   0.0     -0.1                       Hiroshima Carp     CL
+171          Abe Toshiki  35   5   1.0   0.0     0.0   0.0         0.0   0.0      0.0                       Rakuten Eagles     PL
+172          Abe Toshiki  35   7  28.0   0.9    41.4   1.3  -0.4         0.0     -0.3                       Rakuten Eagles     PL
+173          Abe Toshiki  35  DH  19.0                                           -0.2                       Rakuten Eagles     PL
+174        Tanaka Kazuki  30   7  13.0   0.4    39.6   0.4   0.0         0.0     -0.1                       Rakuten Eagles     PL
+175        Chatani Kenta  27   3   1.0   0.0     0.0   0.0         0.0   0.0      0.0                        Lotte Marines     PL
+176      Tamura Shunsuke  21   3   7.0   0.2    36.8   0.2         0.0   0.0     -0.1                       Hiroshima Carp     CL
+177      Tamura Shunsuke  21   7   4.0   0.0     0.0   0.0   0.0         0.0      0.0                       Hiroshima Carp     CL
+178      Tamura Shunsuke  21   9  10.0  -0.9  -115.8  -0.7  -0.2         0.0      0.0                       Hiroshima Carp     CL
+179     Miyazaki Toshiro  36   5  67.0   0.2     3.8   0.8         0.0  -0.6     -0.3                        DeNA BayStars     CL
+180       Hayashi Takuma  24   4   2.0  -0.3  -193.0  -0.3         0.0   0.0      0.0                        DeNA BayStars     CL
+181       Hayashi Takuma  24   5   3.0  -0.5  -214.5  -0.5         0.0   0.0      0.0                        DeNA BayStars     CL
+182       Hayashi Takuma  24   6   8.0   0.1    16.1   0.2        -0.1   0.0      0.1                        DeNA BayStars     CL
+183       Yamanaka Ryoma  24   7  10.0   0.9   115.8   0.9   0.0         0.0     -0.1                       ORIX Buffaloes     PL
+184       Yamanaka Ryoma  24   9   7.0  -0.8  -147.1  -0.6  -0.2         0.0      0.0                       ORIX Buffaloes     PL
+185      Hernandez Elier  30   7   6.0   0.6   128.7   0.3   0.3         0.0     -0.1                       Yomiuri Giants     CL
+186      Hernandez Elier  30   8  73.0  -0.2    -3.5   0.9  -1.1         0.0      0.2                       Yomiuri Giants     CL
+187           Kyoda Yota  31   3   3.0   0.0     0.0   0.0         0.0   0.0      0.0                        DeNA BayStars     CL
+188           Kyoda Yota  31   5   6.0   0.4    85.8   0.4        -0.1   0.1      0.0                        DeNA BayStars     CL
+189        Akiyama Shogo  37   8  22.0  -0.3   -17.6   0.0  -0.3         0.0      0.1                       Hiroshima Carp     CL
+190        Ohyama Yusuke  30   3  83.0  -0.7   -10.9  -0.8         0.0   0.2     -0.9                       Hanshin Tigers     CL
+191       Watanabe Seiya  22   7  62.0  -0.6   -12.5  -0.8   0.2         0.0     -0.6                          Seibu Lions     PL
+192       Asamura Hideto  34   3  56.2   0.1     2.3   0.1         0.0   0.1     -0.6                       Rakuten Eagles     PL
+193        Masaki Tomoya  25   7  28.0   1.7    78.1   1.8  -0.1         0.0     -0.3                       SoftBank Hawks     PL
+194        Masaki Tomoya  25   9  43.0   0.7    21.0   0.6   0.2         0.0     -0.2                       SoftBank Hawks     PL
+195        Satoh Toshiya  27   2  46.0  -1.1   -30.8        -0.9        -0.2      0.7     0.6     -0.1       Lotte Marines     PL
+196        Satoh Toshiya  27   3   9.0  -0.5   -71.5  -0.5         0.0   0.0     -0.1                        Lotte Marines     PL
+197       Itayama Yutaro  31   4  63.0   0.4     8.2   0.4        -0.2   0.1      0.2                     Chunichi Dragons     CL
+198       Martinez Ariel  29   3  15.0   0.1     8.6   0.1         0.0   0.1     -0.2                   Nipponham Fighters     PL
+199       Martinez Ariel  29  DH   9.0                                           -0.1                   Nipponham Fighters     PL
+200        Suekane Shota  29   7   5.0  -0.2   -51.5  -0.5   0.3         0.0      0.0                       Hiroshima Carp     CL
+201        Suekane Shota  29   9  32.1   0.7    27.9   0.4   0.3         0.0     -0.1                       Hiroshima Carp     CL
+202       Yamada Tetsuto  32   4  35.0   0.0     0.0   0.8        -0.1  -0.7      0.1                      Yakult Swallows     CL
+203        Fabian Sandro  27   7  64.1  -0.1    -2.0   0.3  -0.5         0.0     -0.6                       Hiroshima Carp     CL
+204           Tongu Yuma  28   3  60.0   0.2     4.3   0.1         0.0   0.1     -0.7                       ORIX Buffaloes     PL
+205         Ohshiro Koji  32   4  10.0   0.0     0.0   0.0         0.0   0.0      0.0                       ORIX Buffaloes     PL
+206         Ohshiro Koji  32   6  12.0   1.0   107.2   0.9         0.0   0.1      0.1                       ORIX Buffaloes     PL
+207           Kai Takuya  32   2  78.0  -0.2    -3.3        -0.5         0.2      1.1     1.8      0.3      Yomiuri Giants     CL
+208      Namiki Hidetaka  26   8   1.0   0.0     0.0   0.0   0.0         0.0      0.0                      Yakult Swallows     CL
+209    Watanabe Yoshiaki  28   3   4.0   0.0     0.0   0.0         0.0   0.0      0.0                       Rakuten Eagles     PL
+210    Watanabe Yoshiaki  28   5   0.2  -0.5  -919.3  -0.5         0.0   0.0      0.0                       Rakuten Eagles     PL
+211    Watanabe Yoshiaki  28   7   9.0  -0.2   -28.6  -0.2   0.0         0.0     -0.1                       Rakuten Eagles     PL
+212           Nakata Sho  36   3  35.0   1.0    36.8   0.8         0.0   0.1     -0.4                     Chunichi Dragons     CL
+213         Maegawa Ukyo  22   7  63.0  -4.6   -94.0  -3.9  -0.7         0.0     -0.6                       Hanshin Tigers     CL
+214       Tonosaki Shuta  32   5  57.0  -2.1   -47.4  -0.2        -0.2  -1.6     -0.2                          Seibu Lions     PL
+215         Mutoh Atsuki  24   7  11.2   1.8   198.0   1.2   0.6         0.0     -0.1                       Rakuten Eagles     PL
+216         Mutoh Atsuki  24   9   4.0   0.0     0.0   0.0   0.0         0.0      0.0                       Rakuten Eagles     PL
+217        Imamiya Kenta  33   6  62.0  -0.2    -4.2  -0.7         0.2   0.2      0.5                       SoftBank Hawks     PL
+218         Hamada Taiki  24   7   2.0   0.0     0.0   0.0   0.0         0.0      0.0                      Yakult Swallows     CL
+219         Hamada Taiki  24   9  31.0   0.0     0.0   0.0   0.0         0.0     -0.1                      Yakult Swallows     CL
+220         Matsuo Shion  20   2  15.1   0.1     8.4        -0.1         0.1      0.2    -0.9      0.0       DeNA BayStars     CL
+221      Yamamoto Yuudai  26   2  57.2   0.2     4.5         0.1         0.1      0.8     0.0      0.0       DeNA BayStars     CL
+222       Ishii Kazunari  31   4  20.0   0.7    45.0   0.4         0.3   0.1      0.1                   Nipponham Fighters     PL
+223          Inoue Kouta  23   7   9.0  -1.5  -214.5  -1.6   0.1         0.0     -0.1                       Hanshin Tigers     CL
+224      Kikuchi Ryosuke  35   4  64.1  -1.2   -24.0  -1.1        -0.2   0.1      0.2                       Hiroshima Carp     CL
+225         Obata Ryuhei  24   6  13.0   1.1   108.9   0.9         0.1   0.1      0.1                       Hanshin Tigers     CL
+226   Kamikawabata Daigo  28   4  44.0  -1.5   -43.9  -1.5         0.0   0.1      0.1                   Nipponham Fighters     PL
+227   Kamikawabata Daigo  28   6  10.0  -0.4   -51.5  -0.4         0.0   0.0      0.1                   Nipponham Fighters     PL
+228       Nakamura Shogo  33   4  18.0  -1.3   -93.0  -1.4         0.1   0.0      0.0                        Lotte Marines     PL
+229       Nakamura Shogo  33   5  22.0   1.1    64.4   0.9         0.0   0.2     -0.1                        Lotte Marines     PL
+230         Makino Shoya  24   2  15.0  -0.4   -34.3        -0.1        -0.2      0.2    -0.9      0.2         Seibu Lions     PL
+231         Nomura Daiju  24   4  19.0  -0.5   -33.9  -0.4        -0.1   0.0      0.1                          Seibu Lions     PL
+232         Nomura Daiju  24   5   3.0   0.0     0.0   0.0         0.0   0.0      0.0                          Seibu Lions     PL
+233     Sumitani Ginjiro  37   2   2.0   0.0     0.0         0.0         0.0      0.0    -0.1      0.0         Seibu Lions     PL
+234        Shimada Kairi  29   7  11.0  -1.1  -128.7  -1.1   0.0         0.0     -0.1                       Hanshin Tigers     CL
+235     Nishino Masahiro  34   5  24.0  -1.5   -80.4  -0.8        -0.2  -0.5     -0.1                       ORIX Buffaloes     PL
+236       Nakata Keisuke  25   4  16.0  -0.7   -56.3  -0.7         0.0   0.0      0.0                          Seibu Lions     PL
+237       Nakata Keisuke  25   9   1.0   0.0     0.0   0.0   0.0         0.0      0.0                          Seibu Lions     PL
+238    Sakamoto Seishiro  31   2  47.0  -0.2    -5.5        -0.3         0.1      0.7     0.9      0.1      Hanshin Tigers     CL
+239         Genda Sosuke  32   6  58.0   0.7    15.5   0.4         0.0   0.3      0.5                          Seibu Lions     PL
+240        Watanabe Riku  24   2   5.0   0.0     0.0         0.0         0.0      0.1     0.2      0.0      SoftBank Hawks     PL
+241            Yuasa Dai  25   5   3.0   0.5   214.5   0.4         0.0   0.1      0.0                       Yomiuri Giants     CL
+242            Yuasa Dai  25   6   2.0   0.3   193.0   0.4        -0.1   0.0      0.0                       Yomiuri Giants     CL
+243            Itoh Ryui  22   5   1.0   0.0     0.0   0.0         0.0   0.0      0.0                      Yakult Swallows     CL
+244        Umeno Ryutaro  34   2  27.0   0.4    19.1         0.4         0.0      0.4     0.8      0.1      Hanshin Tigers     CL
+245      Makihara Taisei  32   4  37.0   1.9    66.1   1.2         0.6   0.1      0.1                       SoftBank Hawks     PL
+246         Kinami Seiya  31   6  70.0   1.6    29.4   1.3         0.0   0.3      0.6                       Hanshin Tigers     CL
+247     Miyamoto Takeshi  30   9   6.0   0.0     0.0   0.0   0.0         0.0      0.0                      Yakult Swallows     CL
+248      Maruyama Kazuya  25   9  21.2   0.3    17.8  -0.1   0.4         0.0     -0.1                      Yakult Swallows     CL
+249   Tobashira Yasutaka  35   2  10.0  -0.1   -12.9        -0.1         0.0      0.1     0.5      0.0       DeNA BayStars     CL
+250      Ishigaki Masami  26   5  16.0   1.5   120.7   1.1         0.2   0.3     -0.1                        Lotte Marines     PL
+251      Ishigaki Masami  26   6   3.0   0.4   171.6   0.4         0.0   0.0      0.0                        Lotte Marines     PL
+252         Ogawa Ryusei  27   4   1.0   0.0     0.0   0.0         0.0   0.0      0.0                        Lotte Marines     PL
+253         Ogawa Ryusei  27   6  41.0  -1.6   -50.2  -0.6        -0.4  -0.6      0.3                        Lotte Marines     PL
+254         Sakaeda Yuki  27   2   9.0   0.0     0.0         0.0         0.0      0.1     0.9      0.0      Hanshin Tigers     CL
+255        Ohshima Yohei  39   7   7.0  -0.5   -91.9  -0.5   0.0         0.0     -0.1                     Chunichi Dragons     CL
+256       Nakamura Yuhei  35   2  34.2   0.0     0.0        -0.1         0.1      0.5    -1.3     -0.2     Yakult Swallows     CL
+257     Kinoshita Takuya  33   2  52.0   0.2     5.0         0.2         0.1      0.7    -1.0     -0.3    Chunichi Dragons     CL
+258  Yanagimachi Tatsuru  28   9   9.0   0.6    85.8   0.5   0.1         0.0      0.0                       SoftBank Hawks     PL
+259           Koga Yudai  26   2  19.0   0.3    20.3         0.3         0.0      0.3    -0.3      0.0     Yakult Swallows     CL
+260         Hirose Ryuta  24   5  18.0   0.0     0.0  -0.4         0.1   0.3     -0.1                       SoftBank Hawks     PL
+261      Kadowaki Makoto  24   6  78.0   0.9    14.8   0.2         0.5   0.2      0.6                       Yomiuri Giants     CL
+262           Mori Keito  23   6  75.0  -1.8   -30.9  -0.6         0.0  -1.2      0.6                        DeNA BayStars     CL
+263           Ishii Yuta  24   2   9.0  -0.3   -42.9        -0.3         0.0      0.1     0.1      0.0    Chunichi Dragons     CL
+264      Ishihara Tomoki  27   2  44.0   0.1     2.9         0.0         0.1      0.6     1.9      0.1      Hiroshima Carp     CL
+265            Koga Yuto  25   2  45.0   0.0     0.0         0.0         0.1      0.6     0.5      0.0         Seibu Lions     PL
+266       Mizuno Tatsuki  24   6  63.0  -0.7   -14.3  -1.0         0.1   0.3      0.5                   Nipponham Fighters     PL
+267          Ohta Hikaru  28   2  53.0   0.4     9.7         0.4         0.1      0.8    -0.5      0.1      Rakuten Eagles     PL
+268    Ishihara Tsuyoshi  26   2   8.2   0.1    14.8         0.0         0.1      0.1    -0.4      0.0      Rakuten Eagles     PL
+269     Sunagawa Richard  26   5  51.0  -0.2    -5.0   0.2         0.0  -0.4     -0.2                       SoftBank Hawks     PL
+270           Ueda Kyuto  23   3   1.0   0.0     0.0   0.0         0.0   0.0      0.0                        Lotte Marines     PL
+271           Ueda Kyuto  23   5  35.0  -1.6   -58.8  -1.0        -0.2  -0.4     -0.1                        Lotte Marines     PL
+272      Matsumoto Naoki  31   2  21.0   0.6    36.8         0.9        -0.2      0.3    -0.4     -0.1     Yakult Swallows     CL
+273       Urata Shunsuke  22   6   1.0   0.0     0.0   0.0         0.0   0.0      0.0                       Yomiuri Giants     CL
+274       Aizawa Tsubasa  37   2  29.1   0.3    13.2         0.0         0.3      0.4    -0.3     -0.1      Hiroshima Carp     CL
+275        Franco Maikel  32   5   8.0   0.2    32.2   0.2         0.0   0.0      0.0                       Rakuten Eagles     PL
+276        Franco Maikel  32  DH  34.0                                           -0.4                       Rakuten Eagles     PL
+277     Tamura Tatsuhiro  31   2  18.0   0.1     7.2         0.1         0.0      0.3     0.2      0.0       Lotte Marines     PL
+278     Tanigawara Kenta  28   2  22.0  -0.4   -23.4        -0.4         0.0      0.3    -0.4      0.1      SoftBank Hawks     PL
+279      Wakatsuki Kenya  29   2  62.0  -0.2    -4.2         0.6        -0.8      0.9     0.2      0.2      ORIX Buffaloes     PL
+280       Terachi Ryusei  19   2   9.0  -0.3   -42.9        -0.3         0.0      0.1     0.6      0.0       Lotte Marines     PL
+281        Umino Takashi  27   2  45.0  -0.1    -2.9        -0.2         0.1      0.6    -0.4     -0.2      SoftBank Hawks     PL
+282         Fukunaga Sho  25   2  11.0   0.0     0.0         0.0         0.0      0.2    -0.5      0.0      ORIX Buffaloes     PL
+283     Kishida Yukinori  28   2   3.0   0.0     0.0         0.0         0.0      0.0     0.0      0.0      Yomiuri Giants     CL
+284       Noguchi Tomoya  25   6  15.0   0.4    34.3   0.2         0.1   0.1      0.1                       ORIX Buffaloes     PL
