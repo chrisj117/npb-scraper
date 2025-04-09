@@ -1,15 +1,15 @@
-Team,Link,ImgSrc
-Hanshin Tigers,https://npb.jp/bis/eng/teams/index_t.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Tigers.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6224" />
-Hiroshima Carp,https://npb.jp/bis/eng/teams/index_c.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Carp.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6223" />
-DeNA BayStars,https://npb.jp/bis/eng/teams/index_db.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/BayStars.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6228" />
-Yomiuri Giants,https://npb.jp/bis/eng/teams/index_g.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Giants.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6227" />
-Yakult Swallows,https://npb.jp/bis/eng/teams/index_s.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Swallows.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6226" />
-Chunichi Dragons,https://npb.jp/bis/eng/teams/index_d.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Dragons.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6225" />
-ORIX Buffaloes,https://npb.jp/bis/eng/teams/index_b.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Buffaloes.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6222" />
-Lotte Marines,https://npb.jp/bis/eng/teams/index_m.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Marines.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6240" />
-SoftBank Hawks,https://npb.jp/bis/eng/teams/index_h.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Hawks.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6220" /> 
-Rakuten Eagles,https://npb.jp/bis/eng/teams/index_e.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Eagles.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6218" />
-Seibu Lions,https://npb.jp/bis/eng/teams/index_l.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Lions.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6219" />
-Nipponham Fighters,https://npb.jp/bis/eng/teams/index_f.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Fighters.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6217" />
-Oisix Albirex,,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Ventures.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6297" />
-HAYATE Ventures,,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Albirex.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6298" />
+Team,Abbr,Link,ImgSrc
+Hanshin Tigers,Hanshin,https://npb.jp/bis/eng/teams/index_t.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Tigers.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6224" />
+Hiroshima Carp,Hiroshima,https://npb.jp/bis/eng/teams/index_c.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Carp.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6223" />
+DeNA BayStars,DeNA,https://npb.jp/bis/eng/teams/index_db.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/BayStars.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6228" />
+Yomiuri Giants,Yomiuri,https://npb.jp/bis/eng/teams/index_g.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Giants.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6227" />
+Yakult Swallows,Yakult,https://npb.jp/bis/eng/teams/index_s.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Swallows.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6226" />
+Chunichi Dragons,Chunichi,https://npb.jp/bis/eng/teams/index_d.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Dragons.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6225" />
+ORIX Buffaloes,ORIX,https://npb.jp/bis/eng/teams/index_b.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Buffaloes.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6222" />
+Lotte Marines,Lotte,https://npb.jp/bis/eng/teams/index_m.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Marines.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6240" />
+SoftBank Hawks,SoftBank,https://npb.jp/bis/eng/teams/index_h.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Hawks.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6220" /> 
+Rakuten Eagles,Rakuten,https://npb.jp/bis/eng/teams/index_e.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Eagles.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6218" />
+Seibu Lions,Seibu,https://npb.jp/bis/eng/teams/index_l.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Lions.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6219" />
+Nipponham Fighters,Nipponham,https://npb.jp/bis/eng/teams/index_f.html,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Fighters.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6217" />
+Oisix Albirex,Oisix,https://www.niigata-albirex-bc.jp/,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Albirex.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6298" />
+HAYATE Ventures,HAYATE,https://hayateventures.jp/,<img src="https://www.yakyucosmo.com/wp-content/uploads/2025/04/Ventures.jpg" alt="" width="10" height="10" class="alignnone size-full wp-image-6297" />

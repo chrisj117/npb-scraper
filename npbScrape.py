@@ -35,6 +35,8 @@ def main():
     # rosterData.csv *
     # TODO: refactor and put raw files in their own directory *
 
+    # TODO: last updated date on player plots
+    # TODO: streamlit app
     # TODO: readme github
     # TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
     # TODO: add checking raw file existence in init() (also remove user output
@@ -2237,7 +2239,7 @@ class DailyScoresData(Stats):
 
     def org_daily_scores(self):
         """Organize the daily score csv"""
-        # Convert abbrieviated names to full team names
+        # Convert abbreviated names to full team names
         abbrDict = {
             "Hanshin": "Hanshin Tigers",
             "Hiroshima": "Hiroshima Carp",
@@ -2926,7 +2928,8 @@ def get_user_choice(suffix):
 
 
 def convert_team_to_html(df, mode=None):
-    """Formats the team names to include links to their npb.jp pages
+    """Formats the team col to include links to their npb.jp pages and adds img
+    tag col that represents the team (images from yakyucosmo.com)
 
     Parameters:
     df (pandas dataframe): A dataframe containing entries with NPB teams
@@ -2935,76 +2938,20 @@ def convert_team_to_html(df, mode=None):
     found in the dataframe to linked names (None)
 
     Returns:
-    df (pandas dataframe): The dataframe with correct links and abbrieviations
-    inserted as <a> tags"""
+    df (pandas dataframe): The dataframe with correct links and abbreviations
+    inserted in tags (if applicable) or normal text (if no tags can be made),
+    plus an img tag column if mode is not None"""
     # Check for the team link file, if missing, tell user and return
     relDir = os.path.dirname(__file__)
     teamLinkFile = relDir + "/input/teamUrls.csv"
     linkDf = pd.read_csv(teamLinkFile)
-    if mode == "Full":
-        # Update Link col to have <a> tags
-        linkDf["Link"] = linkDf.apply(build_html, args=("Team", ), axis=1)
-        # Create dict of Team Name:Complete HTML tag and convert
-        teamDict = dict(linkDf.values)
-        df["Team"] = (
-            df["Team"]
-            .map(teamDict)
-            .infer_objects()
-            .fillna(df["Team"])
-            .astype(str)
-        )
-    elif mode == "Abb":
-        # Contains 2020-2024 reg/farm baseball team abbrieviations
-        abbrDict = {
-            "Hanshin Tigers": "Hanshin",
-            "Hiroshima Carp": "Hiroshima",
-            "DeNA BayStars": "DeNA",
-            "Yomiuri Giants": "Yomiuri",
-            "Yakult Swallows": "Yakult",
-            "Chunichi Dragons": "Chunichi",
-            "ORIX Buffaloes": "ORIX",
-            "Lotte Marines": "Lotte",
-            "SoftBank Hawks": "SoftBank",
-            "Rakuten Eagles": "Rakuten",
-            "Seibu Lions": "Seibu",
-            "Nipponham Fighters": "Nipponham",
-            "Oisix Albirex": "Oisix",
-            "HAYATE Ventures": "HAYATE",
-        }
-        # Create temp col to have abbrieviations
-        linkDf["Temp"] = (
-            linkDf["Team"]
-            .map(abbrDict)
-            .infer_objects()
-            .fillna(linkDf["Team"])
-            .astype(str)
-        )
-        # Swap full name col with abb col to create HTML tags with abb names
-        linkDf["Team"], linkDf["Temp"] = linkDf["Temp"], linkDf["Team"]
-        linkDf["Link"] = linkDf.apply(build_html, args=("Team", ), axis=1)
-        # Swap full name col back to original spot and delete temp col
-        linkDf["Temp"], linkDf["Team"] = linkDf["Team"], linkDf["Temp"]
-        linkDf = linkDf.drop("Temp", axis=1)
-        # Add new, unlinked farm team abbrieviations to dataframe
-        newRow = {"Team": "Oisix Albirex", "Link": "Oisix"}
-        linkDf = linkDf._append(newRow, ignore_index=True)
-        newRow = {"Team": "HAYATE Ventures", "Link": "HAYATE"}
-        linkDf = linkDf._append(newRow, ignore_index=True)
-        # Create dict of Team Name:Complete HTML tag and convert
-        teamDict = dict(linkDf.values)
-        df["Team"] = (
-            df["Team"]
-            .map(teamDict)
-            .infer_objects()
-            .fillna(df["Team"])
-            .astype(str)
-        )
+
     # Default mode links any team names it finds (assumes full team names are
-    # present in the dataframe)
-    elif mode == None:
-        linkDf["Link"] = linkDf.apply(build_html, args=("Team", ), axis=1)
+    # present in the dataframe) and returns
+    if mode == None:
+        linkDf["Link"] = linkDf.apply(build_html, args=("Team",), axis=1)
         # Create dict of Team Name:Complete HTML tag and convert
-        teamDict = dict(linkDf.values)
+        teamDict = dict(zip(linkDf["Team"], linkDf["Link"]))
         for col in df.columns:
             df[col] = (
                 df[col]
@@ -3013,7 +2960,30 @@ def convert_team_to_html(df, mode=None):
                 .fillna(df[col])
                 .astype(str)
             )
-
+        return df
+    elif mode == "Full":
+        # Update Link col to have <a> tags
+        linkDf["Link"] = linkDf.apply(build_html, args=("Team",), axis=1)
+        # Create dict of Team Name:Complete HTML tag and convert
+        teamDict = dict(zip(linkDf["Team"], linkDf["Link"]))
+    elif mode == "Abb":
+        # Make HTML Link col using abbreviated names
+        linkDf["Link"] = linkDf.apply(build_html, args=("Abbr",), axis=1)
+        # Create dict of Team Name:Complete HTML tag
+        teamDict = dict(zip(linkDf["Team"], linkDf["Link"]))
+    # Add logo/color <img> tag column before converting team names to <a> tags
+    imgDict = dict(zip(linkDf["Team"], linkDf["ImgSrc"]))
+    df.insert(
+        df.columns.get_loc("Team"),
+        "Logos",
+        (df["Team"].map(imgDict).infer_objects().fillna("").astype(str)),
+    )
+    # Convert and return dataframe
+    df["Team"] = (
+        df["Team"].map(teamDict).infer_objects().fillna(df["Team"]).astype(str)
+    )
+    # Rename Logos column to blank ""
+    df = df.rename(columns={"Logos": ""})
     return df
 
 
@@ -3353,14 +3323,9 @@ def convert_player_to_html(df, suffix, year):
     else:
         convertCol = "Player"
     df["keys"] = list(zip(df[convertCol], df["Team"]))
-    df["Link"] = (
-        df["keys"]
-        .map(playerDict)
-        .infer_objects()
-        .astype(str)
-    )
+    df["Link"] = df["keys"].map(playerDict).infer_objects().astype(str)
     # Convert raw link column to HTML code column
-    df["Link"] = df.apply(build_html, args=(convertCol, ), axis=1)
+    df["Link"] = df.apply(build_html, args=(convertCol,), axis=1)
     # Swap HTML link col with original player name col, drop temp cols
     df[convertCol] = df["Link"]
     df = df.drop(["keys", "Link"], axis=1)
@@ -3416,7 +3381,7 @@ def translate_players(df):
 
 
 def build_html(row, nameCol):
-    """Insert the link and text in a <a> tag, returns the tag
+    """Insert the link and nameCol text in a <a> tag, returns the tag
 
     Parameters:
     row (pandas series): A row of a dataframe
