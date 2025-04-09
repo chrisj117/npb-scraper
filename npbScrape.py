@@ -732,23 +732,32 @@ class PlayerData(Stats):
             aggfunc="sum",
             fill_value=0,
         )
+        # Append team names to help differentiate players after pitching merge
+        dfPivot = pd.merge(
+            dfPivot,
+            fieldDf[["Player", "Team"]].drop_duplicates(),
+            on="Player",
+            how="outer",
+        )
         # Append IP for position 1 (pitchers) as a new column "1"
         dfPivot = pd.merge(
             dfPivot,
-            pitchDf[["Pitcher", "IP"]].rename(
+            pitchDf[["Pitcher", "IP", "Team"]].rename(
                 columns={"Pitcher": "Player", "IP": "1"}
             ),
-            on="Player",
+            on=["Player", "Team"],
             how="outer",
         )
         # Fill NaN values in all colums with 0 (if needed)
         dfPivot = dfPivot.fillna(0)
         # Get primary positions
         dfPivot["Pos"] = dfPivot.apply(assign_primary_or_utl, axis=1)
-        # Extract only the player_id and primary_position:
-        tempPrimaryDf = dfPivot[["Player", "Pos"]]
+        # Extract only the player name, team, and primary_position:
+        tempPrimaryDf = dfPivot[["Player", "Pos", "Team"]]
         # Then merge if needed:
-        self.df = pd.merge(self.df, tempPrimaryDf, on="Player", how="left")
+        self.df = pd.merge(
+            self.df, tempPrimaryDf, on=["Player", "Team"], how="left"
+        )
         # Swap temp Pos with updated Pos, drop placeholder Pos, rename
         self.df["Pos_x"], self.df["Pos_y"] = self.df["Pos_y"], self.df["Pos_x"]
         self.df = self.df.drop("Pos_y", axis=1)
@@ -3279,23 +3288,17 @@ def assign_primary_or_utl(
     # Count how many positions >= our thresholds
     num_positions_10plus = (fractions >= pct_utl_thresholdHigh).sum()
     num_positions_5plus = (fractions >= pct_utl_thresholdLow).sum()
-    # Rule 3: For 2 way players, if they appear on the pitching stat file
-    # with at least 2.0 IP and at least 2.0 Inn fielded, label them as a 2 way
-    # player (TWP)
-    posCols.remove("1")
-    if any(row[posCols] > 2.0) and (row["1"] > 2.0):
-        return "TWP"
-    # Rule 4: If the player has 3 positions that are all in the outfield, the
+    # Rule 3: If the player has 3 positions that are all in the outfield, the
     # largest OF pos is the primary
     if row["7"] > 0 and row["8"] > 0 and row["9"] > 0:
         return fractions.idxmax()
-    # Rule 5: If any position >= 50%, that is primary
+    # Rule 4: If any position >= 50%, that is primary
     if any(fractions >= pct_primary_threshold):
         return fractions.idxmax()
-    # Rule 6: If 3 or more positions are >= our thresholds, label UTL
+    # Rule 5: If 3 or more positions are >= our thresholds, label UTL
     if num_positions_10plus >= 3 or num_positions_5plus >= 4:
         return "UTL"
-    # Rule 7: If none of the above, pick the position with the largest fraction
+    # Rule 6: If none of the above, pick the position with the largest fraction
     return fractions.idxmax()
 
 
