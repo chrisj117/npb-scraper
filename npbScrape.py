@@ -2950,9 +2950,20 @@ def convert_team_to_html(df, mode=None):
     # present in the dataframe) and returns
     if mode == None:
         linkDf["Link"] = linkDf.apply(build_html, args=("Team",), axis=1)
-        # Create dict of Team Name:Complete HTML tag and convert
+        # Create dict of Team Name:<img> tag
+        imgDict = dict(zip(linkDf["Team"], linkDf["ImgSrc"]))
+        # Create dict of Team Name:Complete HTML tag
         teamDict = dict(zip(linkDf["Team"], linkDf["Link"]))
         for col in df.columns:
+            # Insert img tag column before converting team names to <a> tags
+            df.insert(
+                df.columns.get_loc(col),
+                "Logos",
+                (df[col].map(imgDict).infer_objects().fillna("").astype(str)),
+            )
+            # Rename Logos column to blank ""
+            df = df.rename(columns={"Logos": ""})
+            # Convert normal team names to <a> tags
             df[col] = (
                 df[col]
                 .map(teamDict)
@@ -2964,7 +2975,7 @@ def convert_team_to_html(df, mode=None):
     elif mode == "Full":
         # Update Link col to have <a> tags
         linkDf["Link"] = linkDf.apply(build_html, args=("Team",), axis=1)
-        # Create dict of Team Name:Complete HTML tag and convert
+        # Create dict of Team Name:Complete HTML tag
         teamDict = dict(zip(linkDf["Team"], linkDf["Link"]))
     elif mode == "Abb":
         # Make HTML Link col using abbreviated names
