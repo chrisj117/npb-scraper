@@ -21,20 +21,9 @@ def main():
     if not (os.path.exists(statsDir)):
         os.mkdir(statsDir)
 
-    # TODO: combine nameTranslations and rosterData * remove after merge is
-    # successful
-    # combine rosterdata and nametranslations to make ultimate file
-    rosterFile = relDir + "/input/rosterData.csv"
-    translationFile = relDir + "/input/nameTranslations.csv"
-    rosterDf = pd.read_csv(translationFile)
-    nameDf = pd.read_csv(translationFile)
-    nameDf["en_name"] = nameDf["en_name"].str.replace('"', "")
-    nameDf["en_name"] = nameDf["en_name"].str.replace(",", "")
-
     # TODO: merge and update npbPlayerUrlScraper roster scraping to update
     # rosterData.csv *
     # TODO: refactor and put raw files in their own directory *
-
     # TODO: last updated date on player plots
     # TODO: streamlit app
     # TODO: readme github
@@ -870,6 +859,7 @@ class PlayerData(Stats):
             if col in invertCols:
                 plotDf[col] = 1.0 - plotDf[col]
             plotDf[col] = plotDf[col] * 100
+            plotDf[col] = plotDf[col].fillna("0")
             # Convert to whole numbers for display on bar
             plotDf[col] = plotDf[col].astype("int")
 
