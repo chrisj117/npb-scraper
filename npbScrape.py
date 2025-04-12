@@ -23,14 +23,16 @@ def main():
 
     # TODO: merge and update npbPlayerUrlScraper roster scraping to update
     # rosterData.csv *
-    # TODO: refactor and put raw files in their own directory *
+
+    # TODO: more robust error checking in init()s if empty Raw data comes in
+    # TODO: put on streamlit/huggingface/etc so people can use it w/o install
+
     # TODO: last updated date on player plots
-    # TODO: streamlit app
+    # TODO: streamlit app for player plots
     # TODO: readme github
     # TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
     # TODO: add checking raw file existence in init() (also remove user output
     # warnings)
-    # TODO: more robust error checking in init()s if empty Raw data comes in
     # TODO: merge npbPlayoffScraper.py functionality
     # TODO: standardize variable names with underscores
     # TODO: unit tests, linting, auto commit new scrapes
@@ -232,7 +234,7 @@ class PlayerData(Stats):
         super().__init__(statsDir, yearDir, suffix, year)
         # Initialize data frame to store stats
         self.df = pd.read_csv(
-            self.yearDir + "/" + year + "StatsRaw" + suffix + ".csv"
+            self.yearDir + "/raw/" + year + "StatsRaw" + suffix + ".csv"
         )
         # Modify df for correct stats
         if self.suffix == "BF" or self.suffix == "BR":
@@ -1490,7 +1492,7 @@ class StandingsData(Stats):
         super().__init__(statsDir, yearDir, suffix, year)
         # Initialize dataframe and year dir to store stats
         self.df = pd.read_csv(
-            self.yearDir + "/" + year + "StandingsRaw" + suffix + ".csv"
+            self.yearDir + "/raw/" + year + "StandingsRaw" + suffix + ".csv"
         )
 
         # Do bare minimum to prepare IP/PA const file for PlayerData objects
@@ -1681,7 +1683,7 @@ class FieldingData(Stats):
         super().__init__(statsDir, yearDir, suffix, year)
         # Initialize data frame to store stats
         self.df = pd.read_csv(
-            self.yearDir + "/" + year + "FieldingRaw" + suffix + ".csv"
+            self.yearDir + "/raw/" + year + "FieldingRaw" + suffix + ".csv"
         )
         # Modify df for correct stats
         self.org_fielding()
@@ -2170,7 +2172,7 @@ class DailyScoresData(Stats):
         super().__init__(statsDir, yearDir, suffix, year)
         # Initialize dataframe to store scores
         self.df = pd.read_csv(
-            self.yearDir + "/" + year + "DailyScoresRaw" + suffix + ".csv"
+            self.yearDir + "/raw/" + year + "DailyScoresRaw" + suffix + ".csv"
         )
         # Modify df for correct stats
         self.org_daily_scores()
@@ -2688,7 +2690,7 @@ def get_stat_urls(suffix, year):
 
 
 def make_raw_player_file(writeDir, suffix, year):
-    """Opens a file to hold all player stats inside a relative /stats/
+    """Opens a file to hold all player stats inside a relative /year/raw/
     directory that is created before calling this function
 
     Parameters:
@@ -2701,10 +2703,13 @@ def make_raw_player_file(writeDir, suffix, year):
     year (string): The desired npb year to scrape
 
     Returns:
-    newFile (file stream object): An opened file in /stats/ named
+    newFile (file stream object): An opened file in /year/raw/ named
     "[Year][Stats][Suffix].csv"""
     # Open and return the file object in write mode
-    newCsvName = writeDir + "/" + year + "StatsRaw" + suffix + ".csv"
+    rawDir = os.path.join(writeDir, "raw")
+    if not (os.path.exists(rawDir)):
+        os.mkdir(rawDir)
+    newCsvName = rawDir + "/" + year + "StatsRaw" + suffix + ".csv"
     if suffix == "BR":
         print(
             "Raw regular season batting results will be stored in: "
@@ -2724,7 +2729,7 @@ def make_raw_player_file(writeDir, suffix, year):
 
 
 def make_raw_daily_scores_file(writeDir, suffix, year):
-    """Opens a file to hold all player stats inside a relative /stats/
+    """Opens a file to hold all player stats inside a relative /year/raw/
     directory that is created before calling this function
 
     Parameters:
@@ -2732,17 +2737,20 @@ def make_raw_daily_scores_file(writeDir, suffix, year):
     year (string): The desired npb year to scrape
 
     Returns:
-    newFile (file stream object): An opened file in /stats/ named
+    newFile (file stream object): An opened file in /year/raw/ named
     "[Year]DailyScoresRaw[Suffix].csv"""
     # Open and return the file object in write mode
-    newCsvName = writeDir + "/" + year + "DailyScoresRaw" + suffix + ".csv"
+    rawDir = os.path.join(writeDir, "raw")
+    if not (os.path.exists(rawDir)):
+        os.mkdir(rawDir)
+    newCsvName = rawDir + "/" + year + "DailyScoresRaw" + suffix + ".csv"
     print("Raw daily scores will be stored in: " + newCsvName)
     newFile = open(newCsvName, "w")
     return newFile
 
 
 def make_raw_standings_file(writeDir, suffix, year):
-    """Opens a file to hold all player stats inside a relative /stats/
+    """Opens a file to hold all player stats inside a relative /year/raw
     directory that is created before calling this function
 
     Parameters:
@@ -2755,10 +2763,13 @@ def make_raw_standings_file(writeDir, suffix, year):
     year (string): The desired npb year to scrape
 
     Returns:
-    newFile (file stream object): An opened file in /stats/ formatted as
+    newFile (file stream object): An opened file in /year/raw/ formatted as
     "[Year][Standings][Suffix].csv"""
     # Open and return the file object in write mode
-    newCsvName = writeDir + "/" + year + "StandingsRaw" + suffix + ".csv"
+    rawDir = os.path.join(writeDir, "raw")
+    if not (os.path.exists(rawDir)):
+        os.mkdir(rawDir)
+    newCsvName = rawDir + "/" + year + "StandingsRaw" + suffix + ".csv"
     if suffix == "C":
         print(
             "Raw Central League regular season standings will be stored in: "
@@ -2784,7 +2795,7 @@ def make_raw_standings_file(writeDir, suffix, year):
 
 
 def make_raw_fielding_file(writeDir, suffix, year):
-    """Opens a file to hold all fielding stats inside a relative /stats/
+    """Opens a file to hold all fielding stats inside a relative /year/raw/
     directory that is created before calling this function
 
     Parameters:
@@ -2795,11 +2806,14 @@ def make_raw_fielding_file(writeDir, suffix, year):
     year (string): The desired npb year to scrape
 
     Return:
-    newFile (file stream object): An opened file in /stats/ named
+    newFile (file stream object): An opened file in /year/raw/ named
     "[Year]FieldingRaw[Suffix].csv"
     """
     # Open and return the file object in write mode
-    newCsvName = writeDir + "/" + year + "FieldingRaw" + suffix + ".csv"
+    rawDir = os.path.join(writeDir, "raw")
+    if not (os.path.exists(rawDir)):
+        os.mkdir(rawDir)
+    newCsvName = rawDir + "/" + year + "FieldingRaw" + suffix + ".csv"
     if suffix == "R":
         print(
             "Raw regular season fielding results will be stored in: "
