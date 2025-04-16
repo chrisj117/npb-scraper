@@ -1178,6 +1178,20 @@ class TeamData(Stats):
         leagueAvg["Team"] = "League Average"
         # OPS+ league average should always be 100 regardless of actual avg
         leagueAvg["OPS+"] = 100
+        # Recalculate stats that are based on league averages
+        leagueAvg["OPS"] = leagueSLG + leagueOBP
+        leagueAvg["AVG"] = self.df["H"].sum() / self.df["AB"].sum()
+        leagueAvg["OBP"] = leagueOBP
+        leagueAvg["SLG"] = leagueSLG
+        leagueAvg["ISO"] = leagueAvg["SLG"] - leagueAvg["AVG"]
+        leagueAvg["BABIP"] = (self.df["H"].sum() - self.df["HR"].sum()) / (
+            self.df["AB"].sum()
+            - self.df["SO"].sum()
+            - self.df["HR"].sum()
+            + self.df["SF"].sum()
+        )
+        leagueAvg["K%"] = self.df["SO"].sum() / self.df["PA"].sum()
+        leagueAvg["BB/K"] = self.df["BB"].sum() / self.df["SO"].sum()
         self.df = self.df._append(leagueAvg, ignore_index=True)
 
         # Remove temp Park Factor column
@@ -1345,7 +1359,7 @@ class TeamData(Stats):
             / self.df["IP"]
         ) + select_fip_const(self.suffix, self.year)
         # NO PARK FACTOR TEST
-        # self.df['FIP-'] = round((100 * (self.df['FIP'] / (totalFIP))), 0)
+        # self.df['FIP-'] = (100 * (self.df['FIP'] / (totalFIP)))
         self.df["FIP-"] = 100 * (
             self.df["FIP"] / (totalFIP * self.df["ParkF"])
         )
@@ -1357,6 +1371,14 @@ class TeamData(Stats):
         # Calculate league averages
         leagueAvg = self.df.mean(numeric_only=True)
         leagueAvg["Team"] = "League Average"
+        # Recalculate averages for stats that are based on league averages
+        leagueAvg["ERA"] = totalERA
+        leagueAvg["K%"] = self.df["SO"].sum() / self.df["BF"].sum()
+        leagueAvg["BB%"] = self.df["BB"].sum() / self.df["BF"].sum()
+        leagueAvg["HR%"] = self.df["HR"].sum() / self.df["BF"].sum()
+        leagueAvg["K-BB%"] = (self.df["SO"].sum() / self.df["BF"].sum()) - (
+            self.df["BB"].sum() / self.df["BF"].sum()
+        )
         self.df = self.df._append(leagueAvg, ignore_index=True)
 
         # Remove temp Park Factor column
