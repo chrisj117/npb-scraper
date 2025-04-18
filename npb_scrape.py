@@ -411,7 +411,7 @@ class PlayerData(Stats):
         )
         self.df.drop(["BK", "PCT"], axis=1, inplace=True)
         # IP ".0 .1 .2" fix
-        self.df["IP"] = convert_ip_column_in(self.df)
+        self.df["IP"] = convert_ip_column_in(self.df, "IP")
 
         # Counting stat column totals
         total_ip = self.df["IP"].sum()
@@ -554,7 +554,7 @@ class PlayerData(Stats):
             col_order.remove("HLD")
         self.df = self.df[col_order]
         # Changing .33 to .1 and .66 to .2 in the IP column
-        self.df["IP"] = convert_ip_column_out(self.df)
+        self.df["IP"] = convert_ip_column_out(self.df, "IP")
         self.df = select_league(self.df, self.suffix)
 
     def org_bat(self):
@@ -711,8 +711,7 @@ class PlayerData(Stats):
         # Combine into 1 raw const df/file
         standings_df1 = pd.read_csv(standings_file1)
         standings_df2 = pd.read_csv(standings_file2)
-        standings_consts = [standings_df1, standings_df2]
-        ip_pa_df = pd.concat(standings_consts)
+        ip_pa_df = pd.concat([standings_df1, standings_df2])
 
         # DEBUG: this file should have all combined teams and games
         # new_csv_name = (const_dir + "/" + self.year + "Const" + self.suffix +
@@ -1228,7 +1227,7 @@ class TeamData(Stats):
         league_avg["K%"] = self.df["SO"].sum() / self.df["PA"].sum()
         league_avg["BB%"] = self.df["BB"].sum() / self.df["PA"].sum()
         league_avg["BB/K"] = self.df["BB"].sum() / self.df["SO"].sum()
-        self.df = self.df._append(league_avg, ignore_index=True)
+        self.df.loc[len(self.df)] = league_avg
 
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
@@ -1285,7 +1284,7 @@ class TeamData(Stats):
         """Outputs pitching team stat files using the organized player stat
         dataframes"""
         # IP column ".1 .2 .3" calculation fix
-        self.player_df["IP"] = convert_ip_column_in(self.player_df)
+        self.player_df["IP"] = convert_ip_column_in(self.player_df, "IP")
         # Initialize new row list with all possible teams
         row_arr = [
             "Hanshin Tigers",
@@ -1414,7 +1413,7 @@ class TeamData(Stats):
         league_avg["K-BB%"] = (self.df["SO"].sum() / self.df["BF"].sum()) - (
             self.df["BB"].sum() / self.df["BF"].sum()
         )
-        self.df = self.df._append(league_avg, ignore_index=True)
+        self.df.loc[len(self.df)] = league_avg
 
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
@@ -1471,7 +1470,7 @@ class TeamData(Stats):
         ]
         self.df = self.df[col_order_arr]
         # Changing .33 to .1 and .66 to .2 in the IP column
-        self.df["IP"] = convert_ip_column_out(self.df)
+        self.df["IP"] = convert_ip_column_out(self.df, "IP")
         # Add "League" column
         self.df = select_league(self.df, self.suffix)
 
@@ -1834,7 +1833,7 @@ class FieldingData(Stats):
         self.df["TZR/143"] = self.df["TZR/143"].astype(str).replace("inf", "")
         self.df["TZR"] = self.df["TZR"].astype(str).replace("inf", "")
         # Innings conversion
-        self.df["Inn"] = convert_ip_column_out(self.df)
+        self.df["Inn"] = convert_ip_column_out(self.df, "Inn")
         # Add League and Age cols
         self.df = select_league(self.df, self.suffix)
         self.df = add_roster_data(self.df, self.suffix)
@@ -2021,8 +2020,8 @@ class TeamSummaryData(Stats):
     def __init__(
         self,
         teamfielding_df,
-        standings1Df,
-        standings2Df,
+        standings_df1,
+        standings_df2,
         team_bat_df,
         team_pitch_df,
         stats_dir,
@@ -2032,15 +2031,15 @@ class TeamSummaryData(Stats):
     ):
         """TeamSummaryData new variables:
         teamfielding_df (pandas dataframe): Holds the team fielding stats df
-        standings1Df (pandas dataframe): Holds the first half of the standings
-        standings2Df (pandas dataframe): Holds the second half of the standings
+        standings_df1 (pandas dataframe): Holds the first half of the standings
+        standings_df2 (pandas dataframe): Holds the second half of the standings
         team_bat_df (pandas dataframe): Holds the team batting stats df
         team_pitch_df (pandas dataframe): Holds the team pitching stats df
         df (pandas dataframe): Holds a team's summarized stats"""
         super().__init__(stats_dir, year_dir, suffix, year)
         # Initialize data frames to store team stats
         self.teamfielding_df = teamfielding_df
-        self.standings_df = pd.concat([standings1Df, standings2Df])
+        self.standings_df = pd.concat([standings_df1, standings_df2])
         self.team_bat_df = team_bat_df
         self.team_pitch_df = team_pitch_df
         self.df = pd.DataFrame()
@@ -2694,7 +2693,7 @@ def get_stat_urls(suffix, year):
 
     # Loop through each entry and change the year in the URL before returning
     for i, url in enumerate(url_arr):
-        url_arr[i] = url_arr[i].replace("2024", year)
+        url_arr[i] = url.replace("2024", year)
     return url_arr
 
 
@@ -3100,8 +3099,7 @@ def calculate_age(birthdate):
     return npb_age
 
 
-def convert_ip_column_out(df):
-    # TODO: pass in inn_col
+def convert_ip_column_out(df, inn_col="IP"):
     """In baseball, innings are traditionally represented using .1 (single
     inning pitched), .2 (2 innings pitched), and whole numbers. This function
     converts the decimals FROM thirds (.33 -> .1, .66 -> .2) for sake of
@@ -3110,14 +3108,11 @@ def convert_ip_column_out(df):
     Parameters:
     df (pandas dataframe): A pitching stat dataframe with the "thirds"
     representation
+    inn_col (string): The name of the column to convert (default is "IP")
 
     Returns:
-    temp_df['IP']/temp_df['Inn'] (pandas dataframe column): An innings column
+    temp_df[inn_col] (pandas dataframe column): An innings column
     converted back to the informal innings representation"""
-    if "IP" in df.columns:
-        inn_col = "IP"
-    elif "Inn" in df.columns:
-        inn_col = "Inn"
     # Innings ".0 .1 .2" fix
     temp_df = pd.DataFrame(df[inn_col])
     # Get the ".0 .3 .7" in the innings column
@@ -3137,21 +3132,18 @@ def convert_ip_column_out(df):
     return temp_df[inn_col]
 
 
-def convert_ip_column_in(df):
+def convert_ip_column_in(df, inn_col="IP"):
     """Converts the decimals in the IP column TO thirds (.1 -> .33, .2 -> .66)
     for stat calculations
 
     Parameters:
     df (pandas dataframe): A pitching stat dataframe with the traditional
     .1/.2 IP representation
+    inn_col (string): The name of the column to convert (default is "IP")
 
     Returns:
-    temp_df['IP'] (pandas dataframe column): An IP column converted for stat
+    temp_df[inn_col] (pandas dataframe column): An IP column converted for stat
     calculations"""
-    if "IP" in df.columns:
-        inn_col = "IP"
-    elif "Inn" in df.columns:
-        inn_col = "Inn"
     temp_df = pd.DataFrame(df[inn_col])
     # Get the ".0 .1 .2" in the 'IP' column
     ip_decimals = temp_df[inn_col] % 1
