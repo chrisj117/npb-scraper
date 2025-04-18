@@ -34,7 +34,8 @@ def main():
     # warnings)
     # TODO: merge npbPlayoffScraper.py functionality
     # TODO: standardize variable names with underscores
-    # TODO: unit tests, linting, auto commit new scrapes
+    # TODO: unit tests, linting (https://github.com/psf/black), 
+    # auto commit new scrapes
     # TODO: multithread scrape, org, and percentiles
     # TODO: update fipConsts, parkFactors (need mr yakyu)
 
@@ -1193,6 +1194,7 @@ class TeamData(Stats):
             + self.df["SF"].sum()
         )
         leagueAvg["K%"] = self.df["SO"].sum() / self.df["PA"].sum()
+        leagueAvg["BB%"] = self.df["BB"].sum() / self.df["PA"].sum()
         leagueAvg["BB/K"] = self.df["BB"].sum() / self.df["SO"].sum()
         self.df = self.df._append(leagueAvg, ignore_index=True)
 
