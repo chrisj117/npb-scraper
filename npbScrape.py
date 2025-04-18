@@ -27,7 +27,6 @@ def main():
     # TODO: more robust error checking in init()s if empty Raw data comes in
     # TODO: put on streamlit/huggingface/etc so people can use it w/o install
 
-    # TODO: last updated date on player plots
     # TODO: streamlit app for player plots
     # TODO: readme github
     # TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
@@ -37,7 +36,6 @@ def main():
     # TODO: standardize variable names with underscores
     # TODO: unit tests, linting, auto commit new scrapes
     # TODO: multithread scrape, org, and percentiles
-    # TODO: better color grading for percentile plots
     # TODO: update fipConsts, parkFactors (need mr yakyu)
 
     # Check for input files (all except playerUrlsFix.csv are required)
@@ -875,25 +873,25 @@ class PlayerData(Stats):
                 plotDf[plotDf[nameCol] == player].index[0]
             ]:
                 if value < 10:
-                    color = "#000066"
+                    color = "#8c7373"
                 elif value < 20:
-                    color = "#0000CC"
+                    color = "#996666"
                 elif value < 30:
-                    color = "#4D4DFF"
+                    color = "#a65959"
                 elif value < 40:
-                    color = "#B3B3FF"
+                    color = "#b34d4d"
                 elif value < 50:
-                    color = "#4A4A4A"
+                    color = "#bf4040"
                 elif value < 60:
-                    color = "#4A2121"
+                    color = "#cc3333"
                 elif value < 70:
-                    color = "#CC5C5A"
+                    color = "#d92626"
                 elif value < 80:
-                    color = "#8C2929"
+                    color = "#e61919"
                 elif value < 90:
-                    color = "#8C1212"
+                    color = "#f20d0d"
                 elif value < 100:
-                    color = "#660000"
+                    color = "#ff0000"
                 colorVals.append(color)
             barContainer = plt.barh(
                 playerData.index,
@@ -932,7 +930,11 @@ class PlayerData(Stats):
                 )
             # Graph and axis names, styles
             plt.xlabel("Percentile Rank")
-            plt.title(f"{player} - Stat Percentiles")
+            plt.title(
+                f"{player} - Stat Percentiles ("
+                + datetime.today().strftime("%Y-%m-%d")
+                + ")"
+            )
             plt.xlim(0, 100)
             plt.grid(axis="x", linestyle="--", alpha=0.7)
             plt.savefig(
