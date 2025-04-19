@@ -1,44 +1,33 @@
 npbScrape.py
-# - After code is finished, but right before github release (in order) -
-# TODO: Find an appropriate license
-# TOOD: 
-# TODO: look into type hinting?
-# TODO: convert to PEP 008 standard (EX: function, var names)
-# TODO: remove all DEBUG code and TODOs (remove CONVERSION OF X and any
-# mentions of yakyucosmo.com in docstrings)
-# TODO: final documentation sweep
-# TODO: eventually make portable and give to Gio
-# TODO: maintain 80 char line limit (or find a linter?)
-# TODO: write a README.txt for web scraping, no ddos, this is educational, etc
-# TODO: automated testing to test if it can produce all files/dirs itself
-# TODO: upload to github
-# TODO: refactor checking for all input files into one function
-# TODO: Remove choice and auto output zips? (main())
-
-# - Possible future stats/data -
-# TODO: post season stats
-# TODO: visual data (plots/graphs)
-# TODO: scrape even more years before 2020
-# TODO: new leaders table on front page
-# TODO: team pages/player pages
-
 # - Misc short term -
-# TODO: *URGENT* League average row disappeared in team stats (see post szn scraper for fix)
-# TODO: in get_user_choice(), scan for Raw files in the year and automatically
-# scrape without user input if no Raw files are present (maybe force scraping,
-# unless user enter DEBUG mode)
-# TODO: (REFACTOR) TURN INTO self.constDf, then change player_org? (IN
-# StandingsData init())
-# TODO: PA/IP drop const rounding issues (not dropping players)
-# TODO: REMOVE if statement (regarding convert_player_to_html) or check for 2024 and beyond years only? in playerData output_final()
-
-# - Ongoing/untested -
+# TODO: continually update fip_consts, park_factors (need mr yakyu)
+# TODO: standardize docstring formats
+# TODO: refactor player stat org methods similarly to team stat org
+# TODO: more robust error checking in init()s if empty Raw data comes in
+# TODO: add checking raw file existence in init() (also remove user output
+# warnings)
+# TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
+# TODO: merge and update npbPlayerUrlScraper roster scraping to update
+# roster_data.csv *
+# TODO: merge npbPlayoffScraper.py functionality
+# TODO: linting (https://github.com/psf/black + pylint)
+# TODO: unit tests
+# TODO: auto commit new scrapes
+# TODO: multithread scrape, org, and percentiles
+# TODO: write a README.txt for web scraping, no ddos, this is educational, etc
+# TODO: TURN INTO self.constDf, then change player_org? (IN StandingsData
+# init()) - end goal is to alleviate dependence on each other
+# TODO: eventually make portable and give to Gio
+    # TODO: put on streamlit/huggingface/etc so people can use it w/o install
+    # TODO: streamlit app for player plots
 # TODO: refactors for any ORG functions
-# TODO: add year scaling for filtering new 2024 and beyond farm teams (current
-# code only checks for 2024)
-# TODO: in pitchOrg() fix the intermittent "+" sign conversion errors
 # TODO: potential refactors on repeating statements in any stat grab function
 # TODO: refactor argBypass in main()
-# TODO: Create error function to check all files in an INPUT folder
-# TODO: Refine errors in FIP const and Park factor
-# TODO: Move common functions to a library?
+# TODO: move common functions to a library
+# TODO: look into type hinting
+
+# - Possible future stats/data -
+# TODO: projection of future stats
+# TODO: more visual data (plots/graphs)
+# TODO: scrape even more years before 2020
+# TODO: team pages/player pages

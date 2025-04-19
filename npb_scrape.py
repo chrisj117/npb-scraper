@@ -1,3 +1,5 @@
+"""Scrapes NPB and Farm League statistics from npb.jp"""
+
 from time import sleep
 from random import randint
 from datetime import datetime
@@ -14,28 +16,37 @@ import matplotlib.pyplot as plt
 
 
 def main():
+    """The main function for the NPB/Farm League Statistic Scraper.
+
+    This function orchestrates the scraping, processing, and output of baseball
+    statistics from the NPB (Nippon Professional Baseball) and Farm League
+    websites. It handles user input, directory setup, file checks, and the
+    execution of various scraping and data organization tasks.
+
+    Workflow:
+    1. Initializes the directory structure for storing scraped data.
+    2. Validates the presence of required input files.
+    3. Processes command-line arguments to determine the year to scrape
+       and bypasses user input if arguments are provided.
+    4. Prompts the user for input if no command-line arguments are given,
+       allowing for manual control over scraping and data organization.
+    5. Scrapes and organizes statistics for regular season and farm league
+       games, including batting, pitching, fielding, standings, and daily
+       scores.
+    6. Generates player percentile plots and optionally zips the output
+       files for easier distribution.
+
+    Returns:
+        int:
+            - -1 if an error occurs.
+            - 0 if the program completes successfully.
+            - 1 if the program completes successfully with user input."""
     print("NPB/Farm League Statistic Scraper")
     # Open the directory to store the scraped stat csv files
     rel_dir = os.path.dirname(__file__)
     stats_dir = os.path.join(rel_dir, "stats")
     if not os.path.exists(stats_dir):
         os.mkdir(stats_dir)
-
-    # TODO: merge and update npbPlayerUrlScraper roster scraping to update
-    # roster_data.csv *
-    # TODO: refactor player stat org methods similarly to team stat org
-    # TODO: more robust error checking in init()s if empty Raw data comes in
-    # TODO: put on streamlit/huggingface/etc so people can use it w/o install
-    # TODO: streamlit app for player plots
-    # TODO: readme github
-    # TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
-    # TODO: add checking raw file existence in init() (also remove user output
-    # warnings)
-    # TODO: merge npbPlayoffScraper.py functionality
-    # TODO: unit tests, linting (https://github.com/psf/black + pylint),
-    # auto commit new scrapes
-    # TODO: multithread scrape, org, and percentiles
-    # TODO: update fip_consts, park_factors (need mr yakyu)
 
     # Check for input files (all except player_urls_fix.csv are required)
     if check_input_files(rel_dir) is True:
@@ -205,6 +216,8 @@ def main():
 
     if arg_bypass is False:
         input("Press Enter to exit. ")
+        return 1
+    return 0
 
 
 class Stats:
@@ -229,13 +242,51 @@ class Stats:
         self.suffix = suffix
         self.year = year
         self.year_dir = year_dir
+        self.df = pd.DataFrame()
+
+    def __str__(self):
+        """Outputs the Alt view of the associated dataframe (no HTML team or
+        player names, no csv formatting, shows entire df instead of only
+        Leaders)"""
+        return self.df.to_string()
 
 
 class PlayerData(Stats):
+    """A class to handle individual player statistics for NPB and Farm League.
+
+    This class extends the `Stats` class and is responsible for organizing,
+    processing, and outputting individual player statistics for batting and
+    pitching. It reads raw CSV files, calculates additional statistics, and
+    formats the data for final output.
+
+    Attributes:
+        df (pandas.DataFrame): Holds an entire league's individual batting or
+            pitching statistics.
+        stats_dir (str): The directory that holds all year stats and player
+            URL files.
+        year_dir (str): The directory to store relevant year statistics.
+        suffix (str): Indicates the type of statistics (e.g., "BR" for regular
+            season batting, "PR" for regular season pitching).
+        year (str): The year that the statistics cover.
+
+    Methods:
+        output_final():
+            Outputs the final organized statistics to CSV files for upload.
+        org_pitch():
+            Organizes raw pitching statistics and calculates additional
+            metrics.
+        org_bat():
+            Organizes raw batting statistics and calculates additional metrics.
+        get_team_games():
+            Combines team games played into a single DataFrame for IP/PA
+            calculations.
+        append_positions(field_df, pitch_df):
+            Adds the primary position of a player to the player DataFrame.
+        generate_plots(storage_dir, field_df=None):
+            Generates percentile plots for player statistics and saves them
+            as PNG files."""
+
     def __init__(self, stats_dir, year_dir, suffix, year):
-        """PlayerData new variables:
-        df (pandas dataframe): Holds an entire NPB league's individual
-        batting/pitching stats"""
         super().__init__(stats_dir, year_dir, suffix, year)
         # Initialize data frame to store stats
         self.df = pd.read_csv(
@@ -246,12 +297,6 @@ class PlayerData(Stats):
             self.org_bat()
         elif self.suffix == "PF" or self.suffix == "PR":
             self.org_pitch()
-
-    def __str__(self):
-        """Outputs the Alt view of the associated dataframe (no HTML team or
-        player names, no csv formatting, shows entire df instead of only
-        Leaders)"""
-        return self.df.to_string()
 
     def output_final(self):
         """Outputs final files for upload using the filtered and organized
@@ -433,7 +478,6 @@ class PlayerData(Stats):
         )
 
         # Individual statistic calculations
-        # Calculate kwERA
         self.df["kwERA"] = round(
             (4.80 - (10 * ((self.df["SO"] - self.df["BB"]) / self.df["BF"]))),
             2,
@@ -447,7 +491,6 @@ class PlayerData(Stats):
         self.df["K%"] = round(self.df["SO"] / self.df["BF"], 3)
         self.df["BB%"] = round(self.df["BB"] / self.df["BF"], 3)
         self.df["K-BB%"] = round(self.df["K%"] - self.df["BB%"], 3)
-        # Calculate FIP
         temp1 = 13 * self.df["HR"]
         temp2 = 3 * (self.df["BB"] + self.df["HB"])
         temp3 = 2 * self.df["SO"]
@@ -456,21 +499,16 @@ class PlayerData(Stats):
             + select_fip_const(self.suffix, self.year),
             2,
         )
-        # Calculate FIP-
         self.df["FIP-"] = round(
             (100 * (self.df["FIP"] / (total_fip * self.df["ParkF"]))), 0
         )
-        # Calculate WHIP
         self.df["WHIP"] = round(
             (self.df["BB"] + self.df["H"]) / self.df["IP"], 2
         )
-        # Calculate HR%
         self.df["HR%"] = self.df["HR"] / self.df["BF"]
-        # Calculate kwERA-
         self.df["kwERA-"] = round(
             (100 * (self.df["kwERA"] / (total_kwera))), 0
         )
-        # Calculate Diff
         self.df["Diff"] = round((self.df["ERA"] - self.df["FIP"]), 2)
 
         # Data cleaning/reformatting
@@ -511,7 +549,7 @@ class PlayerData(Stats):
         self.df["WHIP"] = self.df["WHIP"].str.replace("inf", "")
         self.df["Diff"] = self.df["Diff"].astype(str)
         self.df["Diff"] = self.df["Diff"].str.replace("nan", "")
-        # Add age and throwing/batting arm columns
+        # Reordering columns
         col_order = [
             "Pitcher",
             "G",
@@ -546,6 +584,7 @@ class PlayerData(Stats):
             "K-BB%",
             "Team",
         ]
+        # Reordering for age and throwing arm if correct year
         if int(self.year) == datetime.now().year:
             self.df = add_roster_data(self.df, self.suffix)
             col_order.insert(-1, "Age")
@@ -601,7 +640,6 @@ class PlayerData(Stats):
         self.df["TTO%"] = (
             self.df["BB"] + self.df["SO"] + self.df["HR"]
         ) / self.df["PA"]
-        self.df["TTO%"] = self.df["TTO%"].apply("{:.1%}".format)
         numer = self.df["H"] - self.df["HR"]
         denom = self.df["AB"] - self.df["SO"] - self.df["HR"] + self.df["SF"]
         self.df["BABIP"] = round((numer / denom), 3)
@@ -632,6 +670,7 @@ class PlayerData(Stats):
             "ISO": "{:.3f}",
             "BABIP": "{:.3f}",
             "BB/K": "{:.2f}",
+            "TTO%": "{:.1%}",
         }
         for key, value in format_maps.items():
             self.df[key] = self.df[key].apply(value.format)
@@ -694,19 +733,21 @@ class PlayerData(Stats):
         ip_pa_df (pandas dataframe): A dataframe with 2 columns: team name and
         # of games that team has played"""
         # Make new raw const file in write mode (made in writeStandingsStats())
-        const_dir = os.path.join(self.year_dir, "dropConst")
+        const_dir = os.path.join(self.year_dir, "drop_const")
         if not os.path.exists(const_dir):
             os.mkdir(const_dir)
 
         # Read in the correct raw const files for reg season or farm
         # Regular season team,game files
+        standings_file1 = ""
+        standings_file2 = ""
         if self.suffix == "BR" or self.suffix == "PR":
-            standings_file1 = const_dir + "/" + self.year + "ConstRawC.csv"
-            standings_file2 = const_dir + "/" + self.year + "ConstRawP.csv"
+            standings_file1 = const_dir + "/" + self.year + "const_rawC.csv"
+            standings_file2 = const_dir + "/" + self.year + "const_rawP.csv"
         # Farm team,game files
         if self.suffix == "BF" or self.suffix == "PF":
-            standings_file1 = const_dir + "/" + self.year + "ConstRawW.csv"
-            standings_file2 = const_dir + "/" + self.year + "ConstRawE.csv"
+            standings_file1 = const_dir + "/" + self.year + "const_rawW.csv"
+            standings_file2 = const_dir + "/" + self.year + "const_rawE.csv"
 
         # Combine into 1 raw const df/file
         standings_df1 = pd.read_csv(standings_file1)
@@ -814,6 +855,8 @@ class PlayerData(Stats):
 
         # Suffix determines stats to be put into percentiles
         # Players must meet IP criteria to avoid skewing percentiles
+        plot_cols = []
+        invert_cols = []
         if self.suffix == "PR" or self.suffix == "PF":
             name_col = "Pitcher"
             plot_cols = ["K-BB%", "BB%", "K%", "HR%", "WHIP", "FIP-", "ERA+"]
@@ -981,6 +1024,34 @@ class PlayerData(Stats):
 
 
 class TeamData(Stats):
+    """A class to handle team statistics for NPB and Farm League.
+
+    This class extends the `Stats` class and is responsible for organizing,
+    processing, and outputting team statistics for batting and pitching. It
+    aggregates individual player statistics to calculate team-level metrics
+    and formats the data for final output.
+
+    Attributes:
+        player_df (pandas.DataFrame): Holds an entire league's individual
+            batting or pitching statistics used to calculate team stats.
+        stats_dir (str): The directory that holds all year stats and player
+            URL files.
+        year_dir (str): The directory to store relevant year statistics.
+        suffix (str): Indicates the type of statistics (e.g., "BR" for regular
+            season batting, "PR" for regular season pitching).
+        year (str): The year that the statistics cover.
+        df (pandas.DataFrame): Holds the aggregated team statistics.
+
+    Methods:
+        output_final():
+            Outputs the final organized team statistics to CSV files for upload.
+        org_team_bat():
+            Aggregates individual player batting statistics to calculate team
+            batting metrics.
+        org_team_pitch():
+            Aggregates individual player pitching statistics to calculate team
+            pitching metrics."""
+
     def __init__(self, player_df, stats_dir, year_dir, suffix, year):
         """TeamData new variables:
         player_df (pandas dataframe): Holds an entire NPB league's individual
@@ -992,12 +1063,6 @@ class TeamData(Stats):
             self.org_team_bat()
         elif self.suffix == "PF" or self.suffix == "PR":
             self.org_team_pitch()
-
-    def __str__(self):
-        """Outputs the Alt view of the associated dataframe (no HTML
-        team or player names, no csv formatting, shows entire df instead of
-        only Leaders)"""
-        return self.df.to_string()
 
     def output_final(self):
         """Outputs final files for upload using the team stat dataframes"""
@@ -1447,11 +1512,11 @@ class TeamData(Stats):
             "R": "{:.0f}",
             "ER": "{:.0f}",
         }
+        # Readd HLD formatting if not farm
+        if self.suffix != "PF":
+            format_maps["HLD"] = "{:.0f}"
         for key, value in format_maps.items():
             self.df[key] = self.df[key].apply(value.format)
-        # Only farm NPB pitching lacks HLD column
-        if self.suffix != "PF":
-            self.df["HLD"] = self.df["HLD"].apply("{:.0f}".format)
 
         # Reorder columns
         col_order_arr = col_init_arr + [
@@ -1476,6 +1541,26 @@ class TeamData(Stats):
 
 
 class StandingsData(Stats):
+    """A class to handle league standings data for NPB and Farm League.
+
+    This class extends the `Stats` class and is responsible for organizing,
+    processing, and outputting league standings data. It also prepares data
+    for calculating player qualification thresholds (e.g., IP/PA drop
+    constants) and integrates team-level statistics.
+
+    Attributes:
+        df (pandas.DataFrame): Holds the league standings data.
+        const_df (pandas.DataFrame): A two-column DataFrame containing team
+            names and the number of games they have played.
+
+    Methods:
+        output_final(tb_df, tp_df):
+            Outputs the final organized standings data to CSV files for upload.
+        org_standings(tb_df, tp_df):
+            Organizes the standings data and calculates additional metrics
+            such as runs scored (RS), runs allowed (RA), run differential
+            (Diff), and expected winning percentage (XPCT)."""
+
     def __init__(self, stats_dir, year_dir, suffix, year):
         """StandingsData new variables:
         df (pandas dataframe): Holds a league's standings stats
@@ -1510,8 +1595,8 @@ class StandingsData(Stats):
             "Oisix NiigataAlbirex BC": "Oisix Albirex",
             "Kufu HAYATEVentures Shizuoka": "HAYATE Ventures",
         }
-        for team in team_dict:
-            self.df.loc[self.df.Team == team, "Team"] = team_dict[team]
+        for raw, corrected in team_dict.items():
+            self.df.loc[self.df.Team == raw, "Team"] = corrected
         # Column renaming (Int = Inter, adding space between vs and team abbr.)
         self.df.rename(
             columns={
@@ -1536,19 +1621,13 @@ class StandingsData(Stats):
 
         # Make Raw const df, file, and dir for IP/PA calculations
         self.const_df = self.df[["Team", "G"]]
-        const_dir = os.path.join(self.year_dir, "dropConst")
+        const_dir = os.path.join(self.year_dir, "drop_const")
         if not os.path.exists(const_dir):
             os.mkdir(const_dir)
         new_csv_const = (
-            const_dir + "/" + self.year + "ConstRaw" + self.suffix + ".csv"
+            const_dir + "/" + self.year + "const_raw" + self.suffix + ".csv"
         )
         self.const_df.to_csv(new_csv_const, index=False)
-
-    def __str__(self):
-        """Outputs the Alt view of the associated dataframe (no HTML
-        team or player names, no csv formatting, shows entire df instead of
-        only Leaders)"""
-        return self.df.to_string()
 
     def output_final(self, tb_df, tp_df):
         """Outputs final files using the standings dataframes
@@ -1673,6 +1752,25 @@ class StandingsData(Stats):
 
 
 class FieldingData(Stats):
+    """A class to handle individual fielding statistics for NPB and Farm
+    League.
+
+    This class extends the `Stats` class and is responsible for organizing,
+    processing, and outputting individual fielding statistics. It reads raw
+    CSV files, calculates additional metrics, and formats the data for final
+    output.
+
+    Attributes:
+        df (pandas.DataFrame): Holds the individual fielding statistics.
+
+    Methods:
+        output_final():
+            Outputs the final organized fielding statistics to CSV files for
+            upload.
+        org_fielding():
+            Organizes raw fielding statistics and calculates additional metrics
+            such as Total Zone Rating (TZR) and TZR per 143 games (TZR/143)."""
+
     def __init__(self, stats_dir, year_dir, suffix, year):
         """FieldingData new variables:
         df (pandas dataframe): Holds the individual fielding stats"""
@@ -1683,11 +1781,6 @@ class FieldingData(Stats):
         )
         # Modify df for correct stats
         self.org_fielding()
-
-    def __str__(self):
-        """Outputs the Alt view of the associated dataframe (no HTML
-        team or player names, no csv formatting)"""
-        return self.df.to_string()
 
     def output_final(self):
         """Outputs final files using the fielding dataframes"""
@@ -1860,6 +1953,27 @@ class FieldingData(Stats):
 
 
 class TeamFieldingData(Stats):
+    """A class to handle team fielding statistics for NPB and Farm League.
+
+    This class extends the `Stats` class and is responsible for organizing,
+    processing, and outputting team fielding statistics. It aggregates
+    individual player fielding statistics to calculate team-level metrics
+    and formats the data for final output.
+
+    Attributes:
+        fielding_df (pandas.DataFrame): Holds the individual fielding
+        statistics.
+        df (pandas.DataFrame): Holds the aggregated team fielding statistics.
+
+    Methods:
+        output_final():
+            Outputs the final organized team fielding statistics to CSV files
+            for upload.
+        org_team_fielding():
+            Aggregates individual fielding statistics to calculate team-level
+            metrics such as Total Zone Rating (TZR) and TZR per 143 games
+            (TZR/143)."""
+
     def __init__(self, fielding_df, stats_dir, year_dir, suffix, year):
         """TeamFieldingData new variables:
         fielding_df (pandas dataframe): Holds the individual fielding stats df
@@ -1870,11 +1984,6 @@ class TeamFieldingData(Stats):
         self.df = pd.DataFrame()
         # Modify df for correct stats
         self.org_team_fielding()
-
-    def __str__(self):
-        """Outputs the Alt view of the associated dataframe (no HTML
-        team or player names, no csv formatting)"""
-        return self.df.to_string()
 
     def output_final(self):
         """Outputs final files using the team fielding dataframes"""
@@ -2017,9 +2126,35 @@ class TeamFieldingData(Stats):
 
 
 class TeamSummaryData(Stats):
+    """A class to handle team summary statistics for NPB and Farm League.
+
+    This class extends the `Stats` class and is responsible for aggregating,
+    organizing, and outputting team summary statistics. It combines data from
+    team fielding, standings, batting, and pitching statistics to provide a
+    comprehensive summary of team performance.
+
+    Attributes:
+        team_fielding_df (pandas.DataFrame): Holds the team fielding
+        statistics.
+        standings_df (pandas.DataFrame): Holds the combined league standings
+            data from two halves (e.g., Central and Pacific leagues).
+        team_bat_df (pandas.DataFrame): Holds the team batting statistics.
+        team_pitch_df (pandas.DataFrame): Holds the team pitching statistics.
+        df (pandas.DataFrame): Holds the aggregated team summary statistics.
+
+    Methods:
+        output_final():
+            Outputs the final organized team summary statistics to CSV files
+            for upload.
+        org_team_summary():
+            Aggregates and organizes team statistics from fielding, standings,
+            batting, and pitching data to calculate metrics such as win-loss
+            records, run differentials, and advanced metrics like OPS+ and
+            ERA+."""
+
     def __init__(
         self,
-        teamfielding_df,
+        team_fielding_df,
         standings_df1,
         standings_df2,
         team_bat_df,
@@ -2030,26 +2165,22 @@ class TeamSummaryData(Stats):
         year,
     ):
         """TeamSummaryData new variables:
-        teamfielding_df (pandas dataframe): Holds the team fielding stats df
+        team_fielding_df (pandas dataframe): Holds the team fielding stats df
         standings_df1 (pandas dataframe): Holds the first half of the standings
-        standings_df2 (pandas dataframe): Holds the second half of the standings
+        standings_df2 (pandas dataframe): Holds the second half of the
+        standings
         team_bat_df (pandas dataframe): Holds the team batting stats df
         team_pitch_df (pandas dataframe): Holds the team pitching stats df
         df (pandas dataframe): Holds a team's summarized stats"""
         super().__init__(stats_dir, year_dir, suffix, year)
         # Initialize data frames to store team stats
-        self.teamfielding_df = teamfielding_df
+        self.team_fielding_df = team_fielding_df
         self.standings_df = pd.concat([standings_df1, standings_df2])
         self.team_bat_df = team_bat_df
         self.team_pitch_df = team_pitch_df
         self.df = pd.DataFrame()
         # Modify df for correct stats
         self.org_team_summary()
-
-    def __str__(self):
-        """Outputs the Alt view of the associated dataframe (no HTML
-        team or player names, no csv formatting)"""
-        return self.df.to_string()
 
     def output_final(self):
         """Outputs final files using the team summary dataframes"""
@@ -2114,7 +2245,7 @@ class TeamSummaryData(Stats):
     def org_team_summary(self):
         """Organize the team summary stat csv using the team stat dfs"""
         # Group stats by team and append to team dataframe
-        self.df["Team"] = self.teamfielding_df["Team"].tolist()
+        self.df["Team"] = self.team_fielding_df["Team"].tolist()
         self.df = pd.merge(
             self.df,
             self.team_pitch_df[
@@ -2137,7 +2268,7 @@ class TeamSummaryData(Stats):
         self.df["Diff"] = self.df["RS"].astype(int) - self.df["RA"].astype(int)
         self.df = pd.merge(
             self.df,
-            self.teamfielding_df[["Team", "TZR"]],
+            self.team_fielding_df[["Team", "TZR"]],
             on="Team",
             how="left",
         )
@@ -2167,6 +2298,23 @@ class TeamSummaryData(Stats):
 
 
 class DailyScoresData(Stats):
+    """A class to handle daily game scores for NPB and Farm League.
+
+    This class extends the `Stats` class and is responsible for organizing,
+    processing, and outputting daily game scores. It reads raw CSV files,
+    formats the data, and prepares it for final output.
+
+    Attributes:
+        df (pandas.DataFrame): Holds the daily game scores.
+
+    Methods:
+        output_final():
+            Outputs the final organized daily game scores to CSV files for
+            upload.
+        org_daily_scores():
+            Organizes raw daily game scores, converts team abbreviations to
+            full names, and formats the data for presentation."""
+
     def __init__(self, stats_dir, year_dir, suffix, year):
         """DailyScores new variables:
         df (pandas dataframe): Holds the scores of the games"""
@@ -2177,11 +2325,6 @@ class DailyScoresData(Stats):
         )
         # Modify df for correct stats
         self.org_daily_scores()
-
-    def __str__(self):
-        """Outputs the Alt view of the associated dataframe (no HTML
-        team or player names, no csv formatting)"""
-        return self.df.to_string()
 
     def output_final(self):
         """Outputs final files using the daily score dataframes"""
@@ -2285,7 +2428,7 @@ def get_url(try_url):
     response (Response): The URL's response"""
     try:
         print("Connecting to: " + try_url)
-        response = requests.get(try_url)
+        response = requests.get(try_url, timeout=10)
         response.raise_for_status()
     # Page doesn't exist (404 not found, 403 not authorized, etc)
     except HTTPError as hp:
@@ -3044,6 +3187,7 @@ def add_roster_data(df, suffix):
     # Player throwing/batting arms
     roster_df = pd.read_csv(roster_data_file)
     convert_col = df.iloc[:, 0].name
+    tb_col = ""
     if suffix == "BR" or suffix == "BF" or suffix == "PR" or suffix == "PF":
         if suffix == "PR" or suffix == "PF":
             tb_col = "T"
@@ -3127,7 +3271,7 @@ def convert_ip_column_out(df, inn_col="IP"):
     condlist = [((x % 1) < 0.29), ((x % 1) >= 0.29)]
     choicelist = [x, (x - (x % 1)) + 1]
     temp_df[inn_col] = np.select(condlist, choicelist)
-    temp_df[inn_col] = temp_df[inn_col].apply("{:.1f}".format)
+    temp_df[inn_col] = temp_df[inn_col].apply(lambda x: f"{x:.1f}")
     temp_df[inn_col] = temp_df[inn_col].astype(float)
     return temp_df[inn_col]
 
@@ -3223,6 +3367,7 @@ def select_league(df, suffix):
     Returns:
     df (pandas dataframe): The dataframe with the correct "League" column added
     """
+    league_dict = {}
     if suffix == "BR" or suffix == "PR" or suffix == "R":
         # Contains all 2020-2024 reg baseball team names and leagues
         league_dict = {
@@ -3258,8 +3403,8 @@ def select_league(df, suffix):
             "HAYATE Ventures": "WL",
         }
 
-    for team in league_dict:
-        df.loc[df.Team == team, "League"] = league_dict[team]
+    for team, league in league_dict.items():
+        df.loc[df.Team == team, "League"] = league
     return df
 
 
@@ -3416,9 +3561,7 @@ def build_html(row, name_col):
     html_line (str): The <a> tag if there is a link, else just the team/player
     name"""
     if row["Link"] != "nan":
-        html_line = (
-            "<a href=" "{0}" ">{1}</a>".format(row["Link"], row[name_col])
-        )
+        html_line = f'<a href={row["Link"]}>{row[name_col]}</a>'
     else:
         html_line = row[name_col]
     return html_line
@@ -3438,6 +3581,7 @@ def make_zip(year_dir, suffix, year):
     if not os.path.exists(zip_dir):
         os.mkdir(zip_dir)
 
+    output_filename = ""
     if suffix == "S":
         temp_dir = os.path.join(year_dir, "/stats/temp")
         temp_dir = tempfile.mkdtemp()
