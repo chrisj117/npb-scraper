@@ -1,5 +1,7 @@
 npbScrape.py
 # - Misc short term -
+# TODO: merge npbPlayoffScraper.py functionality
+# TODO: generate_plots() type checking errors
 # TODO: continually update fip_consts, park_factors (need mr yakyu)
 # TODO: standardize docstring formats
 # TODO: refactor player stat org methods similarly to team stat org
@@ -9,7 +11,6 @@ npbScrape.py
 # TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
 # TODO: merge and update npbPlayerUrlScraper roster scraping to update
 # roster_data.csv *
-# TODO: merge npbPlayoffScraper.py functionality
 # TODO: linting (https://github.com/psf/black + pylint)
 # TODO: unit tests
 # TODO: auto commit new scrapes

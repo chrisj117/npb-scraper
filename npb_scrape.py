@@ -459,57 +459,51 @@ class PlayerData(Stats):
         self.df["IP"] = convert_ip_column_in(self.df, "IP")
 
         # Counting stat column totals
-        total_ip = self.df["IP"].sum()
-        total_hr = self.df["HR"].sum()
-        total_so = self.df["SO"].sum()
-        total_bb = self.df["BB"].sum()
-        total_hb = self.df["HB"].sum()
-        total_er = self.df["ER"].sum()
-        total_bf = self.df["BF"].sum()
-        total_era = 9 * (total_er / total_ip)
-        temp1 = 13 * total_hr
-        temp2 = 3 * (total_bb + total_hb)
-        temp3 = 2 * total_so
-        total_fip = ((temp1 + temp2 - temp3) / total_ip) + select_fip_const(
-            self.suffix, self.year
-        )
-        total_kwera = round(
-            (4.80 - (10 * ((total_so - total_bb) / total_bf))), 2
+        total_era = 9 * (self.df["ER"].sum() / self.df["IP"].sum())
+        total_fip = (
+            (
+                13 * self.df["HR"].sum()
+                + 3 * (self.df["BB"].sum() + self.df["HB"].sum())
+                - 2 * self.df["SO"].sum()
+            )
+            / self.df["IP"].sum()
+        ) + select_fip_const(self.suffix, self.year)
+        total_kwera = 4.80 - (
+            10
+            * (
+                (self.df["SO"].sum() - self.df["BB"].sum())
+                / self.df["BF"].sum()
+            )
         )
 
         # Individual statistic calculations
-        self.df["kwERA"] = round(
-            (4.80 - (10 * ((self.df["SO"] - self.df["BB"]) / self.df["BF"]))),
-            2,
+        self.df["kwERA"] = 4.80 - (
+            10 * ((self.df["SO"] - self.df["BB"]) / self.df["BF"])
         )
         self.df = select_park_factor(self.df, self.suffix, self.year)
-        self.df["ERA+"] = round(
-            100 * ((total_era * self.df["ParkF"]) / self.df["ERA"]), 0
+        self.df["ERA+"] = 100 * (
+            (total_era * self.df["ParkF"]) / self.df["ERA"]
         )
         self.df["ERA+"] = self.df["ERA+"].astype(str).replace("inf", "999")
         self.df["ERA+"] = self.df["ERA+"].astype(float)
-        self.df["K%"] = round(self.df["SO"] / self.df["BF"], 3)
-        self.df["BB%"] = round(self.df["BB"] / self.df["BF"], 3)
-        self.df["K-BB%"] = round(self.df["K%"] - self.df["BB%"], 3)
-        temp1 = 13 * self.df["HR"]
-        temp2 = 3 * (self.df["BB"] + self.df["HB"])
-        temp3 = 2 * self.df["SO"]
-        self.df["FIP"] = round(
-            ((temp1 + temp2 - temp3) / self.df["IP"])
-            + select_fip_const(self.suffix, self.year),
-            2,
+        self.df["K%"] = self.df["SO"] / self.df["BF"]
+        self.df["BB%"] = self.df["BB"] / self.df["BF"]
+        self.df["K-BB%"] = self.df["K%"] - self.df["BB%"]
+        self.df["FIP"] = (
+            (
+                13 * self.df["HR"]
+                + 3 * (self.df["BB"] + self.df["HB"])
+                - 2 * self.df["SO"]
+            )
+            / self.df["IP"]
+        ) + select_fip_const(self.suffix, self.year)
+        self.df["FIP-"] = 100 * (
+            self.df["FIP"] / (total_fip * self.df["ParkF"])
         )
-        self.df["FIP-"] = round(
-            (100 * (self.df["FIP"] / (total_fip * self.df["ParkF"]))), 0
-        )
-        self.df["WHIP"] = round(
-            (self.df["BB"] + self.df["H"]) / self.df["IP"], 2
-        )
+        self.df["WHIP"] = (self.df["BB"] + self.df["H"]) / self.df["IP"]
         self.df["HR%"] = self.df["HR"] / self.df["BF"]
-        self.df["kwERA-"] = round(
-            (100 * (self.df["kwERA"] / (total_kwera))), 0
-        )
-        self.df["Diff"] = round((self.df["ERA"] - self.df["FIP"]), 2)
+        self.df["kwERA-"] = 100 * (self.df["kwERA"] / (total_kwera))
+        self.df["Diff"] = self.df["ERA"] - self.df["FIP"]
 
         # Data cleaning/reformatting
         # Remove temp Park Factor column
@@ -538,17 +532,12 @@ class PlayerData(Stats):
         for key, value in format_maps.items():
             self.df[key] = self.df[key].apply(value.format)
 
-        # Replace all infs in batting stat cols
-        self.df["ERA"] = self.df["ERA"].astype(str)
-        self.df["ERA"] = self.df["ERA"].str.replace("inf", "")
-        self.df["FIP"] = self.df["FIP"].astype(str)
-        self.df["FIP"] = self.df["FIP"].str.replace("inf", "")
-        self.df["FIP-"] = self.df["FIP-"].astype(str)
-        self.df["FIP-"] = self.df["FIP-"].str.replace("inf", "")
-        self.df["WHIP"] = self.df["WHIP"].astype(str)
-        self.df["WHIP"] = self.df["WHIP"].str.replace("inf", "")
-        self.df["Diff"] = self.df["Diff"].astype(str)
-        self.df["Diff"] = self.df["Diff"].str.replace("nan", "")
+        # Replace infs/nans in select stat cols
+        self.df["ERA"] = self.df["ERA"].astype(str).replace("inf", "")
+        self.df["FIP"] = self.df["FIP"].astype(str).replace("inf", "")
+        self.df["FIP-"] = self.df["FIP-"].astype(str).replace("inf", "")
+        self.df["WHIP"] = self.df["WHIP"].astype(str).replace("inf", "")
+        self.df["Diff"] = self.df["Diff"].astype(str).replace("nan", "")
         # Reordering columns
         col_order = [
             "Pitcher",
@@ -604,45 +593,43 @@ class PlayerData(Stats):
         )
 
         # Counting stat column totals used in other calculations
-        total_ab = self.df["AB"].sum()
-        total_h = self.df["H"].sum()
-        total_2b = self.df["2B"].sum()
-        total_3b = self.df["3B"].sum()
-        total_hr = self.df["HR"].sum()
-        total_sf = self.df["SF"].sum()
-        total_bb = self.df["BB"].sum()
-        total_hp = self.df["HP"].sum()
-        total_obp = (total_h + total_bb + total_hp) / (
-            total_ab + total_bb + total_hp + total_sf
+        total_obp = (
+            self.df["H"].sum() + self.df["BB"].sum() + self.df["HP"].sum()
+        ) / (
+            self.df["AB"].sum()
+            + self.df["BB"].sum()
+            + self.df["HP"].sum()
+            + self.df["SF"].sum()
         )
         total_slg = (
-            (total_h - total_2b - total_3b - total_hr)
-            + (2 * total_2b)
-            + (3 * total_3b)
-            + (4 * total_hr)
-        ) / total_ab
+            (
+                self.df["H"].sum()
+                - self.df["2B"].sum()
+                - self.df["3B"].sum()
+                - self.df["HR"].sum()
+            )
+            + (2 * self.df["2B"].sum())
+            + (3 * self.df["3B"].sum())
+            + (4 * self.df["HR"].sum())
+        ) / self.df["AB"].sum()
 
         # Individual statistic calculations
-        self.df["OPS"] = round(self.df["SLG"] + self.df["OBP"], 3)
+        self.df["OPS"] = self.df["SLG"] + self.df["OBP"]
         self.df = select_park_factor(self.df, self.suffix, self.year)
-        self.df["OPS+"] = round(
-            100
-            * (
-                (self.df["OBP"] / total_obp) + (self.df["SLG"] / total_slg) - 1
-            ),
-            0,
+        self.df["OPS+"] = 100 * (
+            (self.df["OBP"] / total_obp) + (self.df["SLG"] / total_slg) - 1
         )
         self.df["OPS+"] = self.df["OPS+"] / self.df["ParkF"]
-        self.df["ISO"] = round(self.df["SLG"] - self.df["AVG"], 3)
-        self.df["K%"] = round(self.df["SO"] / self.df["PA"], 3)
-        self.df["BB%"] = round(self.df["BB"] / self.df["PA"], 3)
-        self.df["BB/K"] = round(self.df["BB"] / self.df["SO"], 2)
+        self.df["ISO"] = self.df["SLG"] - self.df["AVG"]
+        self.df["K%"] = self.df["SO"] / self.df["PA"]
+        self.df["BB%"] = self.df["BB"] / self.df["PA"]
+        self.df["BB/K"] = self.df["BB"] / self.df["SO"]
         self.df["TTO%"] = (
             self.df["BB"] + self.df["SO"] + self.df["HR"]
         ) / self.df["PA"]
-        numer = self.df["H"] - self.df["HR"]
-        denom = self.df["AB"] - self.df["SO"] - self.df["HR"] + self.df["SF"]
-        self.df["BABIP"] = round((numer / denom), 3)
+        self.df["BABIP"] = (self.df["H"] - self.df["HR"]) / (
+            self.df["AB"] - self.df["SO"] - self.df["HR"] + self.df["SF"]
+        )
 
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
