@@ -91,14 +91,19 @@ def main():
 
     if npb_scrape_yn == "Y":
         # Scrape regular season batting and pitching URLs
-        get_daily_scores(year_dir, "R", scrape_year)
         get_stats(year_dir, "BR", scrape_year)
         get_stats(year_dir, "PR", scrape_year)
         get_standings(year_dir, "C", scrape_year)
         get_standings(year_dir, "P", scrape_year)
         get_fielding(year_dir, "R", scrape_year)
-    # NPB Daily Scores
-    npb_daily_scores = DailyScoresData(stats_dir, year_dir, "R", scrape_year)
+    # NPB Daily Scores (only executes on current year)
+    if scrape_year == datetime.now().year:
+        if npb_scrape_yn == "Y":
+            get_daily_scores(year_dir, "R", scrape_year)
+        npb_daily_scores = DailyScoresData(
+            stats_dir, year_dir, "R", scrape_year
+        )
+        npb_daily_scores.output_final()
     # NPB Individual Fielding
     # NOTE: fielding must be organized before any player stats to obtain player
     # positions
@@ -139,7 +144,6 @@ def main():
         scrape_year,
     )
     # NPB output
-    npb_daily_scores.output_final()
     npb_bat_player_stats.output_final()
     npb_pitch_player_stats.output_final()
     npb_bat_team_stats.output_final()
