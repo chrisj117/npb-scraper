@@ -251,8 +251,13 @@ class Stats:
     def __str__(self):
         """Outputs the Alt view of the associated dataframe (no HTML team or
         player names, no csv formatting, shows entire df instead of only
-        Leaders)"""
+        Leaders if applicable)"""
         return self.df.to_string()
+
+    def get_csv(self):
+        """Outputs the csv of the associated dataframe (no HTML team or
+        player names shows entire df instead of only Leaders if applicable)"""
+        return self.df.to_csv()
 
 
 class PlayerData(Stats):
@@ -297,9 +302,9 @@ class PlayerData(Stats):
             self.year_dir + "/raw/" + year + "StatsRaw" + suffix + ".csv"
         )
         # Modify df for correct stats
-        if self.suffix == "BF" or self.suffix == "BR":
+        if self.suffix in ("BF", "BR"):
             self.org_bat()
-        elif self.suffix == "PF" or self.suffix == "PR":
+        elif self.suffix in ("PF", "PR"):
             self.org_pitch()
 
     def output_final(self):
@@ -312,17 +317,17 @@ class PlayerData(Stats):
             os.mkdir(alt_dir)
         # Make dirs that will store files uploaded to yakyucosmo.com
         upload_dir = self.year_dir
-        if self.suffix == "PR" or self.suffix == "BR":
+        if self.suffix in ("PR", "BR"):
             upload_dir = os.path.join(self.year_dir, "npb")
             if not os.path.exists(upload_dir):
                 os.mkdir(upload_dir)
-        elif self.suffix == "PF" or self.suffix == "BF":
+        elif self.suffix in ("PF", "BF"):
             upload_dir = os.path.join(self.year_dir, "farm")
             if not os.path.exists(upload_dir):
                 os.mkdir(upload_dir)
 
         # For batting, remove all players with PA <= 0
-        if self.suffix == "BF" or self.suffix == "BR":
+        if self.suffix in ("BF", "BR"):
             self.df = self.df.drop(self.df[self.df.PA == 0].index)
         # Print organized dataframe to file
         new_csv_alt = (
@@ -354,7 +359,7 @@ class PlayerData(Stats):
         )
 
         # AltView, Final, and Leader file output
-        if self.suffix == "PR" or self.suffix == "PF":
+        if self.suffix in ("PR", "PF"):
             # Drop all players below the IP/PA threshold
             if self.suffix == "PF":
                 leader_df = leader_df.drop(
@@ -390,7 +395,7 @@ class PlayerData(Stats):
             )
 
         # Leader file is calculated differently for batters
-        elif self.suffix == "BR" or self.suffix == "BF":
+        elif self.suffix in ("BR", "BF"):
             # Drop all players below the IP/PA threshold (PA gets rounded down)
             if self.suffix == "BF":
                 leader_df = leader_df.drop(
@@ -732,11 +737,11 @@ class PlayerData(Stats):
         # Regular season team,game files
         standings_file1 = ""
         standings_file2 = ""
-        if self.suffix == "BR" or self.suffix == "PR":
+        if self.suffix in ("BR", "PR"):
             standings_file1 = const_dir + "/" + self.year + "const_rawC.csv"
             standings_file2 = const_dir + "/" + self.year + "const_rawP.csv"
         # Farm team,game files
-        if self.suffix == "BF" or self.suffix == "PF":
+        if self.suffix in ("BF", "PF"):
             standings_file1 = const_dir + "/" + self.year + "const_rawW.csv"
             standings_file2 = const_dir + "/" + self.year + "const_rawE.csv"
 
@@ -848,12 +853,12 @@ class PlayerData(Stats):
         # Players must meet IP criteria to avoid skewing percentiles
         plot_cols = []
         invert_cols = []
-        if self.suffix == "PR" or self.suffix == "PF":
+        if self.suffix in ("PR", "PF"):
             name_col = "Pitcher"
             plot_cols = ["K-BB%", "BB%", "K%", "HR%", "WHIP", "FIP-", "ERA+"]
             invert_cols = ["HR%", "WHIP", "FIP-", "BB%"]
             plot_df = self.df[self.df.IP > 25.0].copy()
-        elif self.suffix == "BR" or self.suffix == "BF":
+        elif self.suffix in ("BR", "BF"):
             name_col = "Player"
             plot_cols = [
                 "Defense",
@@ -1050,9 +1055,9 @@ class TeamData(Stats):
         super().__init__(stats_dir, year_dir, suffix, year)
         self.player_df = player_df.copy()
         # Initialize df for teams stats
-        if self.suffix == "BF" or self.suffix == "BR":
+        if self.suffix in ("BF", "BR"):
             self.org_team_bat()
-        elif self.suffix == "PF" or self.suffix == "PR":
+        elif self.suffix in ("PF", "PR"):
             self.org_team_pitch()
 
     def output_final(self):
@@ -1063,11 +1068,11 @@ class TeamData(Stats):
             os.mkdir(alt_dir)
         # Make dirs that will store files uploaded to yakyucosmo.com
         upload_dir = self.year_dir
-        if self.suffix == "PR" or self.suffix == "BR":
+        if self.suffix in ("PR", "BR"):
             upload_dir = os.path.join(self.year_dir, "npb")
             if not os.path.exists(upload_dir):
                 os.mkdir(upload_dir)
-        elif self.suffix == "PF" or self.suffix == "BF":
+        elif self.suffix in ("PF", "BF"):
             upload_dir = os.path.join(self.year_dir, "farm")
             if not os.path.exists(upload_dir):
                 os.mkdir(upload_dir)
@@ -1091,7 +1096,7 @@ class TeamData(Stats):
         final_df.to_csv(new_csv_final, index=False)
 
         # Pitching TeamAlt and Team file location outputs
-        if self.suffix == "PR" or self.suffix == "PF":
+        if self.suffix in ("PR", "PF"):
             print(
                 "The final organized team pitching results will be stored "
                 "in: " + new_csv_final
@@ -1101,7 +1106,7 @@ class TeamData(Stats):
                 "in: " + new_csv_alt
             )
 
-        elif self.suffix == "BR" or self.suffix == "BF":
+        elif self.suffix in ("BR", "BF"):
             print(
                 "The final organized team batting results will be stored "
                 "in: " + new_csv_final
@@ -1631,11 +1636,11 @@ class StandingsData(Stats):
         self.org_standings(tb_df, tp_df)
 
         # Make dir that will store files uploaded to yakyucosmo.com
-        if self.suffix == "C" or self.suffix == "P":
+        if self.suffix in ("C", "P"):
             upload_dir = os.path.join(self.year_dir, "npb")
             if not os.path.exists(upload_dir):
                 os.mkdir(upload_dir)
-        elif self.suffix == "W" or self.suffix == "E":
+        elif self.suffix in ("W", "E"):
             upload_dir = os.path.join(self.year_dir, "farm")
             if not os.path.exists(upload_dir):
                 os.mkdir(upload_dir)
@@ -2490,17 +2495,17 @@ def get_stats(year_dir, suffix, year):
             "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,"
             "IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
         )
-    if suffix == "PR":
+    elif suffix == "PR":
         output_file.write(
             "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,"
             "HB,SO,WP,BK,R,ER,ERA,Team,\n"
         )
-    if suffix == "BF":
+    elif suffix == "BF":
         output_file.write(
             "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,"
             "IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
         )
-    if suffix == "PF":
+    elif suffix == "PF":
         output_file.write(
             "Pitcher,G,W,L,SV,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,"
             "ERA,Team,\n"
@@ -3179,10 +3184,10 @@ def add_roster_data(df, suffix):
     roster_df = pd.read_csv(roster_data_file)
     convert_col = df.iloc[:, 0].name
     tb_col = ""
-    if suffix == "BR" or suffix == "BF" or suffix == "PR" or suffix == "PF":
-        if suffix == "PR" or suffix == "PF":
+    if suffix in ("BR", "BF", "PR", "PF"):
+        if suffix in ("PR", "PF"):
             tb_col = "T"
-        elif suffix == "BR" or suffix == "BF":
+        elif suffix in ("BR", "BF"):
             tb_col = "B"
         player_arm_dict = dict(zip(roster_df["Player"], roster_df[tb_col]))
         df[tb_col] = (
@@ -3308,7 +3313,7 @@ def select_park_factor(df, suffix, year):
     # Drop all rows that are not the df's year
     pf_df = pf_df.drop(pf_df[pf_df.Year.astype(str) != year].index)
     # Drop all rows that do not match the df's league
-    if suffix == "BR" or suffix == "PR":
+    if suffix in ("BR", "PR"):
         pf_suffix = "NPB"
     else:
         pf_suffix = "Farm"
@@ -3339,7 +3344,7 @@ def select_fip_const(suffix, year):
     # Drop all rows that are not the df's year
     fip_df = fip_df.drop(fip_df[fip_df.Year.astype(str) != year].index)
     # Drop all rows that do not match the df's league
-    if suffix == "BR" or suffix == "PR":
+    if suffix in ("BR", "PR"):
         fip_suffix = "NPB"
     else:
         fip_suffix = "Farm"
@@ -3359,7 +3364,7 @@ def select_league(df, suffix):
     df (pandas dataframe): The dataframe with the correct "League" column added
     """
     league_dict = {}
-    if suffix == "BR" or suffix == "PR" or suffix == "R":
+    if suffix in ("BR", "PR", "R"):
         # Contains all 2020-2024 reg baseball team names and leagues
         league_dict = {
             "Hanshin Tigers": "CL",
@@ -3375,7 +3380,7 @@ def select_league(df, suffix):
             "Seibu Lions": "PL",
             "Nipponham Fighters": "PL",
         }
-    elif suffix == "BF" or suffix == "PF" or suffix == "F":
+    elif suffix in ("BF", "PF", "F"):
         # Contains all 2020-2024 farm baseball team names and links
         league_dict = {
             "Hanshin Tigers": "WL",
@@ -3437,10 +3442,10 @@ def assign_primary_or_utl(
     num_positions_5plus = (fractions >= pct_utl_threshold_low).sum()
     # Rule 3: If the player has 3 positions that are all in the outfield, the
     # largest OF pos is the primary
-    if row["7"] > 0 and row["8"] > 0 and row["9"] > 0:
-        return fractions.idxmax()
     # Rule 4: If any position >= 50%, that is primary
-    if any(fractions >= pct_primary_threshold):
+    if (row["7"] > 0 and row["8"] > 0 and row["9"] > 0) or any(
+        fractions >= pct_primary_threshold
+    ):
         return fractions.idxmax()
     # Rule 5: If 3 or more positions are >= our thresholds, label UTL
     if num_positions_10plus >= 3 or num_positions_5plus >= 4:
@@ -3479,7 +3484,7 @@ def convert_player_to_html(df, suffix, year):
         )
     )
     # Make keys from input df
-    if suffix == "PR" or suffix == "PF":
+    if suffix in ("PR", "PF"):
         convert_col = "Pitcher"
     else:
         convert_col = "Player"
