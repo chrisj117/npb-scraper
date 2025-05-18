@@ -97,7 +97,7 @@ def main():
         get_standings(year_dir, "P", scrape_year)
         get_fielding(year_dir, "R", scrape_year)
     # NPB Daily Scores (only executes on current year)
-    if scrape_year == datetime.now().year:
+    if scrape_year == str(datetime.now().year):
         if npb_scrape_yn == "Y":
             get_daily_scores(year_dir, "R", scrape_year)
         npb_daily_scores = DailyScoresData(

@@ -10,7 +10,7 @@ jp_name,jp_team,en_name,en_team
 工藤 泰成,阪神タイガース,"Kudo, Taisei",Hanshin Tigers
 椎葉 剛,阪神タイガース,"Shiiba, Tsuyoshi",Hanshin Tigers
 伊藤 将司,阪神タイガース,"Itoh, Masashi",Hanshin Tigers
-今朝丸 裕喜,阪神タイガース,"Kesamaru, Yuhki",Hanshin Tigers
+今朝丸 裕喜,阪神タイガース,"Kesamaru, Yuki",Hanshin Tigers
 髙橋 遥人,阪神タイガース,"Takahashi, Haruto",Hanshin Tigers
 門別 啓人,阪神タイガース,"Mombetsu, Keito",Hanshin Tigers
 漆原 大晟,阪神タイガース,"Urushihara, Taisei",Hanshin Tigers
@@ -290,6 +290,7 @@ jp_name,jp_team,en_name,en_team
 泉口 友汰,読売ジャイアンツ,"Izuguchi, Yuta",Yomiuri Giants
 中山 礼都,読売ジャイアンツ,"Nakayama, Raito",Yomiuri Giants
 秋広 優人,読売ジャイアンツ,"Akihiro, Yuto",Yomiuri Giants
+秋広 優人,読売ジャイアンツ,"Akihiro, Yuto",SoftBank Hawks
 荒巻 悠,読売ジャイアンツ,"Aramaki, Yu",Yomiuri Giants
 増田 陸,読売ジャイアンツ,"Masuda, Riku",Yomiuri Giants
 長野 久義,読売ジャイアンツ,"Chono, Hisayoshi",Yomiuri Giants
@@ -414,7 +415,7 @@ jp_name,jp_team,en_name,en_team
 下川 隼佑,東京ヤクルトスワローズ,"Shimokawa, Shunsuke",Yakult Swallows
 西舘 昂汰,東京ヤクルトスワローズ,"Nishidate, Kota",Yakult Swallows
 沼田 翔平,東京ヤクルトスワローズ,"Numata, Shohei",Yakult Swallows
-西濱 勇星,東京ヤクルトスワローズ,"Nishihama, Yuhsei",Yakult Swallows
+西濱 勇星,東京ヤクルトスワローズ,"Nishihama, Yuusei",Yakult Swallows
 翔聖,東京ヤクルトスワローズ,"Takahashi, Shosei",Yakult Swallows
 鈴木 康平,東京ヤクルトスワローズ,"Suzuki, Kohei",Yakult Swallows
 佐藤 琢磨,東京ヤクルトスワローズ,"Satoh, Takuma",Yakult Swallows
@@ -587,7 +588,7 @@ jp_name,jp_team,en_name,en_team
 河野 聡太,オリックス・バファローズ,"Kawano, Sota",ORIX Buffaloes
 今坂 幸暉,オリックス・バファローズ,"Imasaka, Tomoki",ORIX Buffaloes
 清水 武蔵,オリックス・バファローズ,"Shimizu, Musashi",ORIX Buffaloes
-遠藤 成,オリックス・バファローズ,"Endo, Jo",ORIX Buffaloes
+遠藤 成,オリックス・バファローズ,"Endoh, Joh",ORIX Buffaloes
 デール,オリックス・バファローズ,"Dale, Jarryd",ORIX Buffaloes
 香月 一也,オリックス・バファローズ,"Katsuki, Kazuya",ORIX Buffaloes
 宜保 翔,オリックス・バファローズ,"Gibo, Sho",ORIX Buffaloes
@@ -733,6 +734,7 @@ jp_name,jp_team,en_name,en_team
 井上 朋也,福岡ソフトバンクホークス,"Inoue, Tomoya",SoftBank Hawks
 宇野 真仁朗,福岡ソフトバンクホークス,"Uno, Shinjiro",SoftBank Hawks
 リチャード,福岡ソフトバンクホークス,"Sunagawa, Richard",SoftBank Hawks
+リチャード,福岡ソフトバンクホークス,"Sunagawa, Richard",Yomiuri Giants
 石見 颯真,福岡ソフトバンクホークス,"Ishimi, Soma",SoftBank Hawks
 野村 勇,福岡ソフトバンクホークス,"Nomura, Isami",SoftBank Hawks
 近藤 健介,福岡ソフトバンクホークス,"Kondoh, Kensuke",SoftBank Hawks
@@ -1010,7 +1012,7 @@ E.ラミレス,埼玉西武ライオンズ,"Ramirez, Emmanuel",Seibu Lions
 伏見 寅威,北海道日本ハムファイターズ,"Fushimi, Torai",Nipponham Fighters
 古川 裕大,北海道日本ハムファイターズ,"Furukawa, Yudai",Nipponham Fighters
 郡司 裕也,北海道日本ハムファイターズ,"Gunji, Yuya",Nipponham Fighters
-進藤 勇也,北海道日本ハムファイターズ,"Shinto, Yuya",Nipponham Fighters
+進藤 勇也,北海道日本ハムファイターズ,"Shintoh, Yuya",Nipponham Fighters
 吉田 賢吾,北海道日本ハムファイターズ,"Yoshida, Kengo",Nipponham Fighters
 田宮 裕涼,北海道日本ハムファイターズ,"Tamiya, Yua",Nipponham Fighters
 梅林 優貴,北海道日本ハムファイターズ,"Umebayashi, Yuki",Nipponham Fighters
