@@ -2469,6 +2469,9 @@ def get_daily_scores(year_dir, suffix, year):
                 + team2
                 + "\n"
             )
+    # After all URLs are scraped, close output file
+    r.close()
+    output_file.close()
 
 
 def get_stats(year_dir, suffix, year):
@@ -2693,6 +2696,8 @@ def get_fielding(year_dir, suffix, year):
     r.close()
     # Pace requests to npb.jp to avoid excessive requests
     sleep(randint(3, 5))
+    # After all URLs are scraped, close output file
+    output_file.close()
 
 
 def get_stat_urls(suffix, year):

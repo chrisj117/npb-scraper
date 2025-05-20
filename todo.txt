@@ -1,39 +1,38 @@
 npbScrape.py
 # - Misc short term -
-# TODO: find better source storage + scraping PC setup
-# TODO: check from empty/no dirs in unit tests
-# TODO: change all other file names like drop_const (?)
-# TODO: create API in Go
-# TODO: merge npbPlayoffScraper.py functionality
+# TODO: see streamlit before any plot todos
 # TODO: generate_plots() type checking errors
+# TODO: merge npbPlayoffScraper.py functionality
+# TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
+# TODO: fix 2020-2024 missing stats, translations, etc
+# TODO: access SPAIA API using Go (https://github.com/armstjc/Nippon-Baseball-Data-Repository/blob/main/spaia_api_endpoints.md)
+# TODO: find better source storage + scraping PC setup
+# TODO: change all other file names like drop_const (?)
 # TODO: continually update fip_consts, park_factors (need mr yakyu)
 # TODO: standardize docstring formats
 # TODO: refactor player stat org methods similarly to team stat org
 # TODO: more robust error checking in init()s if empty Raw data comes in
 # TODO: add checking raw file existence in init() (also remove user output
 # warnings)
-# TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
 # TODO: merge and update npbPlayerUrlScraper roster scraping to update
 # roster_data.csv *
-# TODO: linting (https://github.com/psf/black + pylint)
-# TODO: unit tests
 # TODO: auto commit new scrapes
 # TODO: multithread scrape, org, and percentiles
 # TODO: update README for web scraping, no ddos, this is educational, etc
 # TODO: TURN INTO self.constDf, then change player_org? (IN StandingsData
 # init()) - end goal is to alleviate dependence on reading in files, instead
-# keep it in memory for duration
+# keep it in memory
 # TODO: eventually make portable and give to Gio
     # TODO: put on streamlit/huggingface/etc so people can use it w/o install
     # TODO: streamlit app for player plots
 # TODO: refactors for any ORG functions
 # TODO: potential refactors on repeating statements in any stat grab function
 # TODO: refactor argBypass in main()
-# TODO: move common functions to a library
+# TODO: split up npb_scrape into modules
 # TODO: look into type hinting
 
 # - Possible future stats/data -
-# TODO: projection of future stats
+# TODO: projection of future stats (see SPAIA integration)
 # TODO: more visual data (plots/graphs)
 # TODO: scrape even more years before 2020
 # TODO: team pages/player pages
