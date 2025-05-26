@@ -1,6 +1,9 @@
-name: Pylint
+name: Linting + Unit Tests
 
-on: [push]
+on:
+  push:
+    paths:
+      - '**.py'
 
 jobs:
   build:
@@ -22,3 +25,6 @@ jobs:
     - name: Analysing the code with pylint
       run: |
         pylint --fail-under=9 $(git ls-files '*.py')
+    - name: Conduct unit tests
+      run: |
+        python -m unittest -v
