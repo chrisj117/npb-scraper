@@ -48,11 +48,6 @@ def main():
     if not os.path.exists(stats_dir):
         os.mkdir(stats_dir)
 
-    # Check for input files (all except player_urls_fix.csv are required)
-    if check_input_files(rel_dir) is True:
-        input("Press Enter to exit. ")
-        return -1
-
     # Check for scrape_year command line arg
     if len(sys.argv) == 2:
         print("ARGUMENTS DETECTED: " + str(sys.argv))
@@ -83,6 +78,11 @@ def main():
         percentile_yn = get_user_choice("P")
         stat_zip_yn = get_user_choice("Z")
         percentile_zip_yn = get_user_choice("PZ")
+
+    # Check for input files (all except player_urls_fix.csv are required)
+    if check_input_files(rel_dir, scrape_year) is True:
+        input("Press Enter to exit. ")
+        return -1
 
     # Create year directory
     year_dir = os.path.join(stats_dir, scrape_year)
@@ -343,7 +343,7 @@ class PlayerData(Stats):
         # Convert player/team names to HTML that contains appropriate URLs
         if int(self.year) == datetime.now().year:
             final_df = convert_player_to_html(final_df, self.suffix, self.year)
-        final_df = convert_team_to_html(final_df, "Abb")
+        final_df = convert_team_to_html(final_df, self.year, "Abb")
         # Print final file with all players
         new_csv_final = (
             upload_dir + "/" + self.year + "StatsFinal" + self.suffix + ".csv"
@@ -377,7 +377,7 @@ class PlayerData(Stats):
                 leader_df = convert_player_to_html(
                     leader_df, self.suffix, self.year
                 )
-            leader_df = convert_team_to_html(leader_df, "Abb")
+            leader_df = convert_team_to_html(leader_df, self.year, "Abb")
             # Output leader file as a csv
             leader_csv = (
                 upload_dir + "/" + self.year + "Leaders" + self.suffix + ".csv"
@@ -417,7 +417,7 @@ class PlayerData(Stats):
                 leader_df = convert_player_to_html(
                     leader_df, self.suffix, self.year
                 )
-            leader_df = convert_team_to_html(leader_df, "Abb")
+            leader_df = convert_team_to_html(leader_df, self.year, "Abb")
             # Output leader file as a csv
             leader_csv = (
                 upload_dir + "/" + self.year + "Leaders" + self.suffix + ".csv"
@@ -584,7 +584,7 @@ class PlayerData(Stats):
         ]
         # Reordering for age and throwing arm if correct year
         if int(self.year) == datetime.now().year:
-            self.df = add_roster_data(self.df, self.suffix)
+            self.df = add_roster_data(self.df, self.suffix, self.year)
             col_order.insert(-1, "Age")
             col_order.insert(-1, "T")
         if self.suffix == "PF":
@@ -715,7 +715,7 @@ class PlayerData(Stats):
             "Team",
         ]
         if int(self.year) == datetime.now().year:
-            self.df = add_roster_data(self.df, self.suffix)
+            self.df = add_roster_data(self.df, self.suffix, self.year)
             col_order.insert(-2, "Age")
             col_order.insert(-1, "B")
         self.df = self.df[col_order]
@@ -1088,7 +1088,7 @@ class TeamData(Stats):
         # Make output copy to avoid modifying original df
         final_df = self.df.copy()
         # Insert HTML code for team names
-        final_df = convert_team_to_html(final_df, "Full")
+        final_df = convert_team_to_html(final_df, self.year, "Full")
         # Print output file for upload
         new_csv_final = (
             upload_dir + "/" + self.year + "Team" + self.suffix + ".csv"
@@ -1662,7 +1662,7 @@ class StandingsData(Stats):
         self.df.insert(0, "#", move_col)
         # Insert HTML code for team names
         final_df = self.df.copy()
-        final_df = convert_team_to_html(final_df, "Full")
+        final_df = convert_team_to_html(final_df, self.year, "Full")
         # Create Standings file name
         new_csv_final = (
             upload_dir
@@ -1809,7 +1809,7 @@ class FieldingData(Stats):
         # Convert player/team names to HTML that contains appropriate URLs
         if int(self.year) == datetime.now().year:
             final_df = convert_player_to_html(final_df, self.suffix, self.year)
-        final_df = convert_team_to_html(final_df, "Abb")
+        final_df = convert_team_to_html(final_df, self.year, "Abb")
         # Print final file with all players
         new_csv_final = (
             upload_dir
@@ -1913,7 +1913,7 @@ class FieldingData(Stats):
             .fillna(self.df["Team"])
             .astype(str)
         )
-        self.df = translate_players(self.df)
+        self.df = translate_players(self.df, self.year)
         # TZR/143 calculation and cleaning
         self.df["TZR"] = self.df["TZR"].astype(str).replace("-", "inf")
         self.df["TZR"] = self.df["TZR"].astype(float)
@@ -1925,7 +1925,7 @@ class FieldingData(Stats):
         self.df["Inn"] = convert_ip_column_out(self.df, "Inn")
         # Add League and Age cols
         self.df = select_league(self.df, self.suffix)
-        self.df = add_roster_data(self.df, self.suffix)
+        self.df = add_roster_data(self.df, self.suffix, self.year)
         # Column reordering
         self.df = self.df[
             [
@@ -2015,7 +2015,7 @@ class TeamFieldingData(Stats):
         # Make deep copy of original df to avoid HTML in df's team/player names
         final_df = self.df.copy()
         # Convert team names to HTML that contains appropriate URLs
-        final_df = convert_team_to_html(final_df, "Full")
+        final_df = convert_team_to_html(final_df, self.year, "Full")
         # Print final file with all players
         new_csv_final = (
             upload_dir
@@ -2207,7 +2207,7 @@ class TeamSummaryData(Stats):
         # Make deep copy of original df to avoid HTML in df's team/player names
         final_df = self.df.copy()
         # Convert team names to HTML that contains appropriate URLs
-        final_df = convert_team_to_html(final_df, "Full")
+        final_df = convert_team_to_html(final_df, self.year, "Full")
         # Print final file with all players
         new_csv_final = (
             upload_dir
@@ -2347,7 +2347,7 @@ class DailyScoresData(Stats):
         # Make deep copy of original df to avoid HTML in df's team/player names
         final_df = self.df.copy()
         # Convert team names to HTML that contains appropriate URLs
-        final_df = convert_team_to_html(final_df, None)
+        final_df = convert_team_to_html(final_df, self.year, None)
         # Blank out score column names, rename team columns
         final_df.rename(
             columns={
@@ -2585,7 +2585,7 @@ def get_stats(year_dir, suffix, year):
         # Close request
         r.close()
         # Pace requests to npb.jp to avoid excessive requests
-        sleep(randint(3, 5))
+        sleep(randint(1, 3))
     # After all URLs are scraped, close output file
     output_file.close()
 
@@ -2654,7 +2654,7 @@ def get_standings(year_dir, suffix, year):
     r.close()
     output_file.close()
     # Pace requests to npb.jp to avoid excessive requests
-    sleep(randint(3, 5))
+    sleep(randint(1, 3))
 
 
 def get_fielding(year_dir, suffix, year):
@@ -2667,7 +2667,7 @@ def get_fielding(year_dir, suffix, year):
     "F" = farm fielding stats
     year (string): The desired fielding stat year"""
     rel_dir = os.path.dirname(__file__)
-    url_file = rel_dir + "/input/fielding_urls.csv"
+    url_file = rel_dir + "/input/" + year + "/fielding_urls.csv"
     # Grab singular fielding URL from file
     df = pd.read_csv(url_file)
     df = df.drop(df[df.Year.astype(str) != year].index)
@@ -2695,7 +2695,7 @@ def get_fielding(year_dir, suffix, year):
         output_file.write("\n")
     r.close()
     # Pace requests to npb.jp to avoid excessive requests
-    sleep(randint(3, 5))
+    sleep(randint(1, 3))
     # After all URLs are scraped, close output file
     output_file.close()
 
@@ -3093,7 +3093,7 @@ def get_user_choice(suffix):
     return user_in
 
 
-def convert_team_to_html(df, mode=None):
+def convert_team_to_html(df, year, mode=None):
     """Formats the team col to include links to their npb.jp pages and adds img
     tag col that represents the team (images from yakyucosmo.com)
 
@@ -3109,7 +3109,7 @@ def convert_team_to_html(df, mode=None):
     plus an img tag column if mode is not None"""
     # Check for the team link file, if missing, tell user and return
     rel_dir = os.path.dirname(__file__)
-    team_link_file = rel_dir + "/input/team_urls.csv"
+    team_link_file = rel_dir + "/input/" + year + "/team_urls.csv"
     link_df = pd.read_csv(team_link_file)
 
     # Default mode links any team names it finds (assumes full team names are
@@ -3168,7 +3168,7 @@ def convert_team_to_html(df, mode=None):
     return df
 
 
-def add_roster_data(df, suffix):
+def add_roster_data(df, suffix, year):
     """Adds player age and throwing/batting arm data to the dataframe
 
     Parameters:
@@ -3183,7 +3183,7 @@ def add_roster_data(df, suffix):
     df (pandas dataframe): The inputted dataframe with the appended throwing
     arms and ages"""
     rel_dir = os.path.dirname(__file__)
-    roster_data_file = rel_dir + "/input/roster_data.csv"
+    roster_data_file = rel_dir + "/input/" + year + "/roster_data.csv"
 
     # Player throwing/batting arms
     roster_df = pd.read_csv(roster_data_file)
@@ -3313,7 +3313,7 @@ def select_park_factor(df, suffix, year):
     column"""
     # Check for the park factor file, if nothing is there tell user and return
     rel_dir = os.path.dirname(__file__)
-    pf_file = rel_dir + "/input/park_factors.csv"
+    pf_file = rel_dir + "/input/" + year + "/park_factors.csv"
     pf_df = pd.read_csv(pf_file)
     # Drop all rows that are not the df's year
     pf_df = pf_df.drop(pf_df[pf_df.Year.astype(str) != year].index)
@@ -3344,7 +3344,7 @@ def select_fip_const(suffix, year):
     fip_const (float): The correct FIP const according to year and farm/NPB reg
     season"""
     rel_dir = os.path.dirname(__file__)
-    fip_file = rel_dir + "/input/fip_const.csv"
+    fip_file = rel_dir + "/input/" + year + "/fip_const.csv"
     fip_df = pd.read_csv(fip_file)
     # Drop all rows that are not the df's year
     fip_df = fip_df.drop(fip_df[fip_df.Year.astype(str) != year].index)
@@ -3477,7 +3477,7 @@ def convert_player_to_html(df, suffix, year):
     df (pandas dataframe): The final stat dataframe with valid HTML in the
     player/pitcher columns"""
     rel_dir = os.path.dirname(__file__)
-    player_link_file = rel_dir + "/input/roster_data.csv"
+    player_link_file = rel_dir + "/input/" + year + "/roster_data.csv"
     # Read in csv that contains player name and their personal page link
     link_df = pd.read_csv(player_link_file)
 
@@ -3502,7 +3502,7 @@ def convert_player_to_html(df, suffix, year):
     df = df.drop(["keys", "Link"], axis=1)
 
     # Check for the player link fix file (TODO: defunct?)
-    player_link_fix_file = rel_dir + "/input/player_urls_fix.csv"
+    player_link_fix_file = rel_dir + "/input/" + year + "/player_urls_fix.csv"
     if os.path.exists(player_link_fix_file):
         fix_df = pd.read_csv(player_link_fix_file)
         # Check year and suffix, fix if needed
@@ -3519,7 +3519,7 @@ def convert_player_to_html(df, suffix, year):
     return df
 
 
-def translate_players(df):
+def translate_players(df, year):
     """Translates player names from Japanese to English using a csv file
 
     Parameters:
@@ -3528,7 +3528,7 @@ def translate_players(df):
     Returns:
     df (pandas dataframe): The final stat dataframe with translated names"""
     rel_dir = os.path.dirname(__file__)
-    translation_file = rel_dir + "/input/name_translations.csv"
+    translation_file = rel_dir + "/input/" + year + "/name_translations.csv"
     # Read in csv that contains player and team names in JP and EN
     translation_df = pd.read_csv(translation_file)
     # Create dict of (JP name,EN team):Eng name
@@ -3617,7 +3617,7 @@ def make_zip(year_dir, suffix, year):
     print("Zip created at: " + output_filename + ".zip")
 
 
-def check_input_files(rel_dir):
+def check_input_files(rel_dir, scrape_year=datetime.now().year):
     """Checks that all input files are in the /input/ folder
 
     Parameters:
@@ -3628,14 +3628,18 @@ def check_input_files(rel_dir):
     False"""
     missing_files = False
     # Optional files
-    player_link_fix_file = rel_dir + "/input/player_urls_fix.csv"
+    player_link_fix_file = (
+        rel_dir + "/input/" + scrape_year + "/player_urls_fix.csv"
+    )
     if not os.path.exists(player_link_fix_file):
         print(
             "\nWARNING: No optional player link fix file detected. Provide a "
             "player_urls_fix.csv file in the /input/ directory to fix this.\n"
         )
     # Required files
-    translation_file = rel_dir + "/input/name_translations.csv"
+    translation_file = (
+        rel_dir + "/input/" + scrape_year + "/name_translations.csv"
+    )
     if not os.path.exists(translation_file):
         print(
             "\nERROR: No player name translation file found, player names "
@@ -3643,7 +3647,7 @@ def check_input_files(rel_dir):
             " the /input/ directory to fix this.\n"
         )
         missing_files = True
-    player_link_file = rel_dir + "/input/roster_data.csv"
+    player_link_file = rel_dir + "/input/" + scrape_year + "/roster_data.csv"
     if not os.path.exists(player_link_file):
         print(
             "\nERROR: No player link file found, table entries will not "
@@ -3651,7 +3655,7 @@ def check_input_files(rel_dir):
             "directory to fix this.\n"
         )
         missing_files = True
-    fip_file = rel_dir + "/input/fip_const.csv"
+    fip_file = rel_dir + "/input/" + scrape_year + "/fip_const.csv"
     if not os.path.exists(fip_file):
         print(
             "\nERROR: No FIP constant file found, calculations using FIP will "
@@ -3659,7 +3663,7 @@ def check_input_files(rel_dir):
             "/input/ directory to fix this.\n"
         )
         missing_files = True
-    pf_file = rel_dir + "/input/park_factors.csv"
+    pf_file = rel_dir + "/input/" + scrape_year + "/park_factors.csv"
     if not os.path.exists(pf_file):
         print(
             "\nERROR: No park factor file found, calculations using park "
@@ -3667,7 +3671,7 @@ def check_input_files(rel_dir):
             "file in the /input/ directory to fix this.\n"
         )
         missing_files = True
-    team_link_file = rel_dir + "/input/team_urls.csv"
+    team_link_file = rel_dir + "/input/" + scrape_year + "/team_urls.csv"
     if not os.path.exists(team_link_file):
         print(
             "\nWARNING: No team link file found, table entries will not have "
@@ -3675,8 +3679,8 @@ def check_input_files(rel_dir):
             "to fix this to fix this.\n"
         )
         missing_files = True
-    fieldurl_file = rel_dir + "/input/fielding_urls.csv"
-    if not os.path.exists(fieldurl_file):
+    field_url_file = rel_dir + "/input/" + scrape_year + "/fielding_urls.csv"
+    if not os.path.exists(field_url_file):
         print(
             "\nERROR: No fielding URL file found, raw fielding files will not "
             "be produced...\nProvide a valid fielding_urls.csv file in the "

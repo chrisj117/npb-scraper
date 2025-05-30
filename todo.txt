@@ -1,9 +1,8 @@
-npbScrape.py
+npb_scrape.py
 # - Misc short term -
 # TODO: see streamlit before any plot todos
 # TODO: generate_plots() type checking errors
 # TODO: merge npbPlayoffScraper.py functionality
-# TODO: make input files year specific (I.E. /input/2024, /input/2025, etc)
 # TODO: fix 2020-2024 missing stats, translations, etc
 # TODO: access SPAIA API using Go (https://github.com/armstjc/Nippon-Baseball-Data-Repository/blob/main/spaia_api_endpoints.md)
 # TODO: find better source storage + scraping PC setup
