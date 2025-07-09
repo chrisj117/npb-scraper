@@ -1,7 +1,7 @@
 HomeTeam,RunsHome,RunsAway,AwayTeam
-Yomiuri,2,3,Hiroshima
-DeNA,1,5,Hanshin
-Chunichi,4,5,Yakult
-Nippon-Ham,8,6,Rakuten
-ORIX,4,1,Lotte
-SoftBank,3,1,Seibu
+Yomiuri,5,4,Chunichi
+Yakult,0,4,DeNA
+Hiroshima,1,6,Hanshin
+Seibu,2,7,Rakuten
+Lotte,4,5,Nippon-Ham
+ORIX,1,9,SoftBank
