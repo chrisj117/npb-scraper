@@ -3,7 +3,7 @@ name: Linting + Unit Tests
 on:
   push:
     paths:
-      - '**.py'
+      - 'npb_scrape.py'
 
 jobs:
   build:
