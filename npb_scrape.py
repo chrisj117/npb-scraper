@@ -325,10 +325,6 @@ class PlayerData(Stats):
             upload_dir = os.path.join(self.year_dir, "farm")
             if not os.path.exists(upload_dir):
                 os.mkdir(upload_dir)
-        # Make dir that will store files for streamlit module
-        st_dir = os.path.join(self.year_dir, "streamlit_src")
-        if not os.path.exists(st_dir):
-            os.mkdir(st_dir)
 
         # For batting, remove all players with PA <= 0
         if self.suffix in ("BF", "BR"):
@@ -338,12 +334,18 @@ class PlayerData(Stats):
             alt_dir + "/" + self.year + "AltView" + self.suffix + ".csv"
         )
         self.df.to_string(new_csv_alt)
+
         # Store reg season df without HTML for streamlit
         if self.suffix in ("PR", "BR"):
+            st_dir = os.path.join(self.year_dir, "streamlit_src")
+            if not os.path.exists(st_dir):
+                os.mkdir(st_dir)
             new_csv_st = (
                 st_dir + "/" + self.year + "StatsFinal" + self.suffix + ".csv"
             )
             self.df.to_csv(new_csv_st, index=False)
+            print("Streamlit file stored at: " + new_csv_st)
+
         # Add blank Rank column for Wordpress table counter
         self.df["Rank"] = ""
         move_col = self.df.pop("Rank")
@@ -1804,22 +1806,29 @@ class FieldingData(Stats):
             upload_dir = os.path.join(self.year_dir, "farm")
             if not os.path.exists(upload_dir):
                 os.mkdir(upload_dir)
-        # Make dir that will store files for streamlit module
-        st_dir = os.path.join(self.year_dir, "streamlit_src")
-        if not os.path.exists(st_dir):
-            os.mkdir(st_dir)
 
         # Print organized dataframe to file
         new_csv_alt = (
             alt_dir + "/" + self.year + "FieldingAlt" + self.suffix + ".csv"
         )
         self.df.to_string(new_csv_alt)
+
         # Store reg season df without HTML for streamlit
         if self.suffix in ("R"):
+            st_dir = os.path.join(self.year_dir, "streamlit_src")
+            if not os.path.exists(st_dir):
+                os.mkdir(st_dir)
             new_csv_st = (
-                st_dir + "/" + self.year + "FieldingFinal" + self.suffix + ".csv"
+                st_dir
+                + "/"
+                + self.year
+                + "FieldingFinal"
+                + self.suffix
+                + ".csv"
             )
             self.df.to_csv(new_csv_st, index=False)
+            print("Streamlit file stored at: " + new_csv_st)
+
         # Add blank Rank column for Wordpress table counter
         self.df["Rank"] = ""
         move_col = self.df.pop("Rank")
