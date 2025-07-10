@@ -24,6 +24,12 @@ def main():
     Returns:
         None
     """
+
+    st.set_page_config(
+        page_title="NPB Team Dashboard",
+        page_icon="⚾"
+    )
+
     # User dropdown box
     team_list = [
         "Hanshin Tigers",
