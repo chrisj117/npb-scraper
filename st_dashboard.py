@@ -25,10 +25,7 @@ def main():
         None
     """
 
-    st.set_page_config(
-        page_title="NPB Team Dashboard",
-        page_icon="⚾"
-    )
+    st.set_page_config(page_title="NPB Team Dashboard", page_icon="⚾")
 
     # User dropdown box
     team_list = [
@@ -99,12 +96,12 @@ def create_lineup(team):
         starter = pos_df[pos_df["Inn"] == pos_df["Inn"].max()]
         lineup_df = pd.concat([starter, lineup_df])
 
-    # Reserve = guy with most PA but not in top 9
+    # Reserves = top 3 guys with most PA but not in top 9
     starter_list = lineup_df["Player"].tolist()
     reserve = (
         cumulative_df[~cumulative_df["Player"].isin(starter_list)]
         .sort_values("PA", ascending=False)
-        .head(1)
+        .head(3)
     )
     lineup_df = pd.concat([lineup_df, reserve])
 
@@ -151,7 +148,9 @@ def create_lineup(team):
     lineup_df = lineup_df.astype(str)
 
     # Display data
-    st.dataframe(lineup_df, use_container_width=True, hide_index=True)
+    st.dataframe(
+        lineup_df, use_container_width=True, hide_index=True, row_height=25
+    )
 
 
 def create_rotation_bullpen(team):
@@ -260,8 +259,12 @@ def create_rotation_bullpen(team):
     ]
 
     # Display data
-    st.dataframe(sp_df, use_container_width=True, hide_index=True)
-    st.dataframe(bp_df, use_container_width=True, hide_index=True)
+    st.dataframe(
+        sp_df, use_container_width=True, hide_index=True, row_height=25
+    )
+    st.dataframe(
+        bp_df, use_container_width=True, hide_index=True, row_height=25
+    )
 
 
 def load_data(url=None):
