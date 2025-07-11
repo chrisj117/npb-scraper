@@ -2,11 +2,13 @@
 
 This is a Python script to scrape and organize NPB (Nippon Professional Baseball) and Farm League baseball statistics.
 
-**NOTE:** The repository's /stats/ directory is not updated on a consistent basis. To view the latest statistics as intended, go to https://www.yakyucosmo.com/.
-
 ## **Introduction**
 
-This script scrapes various links for their posted statistics and uses the Pandas library to organize and create new statistics. Outputted files are in .csv (statistics) and .png (player percentiles) formats.
+This script scrapes various sources for their posted statistics and uses the Pandas library to organize and create new statistics. Most output is in CSV format; player percentiles are in PNG format.
+
+To view the latest statistics as intended:
+- Visit https://www.yakyucosmo.com/ for most stats
+- Visit https://npb-team-dashboard.streamlit.app for a team dashboard Streamlit app
 
 ## **Authors and Acknowledgment**
 
