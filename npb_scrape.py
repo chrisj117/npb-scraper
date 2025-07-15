@@ -209,8 +209,10 @@ def main():
     if percentile_yn == "Y":
         npb_bat_player_stats.generate_plots(year_dir, npb_fielding.df)
         npb_pitch_player_stats.generate_plots(year_dir)
-        farm_bat_player_stats.generate_plots(year_dir, farm_fielding.df)
-        farm_pitch_player_stats.generate_plots(year_dir)
+
+        # Uncomment if farm player percentiles are desired
+        # farm_bat_player_stats.generate_plots(year_dir, farm_fielding.df)
+        # farm_pitch_player_stats.generate_plots(year_dir)
 
     # Make upload zips for manual uploads
     if stat_zip_yn == "Y":
@@ -947,25 +949,25 @@ class PlayerData(Stats):
                 plot_df[plot_df[name_col] == player].index[0]
             ]:
                 if value < 10:
-                    color = "#8c7373"
+                    color = "#3366cc"
                 elif value < 20:
-                    color = "#996666"
+                    color = "#6699cc"
                 elif value < 30:
-                    color = "#a65959"
+                    color = "#99b3cc"
                 elif value < 40:
-                    color = "#b34d4d"
+                    color = "#b0c4de"
                 elif value < 50:
-                    color = "#bf4040"
+                    color = "#b3b3b3"
                 elif value < 60:
-                    color = "#cc3333"
+                    color = "#d9a6a6"
                 elif value < 70:
-                    color = "#d92626"
+                    color = "#e68a8a"
                 elif value < 80:
-                    color = "#e61919"
+                    color = "#f25c5c"
                 elif value < 90:
-                    color = "#f20d0d"
+                    color = "#ff2e2e"
                 elif value <= 100:
-                    color = "#ff0000"
+                    color = "#e60000"
                 else:
                     color = "#000000"
                 color_vals.append(color)
@@ -1010,9 +1012,13 @@ class PlayerData(Stats):
             plt.title(
                 f"{player} - Stat Percentiles ("
                 + datetime.today().strftime("%Y-%m-%d")
-                + ")"
+                + ")\n"
+                + "POOR                                    "
+                + "AVERAGE                                  "
+                + "GOOD"
             )
             plt.xlim(0, 100)
+            plt.xticks([0, 50, 100])
             plt.grid(axis="x", linestyle="--", alpha=0.7)
             plt.savefig(
                 plot_dir
