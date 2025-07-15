@@ -103,7 +103,7 @@ def display_player_percentile(df, name, year, suffix):
     # Save raw numbers
     raw_data = df[df[name_col] == name][plot_cols].T
     raw_data = raw_data.reset_index()
-    raw_data.columns = ["Stats", "Raw Numbers"]
+    raw_data.columns = ["Stat", "Value"]
     raw_data = raw_data.iloc[::-1]
     plot_cols.remove("Age")
     if suffix in ("BR", "BF"):

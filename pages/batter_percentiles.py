@@ -39,6 +39,7 @@ def main():
     )
     # Drop players below PA threshold
     bat_df = bat_df.drop(bat_df[bat_df.PA < drop_pa].index)
+    bat_df = bat_df.sort_values('Player')
     player_list = bat_df["Player"]
     player = st.selectbox("Player", player_list)
 

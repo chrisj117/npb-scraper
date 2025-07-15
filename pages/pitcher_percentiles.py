@@ -33,6 +33,7 @@ def main():
         format="%0.1f",
     )
     pitch_df = pitch_df.drop(pitch_df[pitch_df.IP < drop_ip].index)
+    pitch_df = pitch_df.sort_values('Pitcher')
     pitcher_list = pitch_df["Pitcher"]
     pitcher = st.selectbox("Pitcher", pitcher_list)
 
