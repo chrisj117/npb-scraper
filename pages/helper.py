@@ -100,6 +100,8 @@ def display_player_percentile(df, name, year, suffix):
         ]
         invert_cols = ["K%"]
 
+    # Get player's team
+    team = df[df[name_col] == name]["Team"]
     # Save raw numbers
     raw_data = df[df[name_col] == name][plot_cols].T
     raw_data = raw_data.reset_index()
@@ -138,15 +140,7 @@ def display_player_percentile(df, name, year, suffix):
     chart_data.columns = ["Stats", "Percentile Rank"]
     chart_data = chart_data.iloc[::-1]
 
-    chart_title = year + " " + name + " Percentile Ranking"
-    x_title = (
-        "POOR                   "
-        + "                                                                  "
-        + "AVERAGE"
-        + "                                                                   "
-        + "                 "
-        + "GOOD"
-    )
+    chart_title = year + " " + name + " - " + team
     range_ = ["#3366cc", "#b3b3b3", "#e60000"]
     chart = (
         alt.Chart(chart_data, title=chart_title)
@@ -155,7 +149,7 @@ def display_player_percentile(df, name, year, suffix):
             x=alt.X(
                 "Percentile Rank",
                 scale=alt.Scale(type="linear", domain=[0, 100]),
-                title=x_title,
+                title="",
                 axis=alt.Axis(
                     values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
                 ),
@@ -174,7 +168,7 @@ def display_player_percentile(df, name, year, suffix):
     # Display data
     st.altair_chart(
         chart,
-        use_container_width=None,
+        use_container_width=True,
         theme="streamlit",
         key=None,
         on_select="ignore",
