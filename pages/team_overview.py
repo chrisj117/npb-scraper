@@ -7,7 +7,7 @@ import pandas as pd
 
 def main():
     """
-    Main entry point for the Streamlit NPB team dashboard.
+    Main entry point for the Streamlit NPB team overview.
 
     Displays a dropdown for team selection and generates team-specific
     dashboards. When a team is selected, displays the projected starting
