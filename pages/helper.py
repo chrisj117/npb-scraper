@@ -65,8 +65,6 @@ def display_player_percentile(df, name, year, suffix):
             "FIP-",
             "ERA+",
             "IP",
-            "T",
-            "Age",
         ]
         invert_cols = ["HR%", "WHIP", "FIP-", "BB%"]
     elif suffix in ("BR", "BF"):
@@ -94,27 +92,21 @@ def display_player_percentile(df, name, year, suffix):
             "ISO",
             "OPS+",
             "PA",
-            "B",
-            "Age",
-            "Pos",
         ]
         invert_cols = ["K%"]
 
-    # Get player's team
+    # Get player's team, age
     team = df[df[name_col] == name]["Team"]
+    age = df[df[name_col] == name]["Age"].astype(str)
     # Save raw numbers
     raw_data = df[df[name_col] == name][plot_cols].T
     raw_data = raw_data.reset_index()
     raw_data.columns = ["Stat", "Value"]
     raw_data = raw_data.iloc[::-1]
-    plot_cols.remove("Age")
     if suffix in ("BR", "BF"):
         plot_cols.remove("PA")
-        plot_cols.remove("Pos")
-        plot_cols.remove("B")
     elif suffix in ("PR", "PF"):
         plot_cols.remove("IP")
-        plot_cols.remove("T")
 
     # Generate percentiles for given cols
     for col in plot_cols:
@@ -140,10 +132,30 @@ def display_player_percentile(df, name, year, suffix):
     chart_data.columns = ["Stats", "Percentile Rank"]
     chart_data = chart_data.iloc[::-1]
 
-    chart_title = year + " " + name + " - " + team
+    # Determine title contents
+    chart_title = name + " - " + team
+    if suffix in ("PR", "BR"):
+        chart_title = chart_title + " (" + year + " NPB)"
+    elif suffix in ("PF", "BF"):
+        chart_title = chart_title + " (" + year + " Farm)"
+    # Determine subtitle contents
+    if suffix in ("BF", "BR"):
+        tb_hand = df[df[name_col] == name]["B"]
+        pos = df[df[name_col] == name]["Pos"]
+        chart_subtitle = (
+            "Pos: " + pos + " - Age: " + age + " - Bats: " + tb_hand
+        )
+    elif suffix in ("PF", "PR"):
+        tb_hand = df[df[name_col] == name]["T"]
+        chart_subtitle = "Age: " + age + " - Throws: " + tb_hand
+    else:
+        chart_subtitle = " Age: " + age
+    # Chart color ranges
     range_ = ["#3366cc", "#b3b3b3", "#e60000"]
+
+    # Chart settings
     chart = (
-        alt.Chart(chart_data, title=chart_title)
+        alt.Chart(chart_data)
         .mark_bar()
         .encode(
             x=alt.X(
@@ -161,11 +173,22 @@ def display_player_percentile(df, name, year, suffix):
             .scale(domain=[0, 100], range=range_)
             .legend(None),
         )
-        .properties(height=300)
+        .properties(
+            title={
+                "text": chart_title,
+                "subtitle": chart_subtitle,
+                "subtitleColor": "white",
+            },
+            height=300,
+        )
     )
-    chart = chart.mark_bar() + chart.mark_text(align="left", dx=2)
+    # Display percentile number after bar
+    chart = chart.mark_bar() + chart.mark_text(align="left", dx=2, fontSize=14)
+    # Adjust font sizes
+    chart = chart.configure_title(fontSize=20, subtitleFontSize=16)
+    chart = chart.configure_axis(labelFontSize=14)
 
-    # Display data
+    # Display data on Streamlit
     st.altair_chart(
         chart,
         use_container_width=True,
@@ -175,6 +198,11 @@ def display_player_percentile(df, name, year, suffix):
         selection_mode=None,
     )
 
+    # Convert all of dataframe to string to avoid error:
+    # pyarrow.lib.ArrowInvalid:
+    # ("Could not convert 'R' with type str: tried to convert to int64",
+    # 'Conversion failed for column Value with type object')
+    raw_data = raw_data.astype(str)
     st.dataframe(
         raw_data, use_container_width=True, hide_index=True, row_height=25
     )
