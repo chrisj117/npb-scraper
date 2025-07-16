@@ -132,28 +132,46 @@ def display_player_percentile(df, name, year, suffix):
     chart_data.columns = ["Stats", "Percentile Rank"]
     chart_data = chart_data.iloc[::-1]
 
-    # Determine title contents
-    chart_title = name + " - " + team
-    if suffix in ("PR", "BR"):
-        chart_title = chart_title + " (" + year + " NPB)"
-    elif suffix in ("PF", "BF"):
-        chart_title = chart_title + " (" + year + " Farm)"
-    # Determine subtitle contents
+    # Determine title/subtitle contents
+    emoji_dict = {
+        "ORIX Buffaloes": "🦬",
+        "Hiroshima Carp": "🎏",
+        "Chunichi Dragons": "🐉",
+        "DeNA BayStars": "🌟",
+        "Rakuten Eagles": "🦅",
+        "Nipponham Fighters": "🦊",
+        "Yomiuri Giants": "🐰",
+        "SoftBank Hawks": "🪶",
+        "Seibu Lions": "🦁",
+        "Lotte Marines": "⚓",
+        "Yakult Swallows": "🐧",
+        "Hanshin Tigers": "🐯",
+    }
+    title = name + " " + emoji_dict[team.values[0]]
+    if suffix in ("BR", "PR"):
+        subtitle_str = team + " · " + year + " NPB"
+    elif suffix in ("BF", "PF"):
+        subtitle_str = team + " · " + year + " Farm"
+    else:
+        subtitle_str = team + " · " + year
     if suffix in ("BF", "BR"):
         tb_hand = df[df[name_col] == name]["B"]
         pos = df[df[name_col] == name]["Pos"]
-        chart_subtitle = (
-            "Pos: " + pos + " - Age: " + age + " - Bats: " + tb_hand
+        subtitle_str = (
+            subtitle_str + " · " + pos + " · Age " + age + " · Bats " + tb_hand
         )
     elif suffix in ("PF", "PR"):
         tb_hand = df[df[name_col] == name]["T"]
-        chart_subtitle = "Age: " + age + " - Throws: " + tb_hand
+        subtitle_str = subtitle_str + " · Age " + age + " · Throws " + tb_hand
     else:
-        chart_subtitle = " Age: " + age
-    # Chart color ranges
-    range_ = ["#3366cc", "#b3b3b3", "#e60000"]
+        subtitle_str = subtitle_str + " · Age " + age
 
     # Chart settings
+    title_params = alt.TitleParams(
+        text=title,
+        subtitle=subtitle_str,
+        subtitleColor="grey",
+    )
     chart = (
         alt.Chart(chart_data)
         .mark_bar()
@@ -170,22 +188,19 @@ def display_player_percentile(df, name, year, suffix):
             text="Percentile Rank",
             tooltip=alt.value(None),
             color=alt.Color("Percentile Rank")
-            .scale(domain=[0, 100], range=range_)
+            .scale(domain=[0, 100], range=["#3366cc", "#b3b3b3", "#e60000"])
             .legend(None),
         )
         .properties(
-            title={
-                "text": chart_title,
-                "subtitle": chart_subtitle,
-                "subtitleColor": "white",
-            },
+            title=title_params,
             height=300,
         )
     )
+
     # Display percentile number after bar
     chart = chart.mark_bar() + chart.mark_text(align="left", dx=2, fontSize=14)
     # Adjust font sizes
-    chart = chart.configure_title(fontSize=20, subtitleFontSize=16)
+    chart = chart.configure_title(fontSize=20, subtitleFontSize=14)
     chart = chart.configure_axis(labelFontSize=14)
 
     # Display data on Streamlit
