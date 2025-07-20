@@ -72,7 +72,14 @@ def create_lineup(team):
         "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
         + "master/stats/2025/streamlit_src/2025FieldingFinalR.csv"
     )
-    cumulative_df = pd.merge(bat_df, field_df, how="left")
+    try:
+        cumulative_df = pd.merge(bat_df, field_df, how="left")
+    except ValueError:
+        st.error("Error: Batting and fielding dataframes failed to merge. " \
+        "Check Age columns and update name translation + roster data if "\
+        "necessary!")
+        cumulative_df = pd.DataFrame()
+        exit(-1)
 
     # Drop everyone not in team
     cumulative_df = cumulative_df.drop(
