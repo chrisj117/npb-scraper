@@ -44,6 +44,7 @@ def main():
     # Streamlit dataframe displays
     create_lineup(team)
     create_rotation_bullpen(team)
+    st.caption("[Yakyu Cosmopolitan](https://www.yakyucosmo.com/)")
 
 
 def create_lineup(team):
@@ -71,6 +72,10 @@ def create_lineup(team):
     field_df = hp.load_csv(
         "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
         + "master/stats/2025/streamlit_src/2025FieldingFinalR.csv"
+    )
+    # Drop all sub-10 PA players to help alleviate merging errors
+    bat_df = bat_df.drop(
+        bat_df[bat_df.PA < 10].index
     )
     try:
         cumulative_df = pd.merge(bat_df, field_df, how="left")

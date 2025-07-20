@@ -20,6 +20,10 @@ def main():
         "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
         + "master/stats/2025/streamlit_src/2025StatsFinalPR.csv"
     )
+    # Drop all sub-5 IP players to help alleviate merging errors
+    pitch_df = pitch_df.drop(
+        pitch_df[pitch_df.IP < 5].index
+    )
 
     # User input boxes
     year_list = ["2025"]
@@ -39,6 +43,7 @@ def main():
 
     # Display data
     hp.display_player_percentile(pitch_df, pitcher, year, "PR")
+    st.caption("[Yakyu Cosmopolitan](https://www.yakyucosmo.com/)")
 
 
 if __name__ == "__main__":

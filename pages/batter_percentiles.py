@@ -26,6 +26,10 @@ def main():
         "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
         + "master/stats/2025/streamlit_src/2025FieldingFinalR.csv"
     )
+    # Drop all sub-10 PA players to help alleviate merging errors
+    bat_df = bat_df.drop(
+        bat_df[bat_df.PA < 10].index
+    )
 
     # User input boxes
     year_list = ["2025"]
@@ -74,6 +78,7 @@ def main():
     )
 
     hp.display_player_percentile(cumulative_df, player, year, "BR")
+    st.caption("[Yakyu Cosmopolitan](https://www.yakyucosmo.com/)")
 
 
 if __name__ == "__main__":
