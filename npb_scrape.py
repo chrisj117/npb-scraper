@@ -12,7 +12,6 @@ import requests
 import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
-import matplotlib.pyplot as plt
 
 
 def main():
@@ -33,8 +32,7 @@ def main():
     5. Scrapes and organizes statistics for regular season and farm league
        games, including batting, pitching, fielding, standings, and daily
        scores.
-    6. Generates player percentile plots and optionally zips the output
-       files for easier distribution.
+    6. Optionally zips the output files for easier distribution.
 
     Returns:
         int:
@@ -63,9 +61,7 @@ def main():
         arg_bypass = True
         npb_scrape_yn = "Y"
         farm_scrape_yn = "Y"
-        percentile_yn = "N"
         stat_zip_yn = "Y"
-        percentile_zip_yn = "N"
     elif len(sys.argv) > 2:
         print("Too many arguments. Try passing in the desired stat year.")
         sys.exit("Exiting...")
@@ -75,9 +71,7 @@ def main():
         scrape_year = get_scrape_year()
         npb_scrape_yn = get_user_choice("R")
         farm_scrape_yn = get_user_choice("F")
-        percentile_yn = get_user_choice("P")
         stat_zip_yn = get_user_choice("Z")
-        percentile_zip_yn = get_user_choice("PZ")
 
     # Check for input files (all except player_urls_fix.csv are required)
     if check_input_files(rel_dir, scrape_year) is True:
@@ -205,20 +199,9 @@ def main():
     farm_team_fielding.output_final()
     print("Farm statistics finished!\n")
 
-    # Generate player percentile plots
-    if percentile_yn == "Y":
-        npb_bat_player_stats.generate_plots(year_dir, npb_fielding.df)
-        npb_pitch_player_stats.generate_plots(year_dir)
-
-        # Uncomment if farm player percentiles are desired
-        # farm_bat_player_stats.generate_plots(year_dir, farm_fielding.df)
-        # farm_pitch_player_stats.generate_plots(year_dir)
-
     # Make upload zips for manual uploads
     if stat_zip_yn == "Y":
         make_zip(year_dir, "S", scrape_year)
-    if percentile_zip_yn == "Y":
-        make_zip(year_dir, "P", scrape_year)
 
     if arg_bypass is False:
         input("Press Enter to exit. ")
@@ -292,10 +275,7 @@ class PlayerData(Stats):
             Combines team games played into a single DataFrame for IP/PA
             calculations.
         append_positions(field_df, pitch_df):
-            Adds the primary position of a player to the player DataFrame.
-        generate_plots(storage_dir, field_df=None):
-            Generates percentile plots for player statistics and saves them
-            as PNG files."""
+            Adds the primary position of a player to the player DataFrame."""
 
     def __init__(self, stats_dir, year_dir, suffix, year):
         super().__init__(stats_dir, year_dir, suffix, year)
@@ -664,9 +644,7 @@ class PlayerData(Stats):
         )
         # "Davis Jonathan" name changing to "Davis JD"
         self.df["Player"] = (
-            self.df["Player"]
-            .astype(str)
-            .replace("Davis Jonathan", "Davis JD")
+            self.df["Player"].astype(str).replace("Davis Jonathan", "Davis JD")
         )
         # Number formatting
         format_maps = {
@@ -818,223 +796,6 @@ class PlayerData(Stats):
         # NaN means player wasn't on fielding df and pitching df (N/A data) OR
         # was a pinch hitter
         self.df["Pos"] = self.df["Pos"].fillna("")
-
-    def generate_plots(self, storage_dir, field_df=None):
-        """Generates percentile plots for player statistics and saves them as
-        PNG files.
-
-        Parameters:
-        storage_dir (string): The directory where the generated plots will be
-        stored.
-        field_df (pandas dataframe, optional): Holds an entire NPB league's
-        fielding stats. Required for calculating defensive metrics when
-        generating batting percentile plots.
-
-        Functionality:
-        - Determines the relevant statistics to plot based on the suffix
-        (e.g., batting or pitching).
-        - Filters players based on minimum thresholds for plate appearances
-        (batters) or innings pitched (pitchers).
-        - Calculates percentiles for selected statistics and adjusts for
-        metrics where lower values are better.
-        - For batters, calculates a "Defense" metric using fielding stats
-        if `field_df` is provided.
-        - Creates horizontal bar plots for each player, showing their
-        percentile ranks across the selected statistics.
-        - Saves the plots as PNG files in a directory structure based on the
-        suffix and year.
-
-        Notes:
-        - Requires matplotlib for generating plots.
-        - Percentile calculations normalize values between 0 and 100.
-        - Defensive metrics are only included for batters if `field_df` is
-        provided.
-
-        Output:
-        - PNG files for each player's percentile plot are saved in the
-        specified directory.
-        - Prints the location of the generated plots to the console."""
-        # Create dir for plots
-        plot_dir = os.path.join(storage_dir, "plots")
-        if not os.path.exists(plot_dir):
-            os.mkdir(plot_dir)
-        plot_dir = os.path.join(plot_dir, self.suffix)
-        if not os.path.exists(plot_dir):
-            os.mkdir(plot_dir)
-        print("Generating " + self.suffix + " player percentile plots...")
-
-        # Suffix determines stats to be put into percentiles
-        # Players must meet IP criteria to avoid skewing percentiles
-        plot_cols = []
-        invert_cols = []
-        if self.suffix in ("PR", "PF"):
-            name_col = "Pitcher"
-            plot_cols = ["K-BB%", "BB%", "K%", "HR%", "WHIP", "FIP-", "ERA+"]
-            invert_cols = ["HR%", "WHIP", "FIP-", "BB%"]
-            plot_df = self.df[self.df.IP > 25.0].copy()
-        elif self.suffix in ("BR", "BF"):
-            name_col = "Player"
-            plot_cols = [
-                "Defense",
-                "BB/K",
-                "BB%",
-                "K%",
-                "BABIP",
-                "ISO",
-                "OPS+",
-            ]
-            invert_cols = ["K%"]
-            plot_df = self.df[self.df.PA > 50.0].copy()
-
-            # Defense stat calculation
-            temp_df = field_df[name_col].drop_duplicates()
-            # Each TZR in fielding must have Pos Adj applied to it
-            field_df["TZR"] = field_df["TZR"].apply(
-                pd.to_numeric, errors="coerce"
-            )
-            field_df["TZR"] = field_df["TZR"].fillna(0)
-            field_df["Pos Adj"] = field_df["Pos Adj"].apply(
-                pd.to_numeric, errors="coerce"
-            )
-            field_df["TZR"] = field_df["TZR"] + field_df["Pos Adj"]
-            # Combine all TZRs and Inn per player
-            temp_df = pd.merge(
-                temp_df,
-                field_df.groupby(name_col, as_index=False)["TZR"].sum(),
-                on=name_col,
-            )
-            temp_df = pd.merge(
-                temp_df,
-                field_df.groupby(name_col, as_index=False)["Inn"].sum(),
-                on=name_col,
-            )
-            # Calculate Defense (similar to TZR/143) and prep for plotting
-            temp_df["Defense"] = (temp_df["TZR"] / temp_df["Inn"]) * 1287
-            plot_df = pd.merge(
-                plot_df,
-                temp_df[[name_col, "Defense"]],
-                on=name_col,
-                how="inner",
-            )
-
-        # Generate percentiles for given cols
-        for col in plot_cols:
-            # Standardize all stat cols as floats
-            if "%" in col:
-                plot_df[col] = (
-                    plot_df[col].str.rstrip("%").astype("float") / 100.0
-                )
-            else:
-                plot_df[col] = plot_df[col].astype("float")
-            plot_df[col] = plot_df[col].rank(pct=True)
-            # Percentile adjustment (I.E. 0th percentile = lowest)
-            plot_df[col] = (plot_df[col] - plot_df[col].min()) / (
-                plot_df[col].max() - plot_df[col].min()
-            )
-            # invert_cols are stats where lower = better
-            if col in invert_cols:
-                plot_df[col] = 1.0 - plot_df[col]
-            plot_df[col] = plot_df[col] * 100
-            plot_df[col] = plot_df[col].fillna("0")
-            # Convert to whole numbers for display on bar
-            plot_df[col] = plot_df[col].astype("int")
-
-        # Generate percentile graphs for each player
-        for player in plot_df[name_col]:
-            player_data = plot_df[plot_df[name_col] == player][plot_cols].T
-            plt.figure(figsize=(8, 5))
-            # Generate colors based on value
-            color_vals = []
-            for value in player_data[
-                plot_df[plot_df[name_col] == player].index[0]
-            ]:
-                if value < 10:
-                    color = "#3366cc"
-                elif value < 20:
-                    color = "#6699cc"
-                elif value < 30:
-                    color = "#99b3cc"
-                elif value < 40:
-                    color = "#b0c4de"
-                elif value < 50:
-                    color = "#b3b3b3"
-                elif value < 60:
-                    color = "#d9a6a6"
-                elif value < 70:
-                    color = "#e68a8a"
-                elif value < 80:
-                    color = "#f25c5c"
-                elif value < 90:
-                    color = "#ff2e2e"
-                elif value <= 100:
-                    color = "#e60000"
-                else:
-                    color = "#000000"
-                color_vals.append(color)
-            bar_container = plt.barh(
-                player_data.index,
-                player_data[plot_df[plot_df[name_col] == player].index[0]],
-                color=color_vals,
-                alpha=0.7,
-            )
-            # Display data values on the bars
-            for plot_bar in bar_container:
-                # Determine where and how data appears on bar graph
-                # 0 displays at edge of bar graph along with 1 and 2 (min
-                # offset is -2)
-                if plot_bar.get_width() <= 2:
-                    width = 0
-                    data_val = plot_bar.get_width()
-                # Never display 100 in percentiles, max is 99
-                elif plot_bar.get_width() >= 100:
-                    width = plot_bar.get_width() - 3
-                    data_val = 99
-                # Smallest values should be closer to edge of bar
-                elif plot_bar.get_width() < 10:
-                    width = plot_bar.get_width() - 2
-                    data_val = plot_bar.get_width()
-                # Display values for double digit values
-                else:
-                    width = plot_bar.get_width() - 3
-                    data_val = plot_bar.get_width()
-                plt.text(
-                    width,  # Position the text relative to the bar
-                    plot_bar.get_y()
-                    + plot_bar.get_height() / 2,  # Center vertically
-                    f"{int(data_val)}",
-                    va="center",  # Align the text vertically
-                    ha="left",  # Align the text horizontally
-                    fontsize=9,
-                    color="black",
-                )
-            # Graph and axis names, styles
-            plt.xlabel("Percentile Rank")
-            plt.title(
-                f"{player} - Stat Percentiles ("
-                + datetime.today().strftime("%Y-%m-%d")
-                + ")\n"
-                + "POOR                                    "
-                + "AVERAGE                                  "
-                + "GOOD"
-            )
-            plt.xlim(0, 100)
-            plt.xticks([0, 50, 100])
-            plt.grid(axis="x", linestyle="--", alpha=0.7)
-            plt.savefig(
-                plot_dir
-                + "/"
-                + self.year
-                + player.replace(" ", "")
-                + self.suffix
-                + ".png"
-            )
-            plt.close()
-
-        print(
-            self.suffix
-            + " player percentile plots can be found at: "
-            + plot_dir
-        )
 
 
 class TeamData(Stats):
@@ -3078,8 +2839,7 @@ def get_user_choice(suffix):
 
     Parameters:
     suffix (string): Indicates the option being asked about (can be farm
-    scraping "F", regular season scraping "R", stat zip file creation "Z",
-    player percentile creation "P", or percentile zip file creation "PZ")
+    scraping "F", regular season scraping "R", stat zip file creation "Z"
 
     Returns:
     user_in (string): Returns "Y" or "N" (if "Q" is chosen, program terminates)
@@ -3102,12 +2862,6 @@ def get_user_choice(suffix):
             user_in = input("Scrape regular season stats stats? (Y/N): ")
         elif suffix == "Z":
             user_in = input("Output stats in a zip file? (Y/N): ")
-        elif suffix == "P":
-            user_in = input("Output player percentile plots? (Y/N): ")
-        elif suffix == "PZ":
-            user_in = input(
-                "Output player percentile plots in a zip file? (Y/N): "
-            )
         else:
             user_in = "Q"
 
@@ -3629,23 +3383,6 @@ def make_zip(year_dir, suffix, year):
             year_dir + "/npb", temp_dir + "/stats/npb", dirs_exist_ok=True
         )
         output_filename = zip_dir + "/" + year + "upload"
-    elif suffix == "P":
-        temp_dir = os.path.join(year_dir, "/plots/temp")
-        temp_dir = tempfile.mkdtemp()
-        # Gather all percentile dirs to put into temp
-        shutil.copytree(
-            year_dir + "/plots/BF", temp_dir + "/plots/BF", dirs_exist_ok=True
-        )
-        shutil.copytree(
-            year_dir + "/plots/BR", temp_dir + "/plots/BR", dirs_exist_ok=True
-        )
-        shutil.copytree(
-            year_dir + "/plots/PF", temp_dir + "/plots/PF", dirs_exist_ok=True
-        )
-        shutil.copytree(
-            year_dir + "/plots/PR", temp_dir + "/plots/PR", dirs_exist_ok=True
-        )
-        output_filename = zip_dir + "/" + year + "playerPercentiles"
 
     shutil.make_archive(output_filename, "zip", temp_dir)
     shutil.rmtree(temp_dir)
@@ -3728,26 +3465,6 @@ def check_input_files(rel_dir, scrape_year=datetime.now().year):
     else:
         print("Missing needed input file(s), exiting...")
     return missing_files
-
-
-def get_pitch_types(year_dir, year, suffix):
-    """PITCHING TYPES SCRAPING CODE (move into a new function get_pitch_types)
-    * discuss scrapping this with mr yakyu *"""
-    pitch_types_file = (
-        year_dir + "/" + year + "PitchTypesRaw" + suffix + ".csv"
-    )
-    print("Raw pitching types will be stored in: " + pitch_types_file)
-    # new_file = open(pitch_types_file, "w")
-    # Make GET request
-    url = (
-        "https://docs.google.com/spreadsheets/d/e/2PACX-"
-        + "1vS6W2zDr6OWslGU0QSLhvw4xi-NpnjWEqO16OvLnU2OCJoMbKFH-"
-        + "Z3FYL1sGxIFKb8flYQFgH9wphPU/pub?gid=1691151132&single=true&"
-        + "output=csv"
-    )
-    # r = get_url(url)
-    test_df = pd.read_csv(url, index_col=0)
-    print(test_df.to_string())
 
 
 if __name__ == "__main__":
