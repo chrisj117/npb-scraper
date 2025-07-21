@@ -662,11 +662,11 @@ class PlayerData(Stats):
             .astype(str)
             .replace("Mercedes Cristopher Crisostomo", "Mercedes CC")
         )
-        # "Tysinger Brandon Taiga" name shortening to "Tysinger Brandon"
+        # "Davis Jonathan" name changing to "Davis JD"
         self.df["Player"] = (
             self.df["Player"]
             .astype(str)
-            .replace("Mercedes Cristopher Crisostomo", "Mercedes CC")
+            .replace("Davis Jonathan", "Davis JD")
         )
         # Number formatting
         format_maps = {
