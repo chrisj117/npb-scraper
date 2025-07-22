@@ -295,38 +295,24 @@ class PlayerData(Stats):
         function)"""
         # Make dir that will store alt views of the dataframes
         alt_dir = os.path.join(self.year_dir, "alt")
-        if not os.path.exists(alt_dir):
-            os.mkdir(alt_dir)
         # Make dirs that will store files uploaded to yakyucosmo.com
         upload_dir = self.year_dir
         if self.suffix in ("PR", "BR"):
             upload_dir = os.path.join(self.year_dir, "npb")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
         elif self.suffix in ("PF", "BF"):
             upload_dir = os.path.join(self.year_dir, "farm")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
 
         # For batting, remove all players with PA <= 0
         if self.suffix in ("BF", "BR"):
             self.df = self.df.drop(self.df[self.df.PA == 0].index)
         # Print organized dataframe to file
-        new_csv_alt = (
-            alt_dir + "/" + self.year + "AltView" + self.suffix + ".csv"
-        )
-        self.df.to_string(new_csv_alt)
+        alt_filename = self.year + "AltView" + self.suffix + ".csv"
+        alt_filename = store_dataframe(self.df, alt_dir, alt_filename, "alt")
 
-        # Store reg season df without HTML for streamlit
-        if self.suffix in ("PR", "BR"):
-            st_dir = os.path.join(self.year_dir, "streamlit_src")
-            if not os.path.exists(st_dir):
-                os.mkdir(st_dir)
-            new_csv_st = (
-                st_dir + "/" + self.year + "StatsFinal" + self.suffix + ".csv"
-            )
-            self.df.to_csv(new_csv_st, index=False)
-            print("Streamlit file stored at: " + new_csv_st)
+        # Store df without HTML for streamlit
+        st_dir = os.path.join(self.year_dir, "streamlit_src")
+        st_filename = self.year + "StatsFinal" + self.suffix + ".csv"
+        st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
 
         # Add blank Rank column for Wordpress table counter
         self.df["Rank"] = ""
@@ -339,10 +325,11 @@ class PlayerData(Stats):
             final_df = convert_player_to_html(final_df, self.suffix, self.year)
         final_df = convert_team_to_html(final_df, self.year, "Abb")
         # Print final file with all players
-        new_csv_final = (
-            upload_dir + "/" + self.year + "StatsFinal" + self.suffix + ".csv"
+        final_filename = self.year + "StatsFinal" + self.suffix + ".csv"
+        final_filename = store_dataframe(
+            final_df, upload_dir, final_filename, "csv"
         )
-        final_df.to_csv(new_csv_final, index=False)
+
         # Make deep copy again for leader's file
         leader_df = self.df.copy()
         # Get df with number of games played by each team for IP/PA drop consts
@@ -373,19 +360,25 @@ class PlayerData(Stats):
                 )
             leader_df = convert_team_to_html(leader_df, self.year, "Abb")
             # Output leader file as a csv
-            leader_csv = (
-                upload_dir + "/" + self.year + "Leaders" + self.suffix + ".csv"
+            leader_filename = self.year + "Leaders" + self.suffix + ".csv"
+            leader_filename = store_dataframe(
+                leader_df, upload_dir, leader_filename, "csv"
             )
-            leader_df.to_csv(leader_csv, index=False)
+            # Store df without HTML for streamlit
+            st_filename = self.year + "Leaders" + self.suffix + ".csv"
+            st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
 
-            print("The pitching leaders file will be stored in: " + leader_csv)
+            print(
+                "The pitching leaders file will be stored in: "
+                + leader_filename
+            )
             print(
                 "An alternative view of the pitching results will be stored "
-                "in: " + new_csv_alt
+                "in: " + alt_filename
             )
             print(
                 "The final organized pitching results will be stored in: "
-                + new_csv_final
+                + final_filename
             )
 
         # Leader file is calculated differently for batters
@@ -413,19 +406,25 @@ class PlayerData(Stats):
                 )
             leader_df = convert_team_to_html(leader_df, self.year, "Abb")
             # Output leader file as a csv
-            leader_csv = (
-                upload_dir + "/" + self.year + "Leaders" + self.suffix + ".csv"
+            leader_filename = self.year + "Leaders" + self.suffix + ".csv"
+            leader_filename = store_dataframe(
+                leader_df, upload_dir, leader_filename, "csv"
             )
-            leader_df.to_csv(leader_csv, index=False)
+            # Store df without HTML for streamlit
+            st_filename = self.year + "Leaders" + self.suffix + ".csv"
+            st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
 
-            print("The batting leaders file will be stored in: " + leader_csv)
+            print(
+                "The batting leaders file will be stored in: "
+                + leader_filename
+            )
             print(
                 "An alternative view of the batting results will be stored "
-                "in: " + new_csv_alt
+                "in: " + alt_filename
             )
             print(
                 "The final organized batting results will be stored in: "
-                + new_csv_final
+                + final_filename
             )
 
     def org_pitch(self):
@@ -843,23 +842,22 @@ class TeamData(Stats):
         """Outputs final files for upload using the team stat dataframes"""
         # Make dir that will store alt views of the dataframes
         alt_dir = os.path.join(self.year_dir, "alt")
-        if not os.path.exists(alt_dir):
-            os.mkdir(alt_dir)
         # Make dirs that will store files uploaded to yakyucosmo.com
         upload_dir = self.year_dir
         if self.suffix in ("PR", "BR"):
             upload_dir = os.path.join(self.year_dir, "npb")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
         elif self.suffix in ("PF", "BF"):
             upload_dir = os.path.join(self.year_dir, "farm")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
+
         # Print organized dataframe to file
-        new_csv_alt = (
-            alt_dir + "/" + self.year + "TeamAlt" + self.suffix + ".csv"
-        )
-        self.df.to_string(new_csv_alt)
+        alt_filename = self.year + "TeamAlt" + self.suffix + ".csv"
+        alt_filename = store_dataframe(self.df, alt_dir, alt_filename, "alt")
+
+        # Store df without HTML for streamlit
+        st_dir = os.path.join(self.year_dir, "streamlit_src")
+        st_filename = self.year + "Team" + self.suffix + ".csv"
+        st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
+
         # Add blank counter (#) column for Wordpress table counter
         self.df["#"] = ""
         move_col = self.df.pop("#")
@@ -869,30 +867,30 @@ class TeamData(Stats):
         # Insert HTML code for team names
         final_df = convert_team_to_html(final_df, self.year, "Full")
         # Print output file for upload
-        new_csv_final = (
-            upload_dir + "/" + self.year + "Team" + self.suffix + ".csv"
+        final_filename = self.year + "Team" + self.suffix + ".csv"
+        final_filename = store_dataframe(
+            final_df, upload_dir, final_filename, "csv"
         )
-        final_df.to_csv(new_csv_final, index=False)
 
         # Pitching TeamAlt and Team file location outputs
         if self.suffix in ("PR", "PF"):
             print(
                 "The final organized team pitching results will be stored "
-                "in: " + new_csv_final
+                "in: " + final_filename
             )
             print(
                 "An alternative view of team pitching results will be stored"
-                "in: " + new_csv_alt
+                "in: " + alt_filename
             )
 
         elif self.suffix in ("BR", "BF"):
             print(
                 "The final organized team batting results will be stored "
-                "in: " + new_csv_final
+                "in: " + final_filename
             )
             print(
                 "An alternative view of team batting results will be stored "
-                "in: " + new_csv_alt
+                "in: " + alt_filename
             )
 
     def org_team_bat(self):
@@ -1417,24 +1415,22 @@ class StandingsData(Stats):
         # Make dir that will store files uploaded to yakyucosmo.com
         if self.suffix in ("C", "P"):
             upload_dir = os.path.join(self.year_dir, "npb")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
         elif self.suffix in ("W", "E"):
             upload_dir = os.path.join(self.year_dir, "farm")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
         else:
             upload_dir = self.year_dir
         # Make dir that will store alt views of the dataframes
         alt_dir = os.path.join(self.year_dir, "alt")
-        if not os.path.exists(alt_dir):
-            os.mkdir(alt_dir)
 
         # Print organized dataframe to file
-        new_csv_alt = (
-            alt_dir + "/" + self.year + "StandingsAlt" + self.suffix + ".csv"
-        )
-        self.df.to_string(new_csv_alt)
+        alt_filename = self.year + "StandingsAlt" + self.suffix + ".csv"
+        alt_filename = store_dataframe(self.df, alt_dir, alt_filename, "alt")
+
+        # Store df without HTML for streamlit
+        st_dir = os.path.join(self.year_dir, "streamlit_src")
+        st_filename = self.year + "StandingsFinal" + self.suffix + ".csv"
+        st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
+
         # Add blank counter (#) column for Wordpress table counter
         self.df["#"] = ""
         move_col = self.df.pop("#")
@@ -1443,15 +1439,11 @@ class StandingsData(Stats):
         final_df = self.df.copy()
         final_df = convert_team_to_html(final_df, self.year, "Full")
         # Create Standings file name
-        new_csv_final = (
-            upload_dir
-            + "/"
-            + self.year
-            + "StandingsFinal"
-            + self.suffix
-            + ".csv"
+        final_filename = self.year + "StandingsFinal" + self.suffix + ".csv"
+        final_filename = store_dataframe(
+            final_df, upload_dir, final_filename, "csv"
         )
-        final_df.to_csv(new_csv_final, index=False)
+
         # Convert the standings to a string and output to user
         std_dict = {
             "C": "Central",
@@ -1462,13 +1454,13 @@ class StandingsData(Stats):
 
         print(
             "The final " + std_dict[self.suffix] + " standings will be stored"
-            " in: " + new_csv_final
+            " in: " + final_filename
         )
         print(
             "An alternative view of the "
             + std_dict[self.suffix]
             + " standings will be stored in: "
-            + new_csv_alt
+            + alt_filename
         )
 
     def org_standings(self, tb_df, tp_df):
@@ -1561,40 +1553,21 @@ class FieldingData(Stats):
         """Outputs final files using the fielding dataframes"""
         # Make dir that will store alt views of the dataframes
         alt_dir = os.path.join(self.year_dir, "alt")
-        if not os.path.exists(alt_dir):
-            os.mkdir(alt_dir)
         # Make dirs that will store files uploaded to yakyucosmo.com
         upload_dir = self.year_dir
         if self.suffix == "R":
             upload_dir = os.path.join(self.year_dir, "npb")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
         elif self.suffix == "F":
             upload_dir = os.path.join(self.year_dir, "farm")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
 
         # Print organized dataframe to file
-        new_csv_alt = (
-            alt_dir + "/" + self.year + "FieldingAlt" + self.suffix + ".csv"
-        )
-        self.df.to_string(new_csv_alt)
+        alt_filename = self.year + "FieldingAlt" + self.suffix + ".csv"
+        alt_filename = store_dataframe(self.df, alt_dir, alt_filename, "alt")
 
-        # Store reg season df without HTML for streamlit
-        if self.suffix in ("R"):
-            st_dir = os.path.join(self.year_dir, "streamlit_src")
-            if not os.path.exists(st_dir):
-                os.mkdir(st_dir)
-            new_csv_st = (
-                st_dir
-                + "/"
-                + self.year
-                + "FieldingFinal"
-                + self.suffix
-                + ".csv"
-            )
-            self.df.to_csv(new_csv_st, index=False)
-            print("Streamlit file stored at: " + new_csv_st)
+        # Store df without HTML for streamlit
+        st_dir = os.path.join(self.year_dir, "streamlit_src")
+        st_filename = self.year + "FieldingFinal" + self.suffix + ".csv"
+        st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
 
         # Add blank Rank column for Wordpress table counter
         self.df["Rank"] = ""
@@ -1607,33 +1580,28 @@ class FieldingData(Stats):
             final_df = convert_player_to_html(final_df, self.suffix, self.year)
         final_df = convert_team_to_html(final_df, self.year, "Abb")
         # Print final file with all players
-        new_csv_final = (
-            upload_dir
-            + "/"
-            + self.year
-            + "FieldingFinal"
-            + self.suffix
-            + ".csv"
+        final_filename = self.year + "FieldingFinal" + self.suffix + ".csv"
+        final_filename = store_dataframe(
+            final_df, upload_dir, final_filename, "csv"
         )
-        final_df.to_csv(new_csv_final, index=False)
 
         if self.suffix == "R":
             print(
                 "An alternative view of the regular season individual fielding"
-                " results will be stored in: " + new_csv_alt
+                " results will be stored in: " + alt_filename
             )
             print(
                 "The final organized regular season individual fielding "
-                "results will be stored in: " + new_csv_final
+                "results will be stored in: " + final_filename
             )
         elif self.suffix == "F":
             print(
                 "An alternative view of the farm individual fielding results "
-                "will be stored in: " + new_csv_alt
+                "will be stored in: " + alt_filename
             )
             print(
                 "The final organized farm individual fielding results will be "
-                "stored in: " + new_csv_final
+                "stored in: " + final_filename
             )
 
     def org_fielding(self):
@@ -1781,29 +1749,22 @@ class TeamFieldingData(Stats):
         """Outputs final files using the team fielding dataframes"""
         # Make dir that will store alt views of the dataframes
         alt_dir = os.path.join(self.year_dir, "alt")
-        if not os.path.exists(alt_dir):
-            os.mkdir(alt_dir)
         # Make dirs that will store files uploaded to yakyucosmo.com
         upload_dir = self.year_dir
         if self.suffix == "R":
             upload_dir = os.path.join(self.year_dir, "npb")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
         elif self.suffix == "F":
             upload_dir = os.path.join(self.year_dir, "farm")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
 
         # Print organized dataframe to file
-        new_csv_alt = (
-            alt_dir
-            + "/"
-            + self.year
-            + "TeamFieldingAlt"
-            + self.suffix
-            + ".csv"
-        )
-        self.df.to_string(new_csv_alt)
+        alt_filename = self.year + "TeamFieldingAlt" + self.suffix + ".csv"
+        alt_filename = store_dataframe(self.df, alt_dir, alt_filename, "alt")
+
+        # Store df without HTML for streamlit
+        st_dir = os.path.join(self.year_dir, "streamlit_src")
+        st_filename = self.year + "TeamFieldingFinal" + self.suffix + ".csv"
+        st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
+
         # Add blank # column for Wordpress table counter
         self.df["#"] = ""
         move_col = self.df.pop("#")
@@ -1813,33 +1774,28 @@ class TeamFieldingData(Stats):
         # Convert team names to HTML that contains appropriate URLs
         final_df = convert_team_to_html(final_df, self.year, "Full")
         # Print final file with all players
-        new_csv_final = (
-            upload_dir
-            + "/"
-            + self.year
-            + "TeamFieldingFinal"
-            + self.suffix
-            + ".csv"
+        final_filename = self.year + "TeamFieldingFinal" + self.suffix + ".csv"
+        final_filename = store_dataframe(
+            final_df, upload_dir, final_filename, "csv"
         )
-        final_df.to_csv(new_csv_final, index=False)
 
         if self.suffix == "R":
             print(
                 "An alternative view of the regular season team fielding "
-                "results will be stored in: " + new_csv_alt
+                "results will be stored in: " + alt_filename
             )
             print(
                 "The final organized regular season team fielding results "
-                "will be stored in: " + new_csv_final
+                "will be stored in: " + final_filename
             )
         elif self.suffix == "F":
             print(
                 "An alternative view of the farm team fielding results will "
-                "be stored in: " + new_csv_alt
+                "be stored in: " + alt_filename
             )
             print(
                 "The final organized farm team fielding results will be stored"
-                " in: " + new_csv_final
+                " in: " + final_filename
             )
 
     def org_team_fielding(self):
@@ -1978,24 +1934,22 @@ class TeamSummaryData(Stats):
         """Outputs final files using the team summary dataframes"""
         # Make dir that will store alt views of the dataframes
         alt_dir = os.path.join(self.year_dir, "alt")
-        if not os.path.exists(alt_dir):
-            os.mkdir(alt_dir)
         # Make dirs that will store files uploaded to yakyucosmo.com
         upload_dir = self.year_dir
         if self.suffix == "R":
             upload_dir = os.path.join(self.year_dir, "npb")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
         elif self.suffix == "F":
             upload_dir = os.path.join(self.year_dir, "farm")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
 
         # Print organized dataframe to file
-        new_csv_alt = (
-            alt_dir + "/" + self.year + "TeamSummaryAlt" + self.suffix + ".csv"
-        )
-        self.df.to_string(new_csv_alt)
+        alt_filename = self.year + "TeamSummaryAlt" + self.suffix + ".csv"
+        alt_filename = store_dataframe(self.df, alt_dir, alt_filename, "alt")
+
+        # Store df without HTML for streamlit
+        st_dir = os.path.join(self.year_dir, "streamlit_src")
+        st_filename = self.year + "TeamSummaryFinal" + self.suffix + ".csv"
+        st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
+
         # Add blank Rank column for Wordpress table counter
         self.df["#"] = ""
         move_col = self.df.pop("#")
@@ -2005,33 +1959,28 @@ class TeamSummaryData(Stats):
         # Convert team names to HTML that contains appropriate URLs
         final_df = convert_team_to_html(final_df, self.year, "Full")
         # Print final file with all players
-        new_csv_final = (
-            upload_dir
-            + "/"
-            + self.year
-            + "TeamSummaryFinal"
-            + self.suffix
-            + ".csv"
+        final_filename = self.year + "TeamSummaryFinal" + self.suffix + ".csv"
+        final_filename = store_dataframe(
+            final_df, upload_dir, final_filename, "csv"
         )
-        final_df.to_csv(new_csv_final, index=False)
 
         if self.suffix == "R":
             print(
                 "An alternative view of the regular season team summary "
-                "results will be stored in: " + new_csv_alt
+                "results will be stored in: " + alt_filename
             )
             print(
                 "The final organized regular season team summary results will "
-                "be stored in: " + new_csv_final
+                "be stored in: " + final_filename
             )
         elif self.suffix == "F":
             print(
                 "An alternative view of the farm team summary results will "
-                "be stored in: " + new_csv_alt
+                "be stored in: " + alt_filename
             )
             print(
                 "The final organized farm team summary results will be stored "
-                "in: " + new_csv_final
+                "in: " + final_filename
             )
 
     def org_team_summary(self):
@@ -2122,24 +2071,21 @@ class DailyScoresData(Stats):
         """Outputs final files using the daily score dataframes"""
         # Make dir that will store alt views of the dataframes
         alt_dir = os.path.join(self.year_dir, "alt")
-        if not os.path.exists(alt_dir):
-            os.mkdir(alt_dir)
         # Make dirs that will store files uploaded to yakyucosmo.com
         upload_dir = self.year_dir
         if self.suffix == "R":
             upload_dir = os.path.join(self.year_dir, "npb")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
         elif self.suffix == "F":
             upload_dir = os.path.join(self.year_dir, "farm")
-            if not os.path.exists(upload_dir):
-                os.mkdir(upload_dir)
 
-        # Print organized dataframe to file
-        new_csv_alt = (
-            alt_dir + "/" + self.year + "DailyScoresAlt" + self.suffix + ".csv"
-        )
-        self.df.to_string(new_csv_alt)
+        alt_filename = self.year + "DailyScoresAlt" + self.suffix + ".csv"
+        alt_filename = store_dataframe(self.df, alt_dir, alt_filename, "alt")
+
+        # Store df without HTML for streamlit
+        st_dir = os.path.join(self.year_dir, "streamlit_src")
+        st_filename = self.year + "DailyScoresFinal" + self.suffix + ".csv"
+        st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
+
         # Make deep copy of original df to avoid HTML in df's team/player names
         final_df = self.df.copy()
         # Convert team names to HTML that contains appropriate URLs
@@ -2155,23 +2101,18 @@ class DailyScoresData(Stats):
             inplace=True,
         )
         # Print final file with most recent game scores
-        new_csv_final = (
-            upload_dir
-            + "/"
-            + self.year
-            + "DailyScoresFinal"
-            + self.suffix
-            + ".csv"
+        final_filename = self.year + "DailyScoresFinal" + self.suffix + ".csv"
+        final_filename = store_dataframe(
+            final_df, upload_dir, final_filename, "csv"
         )
-        final_df.to_csv(new_csv_final, index=False)
 
         print(
             "An alternative view of the daily game scores will be stored "
-            "in: " + new_csv_alt
+            "in: " + alt_filename
         )
         print(
             "The final organized daily game scores will be stored in: "
-            + new_csv_final
+            + final_filename
         )
 
     def org_daily_scores(self):
@@ -3465,6 +3406,30 @@ def check_input_files(rel_dir, scrape_year=datetime.now().year):
     else:
         print("Missing needed input file(s), exiting...")
     return missing_files
+
+
+def store_dataframe(df, store_dir, filename, mode):
+    """
+    Stores a DataFrame to disk as either a CSV file or a plain text file.
+
+    Parameters:
+        df (pandas.DataFrame): The DataFrame to store.
+        store_dir (str): The directory where the file will be saved.
+        filename (str): The name of the file to create.
+        mode (str): The file format to use: "csv" for CSV format, "alt" for 
+        plain text.
+
+    Returns:
+        str: The full path to the stored file.
+    """
+    if not os.path.exists(store_dir):
+        os.mkdir(store_dir)
+    store_path = store_dir + "/" + filename
+    if mode == "csv":
+        df.to_csv(store_path, index=False)
+    elif mode == "alt":
+        df.to_string(store_path)
+    return store_path
 
 
 if __name__ == "__main__":
