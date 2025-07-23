@@ -27,9 +27,7 @@ def main():
         + "master/stats/2025/streamlit_src/2025FieldingFinalR.csv"
     )
     # Drop all sub-10 PA players to help alleviate merging errors
-    bat_df = bat_df.drop(
-        bat_df[bat_df.PA < 10].index
-    )
+    bat_df = bat_df.drop(bat_df[bat_df.PA < 10].index)
 
     # User input boxes
     year_list = ["2025"]
@@ -43,11 +41,11 @@ def main():
     )
     # Drop players below PA threshold
     bat_df = bat_df.drop(bat_df[bat_df.PA < drop_pa].index)
-    bat_df = bat_df.sort_values('Player')
+    bat_df = bat_df.sort_values("Player")
     player_list = bat_df["Player"]
     player = st.selectbox("Player", player_list)
 
-    # Defense stat calculation
+    # Def Value stat calculation
     temp_df = field_df["Player"].drop_duplicates()
     # Each TZR in fielding must have Pos Adj applied to it
     field_df["TZR"] = field_df["TZR"].apply(pd.to_numeric, errors="coerce")
@@ -67,15 +65,55 @@ def main():
         field_df.groupby("Player", as_index=False)["Inn"].sum(),
         on="Player",
     )
-    # Calculate Defense (similar to TZR/143) and prep for plotting
-    temp_df["Defense"] = (temp_df["TZR"] / temp_df["Inn"]) * 1287
-    temp_df["Defense"] = temp_df["Defense"].map("{:,.2f}".format)
+    temp_df = pd.merge(
+        temp_df,
+        field_df.groupby("Player", as_index=False)["RngR"].sum(),
+        on="Player",
+    )
+    temp_df = pd.merge(
+        temp_df,
+        field_df.groupby("Player", as_index=False)["ARM"].sum(),
+        on="Player",
+    )
+    temp_df = pd.merge(
+        temp_df,
+        field_df.groupby("Player", as_index=False)["DPR"].sum(),
+        on="Player",
+    )
+    temp_df = pd.merge(
+        temp_df,
+        field_df.groupby("Player", as_index=False)["Framing"].sum(),
+        on="Player",
+    )
+    # Calculate Def Value (similar to TZR/143) and prep for plotting
+    temp_df["Def Value"] = (temp_df["TZR"] / temp_df["Inn"]) * 1287
     cumulative_df = pd.merge(
         bat_df,
-        temp_df[["Player", "Defense"]],
+        temp_df[
+            ["Player", "Def Value", "RngR", "ARM", "DPR", "Framing", "Inn"]
+        ],
         on="Player",
         how="inner",
     )
+    cumulative_df["Range"] = (
+        cumulative_df["RngR"] / cumulative_df["Inn"]
+    ) * 1287
+    cumulative_df["Arm"] = (cumulative_df["ARM"] / cumulative_df["Inn"]) * 1287
+    cumulative_df["DPR"] = (cumulative_df["DPR"] / cumulative_df["Inn"]) * 1287
+    cumulative_df["Framing"] = (
+        cumulative_df["Framing"] / cumulative_df["Inn"]
+    ) * 1287
+
+    # Number formatting
+    format_maps = {
+        "Range": "{:.1f}",
+        "Arm": "{:.1f}",
+        "DPR": "{:.1f}",
+        "Framing": "{:.1f}",
+        "Def Value": "{:.1f}",
+    }
+    for key, value in format_maps.items():
+        cumulative_df[key] = cumulative_df[key].apply(value.format)
 
     hp.display_player_percentile(cumulative_df, player, year, "BR")
     st.caption("[Yakyu Cosmopolitan](https://www.yakyucosmo.com/)")

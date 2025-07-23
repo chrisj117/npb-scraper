@@ -84,7 +84,8 @@ def display_player_percentile(df, name, year, suffix):
         df["Pos"] = df["Pos"].map(pos_map)
         name_col = "Player"
         plot_cols = [
-            "Defense",
+            "Def Value",
+            "wSB",
             "BB/K",
             "BB%",
             "K%",
@@ -93,6 +94,22 @@ def display_player_percentile(df, name, year, suffix):
             "OPS+",
             "PA",
         ]
+        # Position specific stats
+        if df[df[name_col] == name]["Pos"].values[0] == "C":
+            plot_cols.insert(0, "Framing")
+            plot_cols.insert(0, "Arm")
+        elif df[df[name_col] == name]["Pos"].values[0] in (
+            "1B",
+            "2B",
+            "3B",
+            "SS",
+            "UTL",
+        ):
+            plot_cols.insert(0, "Range")
+            plot_cols.insert(0, "DPR")
+        elif df[df[name_col] == name]["Pos"].values[0] in ("LF", "CF", "RF"):
+            plot_cols.insert(0, "Range")
+            plot_cols.insert(0, "Arm")
         invert_cols = ["K%"]
 
     # Get player's team, age
@@ -192,8 +209,9 @@ def display_player_percentile(df, name, year, suffix):
             .legend(None),
         )
         .properties(
+            width="container",
+            height=alt.Step(25),
             title=title_params,
-            height=300,
         )
     )
 
