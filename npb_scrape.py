@@ -633,6 +633,25 @@ class PlayerData(Stats):
             self.df["AB"] - self.df["SO"] - self.df["HR"] + self.df["SF"]
         )
 
+        lg_single = (
+            self.df["H"].sum()
+            - self.df["2B"].sum()
+            - self.df["3B"].sum()
+            - self.df["HR"].sum()
+        )
+        pl_single = (
+            self.df["H"] - self.df["2B"] - self.df["3B"] - self.df["HR"]
+        )
+        wsb_a = 0.17 * self.df["SB"] - 0.33 * self.df["CS"]
+        wsb_b = (self.df["SB"].sum() * 0.17 + self.df["CS"].sum() * -0.33) / (
+            lg_single
+            + self.df["BB"].sum()
+            + self.df["HP"].sum()
+            - self.df["IBB"].sum()
+        )
+        wsb_c = pl_single + self.df["BB"] + self.df["HP"] - self.df["IBB"]
+        self.df["wSB"] = wsb_a - wsb_b * wsb_c
+
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
         # "Mercedes Cristopher Crisostomo" name shortening to "Mercedes CC"
@@ -658,6 +677,7 @@ class PlayerData(Stats):
             "BABIP": "{:.3f}",
             "BB/K": "{:.2f}",
             "TTO%": "{:.1%}",
+            "wSB": "{:.1f}",
         }
         for key, value in format_maps.items():
             self.df[key] = self.df[key].apply(value.format)
@@ -702,6 +722,7 @@ class PlayerData(Stats):
             "K%",
             "BB%",
             "BB/K",
+            "wSB",
             "Pos",
             "Team",
         ]
@@ -1006,7 +1027,7 @@ class TeamData(Stats):
         # Retrieve park factors for any remaining team stats (EX: OPS+)
         self.df = select_park_factor(self.df, self.suffix, self.year)
 
-        # Calculate OPS+, ISO, K%, BB%, BB/K, TTO%, BABIP
+        # Calculate OPS+, ISO, K%, BB%, BB/K, TTO%, BABIP, wSB
         league_obp = (
             self.df["H"].sum() + self.df["BB"].sum() + self.df["HP"].sum()
         ) / (
@@ -1044,6 +1065,24 @@ class TeamData(Stats):
         self.df["BABIP"] = (self.df["H"] - self.df["HR"]) / (
             self.df["AB"] - self.df["SO"] - self.df["HR"] + self.df["SF"]
         )
+        lg_single = (
+            self.df["H"].sum()
+            - self.df["2B"].sum()
+            - self.df["3B"].sum()
+            - self.df["HR"].sum()
+        )
+        team_single = (
+            self.df["H"] - self.df["2B"] - self.df["3B"] - self.df["HR"]
+        )
+        wsb_a = 0.17 * self.df["SB"] - 0.33 * self.df["CS"]
+        wsb_b = (self.df["SB"].sum() * 0.17 + self.df["CS"].sum() * -0.33) / (
+            lg_single
+            + self.df["BB"].sum()
+            + self.df["HP"].sum()
+            - self.df["IBB"].sum()
+        )
+        wsb_c = team_single + self.df["BB"] + self.df["HP"] - self.df["IBB"]
+        self.df["wSB"] = wsb_a - wsb_b * wsb_c
 
         # Create "League Average" row after all stats have been calculated
         league_avg = self.df.mean(numeric_only=True)
@@ -1100,6 +1139,7 @@ class TeamData(Stats):
             "R": "{:.0f}",
             "TTO%": "{:.1%}",
             "BABIP": "{:.3f}",
+            "wSB": "{:.1f}",
         }
         for key, value in format_maps.items():
             self.df[key] = self.df[key].apply(value.format)
@@ -1113,6 +1153,7 @@ class TeamData(Stats):
             "K%",
             "BB%",
             "BB/K",
+            "wSB",
         ]
         self.df = self.df[col_order_arr]
         # Add "League" column
@@ -1998,7 +2039,7 @@ class TeamSummaryData(Stats):
         self.df.rename(columns={"R": "RA"}, inplace=True)
         self.df = pd.merge(
             self.df,
-            self.team_bat_df[["Team", "HR", "SB", "OPS+", "R"]],
+            self.team_bat_df[["Team", "HR", "SB", "OPS+", "R", "wSB"]],
             on="Team",
             how="left",
         )
@@ -2029,6 +2070,7 @@ class TeamSummaryData(Stats):
                 "ERA+",
                 "FIP-",
                 "K-BB%",
+                "wSB",
                 "TZR",
             ]
         ]
@@ -3416,7 +3458,7 @@ def store_dataframe(df, store_dir, filename, mode):
         df (pandas.DataFrame): The DataFrame to store.
         store_dir (str): The directory where the file will be saved.
         filename (str): The name of the file to create.
-        mode (str): The file format to use: "csv" for CSV format, "alt" for 
+        mode (str): The file format to use: "csv" for CSV format, "alt" for
         plain text.
 
     Returns:
