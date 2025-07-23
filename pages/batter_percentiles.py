@@ -65,25 +65,38 @@ def main():
         field_df.groupby("Player", as_index=False)["Inn"].sum(),
         on="Player",
     )
+    # Drop players with no recorded stat (NaNs), then sum + merge
     temp_df = pd.merge(
         temp_df,
-        field_df.groupby("Player", as_index=False)["RngR"].sum(),
+        field_df.dropna(subset="RngR")
+        .groupby("Player", as_index=False)["RngR"]
+        .sum(),
         on="Player",
+        how="left",
     )
     temp_df = pd.merge(
         temp_df,
-        field_df.groupby("Player", as_index=False)["ARM"].sum(),
+        field_df.dropna(subset="ARM")
+        .groupby("Player", as_index=False)["ARM"]
+        .sum(),
         on="Player",
+        how="left",
     )
     temp_df = pd.merge(
         temp_df,
-        field_df.groupby("Player", as_index=False)["DPR"].sum(),
+        field_df.dropna(subset="DPR")
+        .groupby("Player", as_index=False)["DPR"]
+        .sum(),
         on="Player",
+        how="left",
     )
     temp_df = pd.merge(
         temp_df,
-        field_df.groupby("Player", as_index=False)["Framing"].sum(),
+        field_df.dropna(subset="Framing")
+        .groupby("Player", as_index=False)["Framing"]
+        .sum(),
         on="Player",
+        how="left",
     )
     # Calculate Def Value (similar to TZR/143) and prep for plotting
     temp_df["Def Value"] = (temp_df["TZR"] / temp_df["Inn"]) * 1287

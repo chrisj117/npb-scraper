@@ -25,24 +25,14 @@ def main():
              "independent pitching minus (FIP-) are shown. Relief pitchers "
              "are sorted in order of saves (SV) and holds (HLD) instead.")
     st.header("Player Percentiles")
-    st.write("The batter and pitcher percentiles visualize a player's key "
-             "statistics using bar graphs. These percentiles are relative "
-             "metrics, indicating how a player ranks compared to others "
-             "across the league. For example, ranking in the 95th percentile "
-             "means the player is among the top 5% in the league for that "
-             "stat. A plate appearances (PA) or innings pitched (IP) filter "
-             "can be applied to adjust the sample of players used for "
-             "comparison. The absolute minimum for these is 25 PA and 10 "
-             "IP. Higher percentiles indicate better performance.  A hitter's "
-             "on base plus slugging plus (OPS+), isolated power (ISO), "
-             "batting average on balls in play (BABIP), strikeout rate (K%), "
-             "walk rate (BB%), walk to strikeout ratio (BB/K), and "
-             "position-adjusted total zone runs (Defense) are shown. A "
-             "pitcher's earned run average plus (ERA+), fielding independent "
-             "pitching minus (FIP-), walks plus hits per inning pitched "
-             "(WHIP), strikeout rate (K%), walk rate (BB%), and strikeout "
-             "rate minus walk rate (K-BB%) are shown. The raw stats are "
-             "displayed below the percentiles.")
+    st.write("The batter and pitcher percentiles visualize a player's key statistics using bar graphs. These percentiles are relative metrics, indicating how a player ranks compared to others across the league. For example, ranking in the 95th percentile means the player is among the top 5% in the league for that stat. A plate appearances (PA) or innings pitched (IP) filter can be applied to adjust the sample of players used for comparison. The absolute minimum for these is 25 PA and 10 IP. Higher percentiles indicate better performance.")
+    st.write("A hitter's following stats are shown:\n- On Base plus Slugging Plus (OPS+)\n- Isolated Power (ISO)\n- Batting Average on Balls in Play (BABIP)\n- Strikeout Rate (K%)\n- Walk Rate (BB%)\n- Walk to Strikeout Ratio (BB/K)\n- Position-Adjusted Total Zone Runs (Def Value)")
+    st.write("Additionally, the following position-specific defensive metrics are included:")
+    st.write("- Framing Value per 143 Games (Framing - Catchers)\n- Arm Runs per 143 Games (Arm - Catchers & Outfielders)\n- Double Play Runs per 143 Games (DPR - Infielders)\n- Range Runs per 143 Games (Range - Infielders & Outfielders)")
+    st.write("A pitcher's following stats are shown:")
+    st.write("- Earned Run Average Plus (ERA+)\n- Fielding Independent Pitching Minus (FIP-)\n- Walks plus Hits per Inning Pitched (WHIP)\n- Strikeout Rate (K%)\n- Walk Rate (BB%)\n- Strikeout Rate minus Walk Rate (K-BB%)")
+    st.write("All player's raw stats are displayed below the percentiles.")
+
     st.caption("[Yakyu Cosmopolitan](https://www.yakyucosmo.com/)")
 
 
