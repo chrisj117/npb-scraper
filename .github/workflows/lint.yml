@@ -1,0 +1,22 @@
+name: Linting
+
+on:
+  push:
+    paths:
+      - '***.py'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Analysing the code with pylint
+      run: |
+        pylint --fail-under=9 $(git ls-files '*.py')
