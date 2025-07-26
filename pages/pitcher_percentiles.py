@@ -41,6 +41,13 @@ def main():
     pitcher_list = pitch_df["Pitcher"]
     pitcher = st.selectbox("Pitcher", pitcher_list)
 
+    # Number formatting
+    format_maps = {
+        "WHIP": "{:.2f}",
+    }
+    for key, value in format_maps.items():
+        pitch_df[key] = pitch_df[key].apply(value.format)
+
     # Display data
     hp.display_player_percentile(pitch_df, pitcher, year, "PR")
     st.caption("[Yakyu Cosmopolitan](https://www.yakyucosmo.com/)")

@@ -231,11 +231,80 @@ def display_player_percentile(df, name, year, suffix):
         selection_mode=None,
     )
 
-    # Convert all of dataframe to string to avoid error:
-    # pyarrow.lib.ArrowInvalid:
-    # ("Could not convert 'R' with type str: tried to convert to int64",
-    # 'Conversion failed for column Value with type object')
+    # Display the actual stats the player has + league averages
+    raw_data = add_league_average(df, raw_data, name, plot_cols, suffix)
+    # Convert all of dataframe to string to avoid pyarrow.lib.ArrowInvalid
     raw_data = raw_data.astype(str)
     st.dataframe(
         raw_data, use_container_width=True, hide_index=True, row_height=25
     )
+
+
+def add_league_average(df, player_df, name, stat_cols, suffix):
+    """
+    Adds league average statistics to a player's raw data DataFrame for
+    comparison.
+
+    Parameters:
+        df (pandas.DataFrame): The full DataFrame containing all player
+        statistics.
+        player_df (pandas.DataFrame): DataFrame containing the selected
+        player's raw statistics.
+        name (str): The name of the player.
+        stat_cols (list): List of statistic column names to include.
+        suffix (str): Indicates stat type and determines which team stats to
+        use ('BR', 'PR', etc.).
+
+    Functionality:
+        - Loads league average stats from the appropriate team CSV file based
+        on suffix.
+        - Appends league average values to the player's stats for side-by-side
+        comparison.
+        - Ensures relevant columns (including PA or IP) are included for
+        display.
+        - Inserts a "Player" column to label rows as either the player or
+        "League Average".
+
+    Returns:
+        pandas.DataFrame: DataFrame containing both the player's and league
+        average statistics.
+    """
+    # Transpose vertical df, reset index, and drop
+    player_df = player_df.T
+    player_df.columns = player_df.iloc[0]
+    player_df = player_df.drop(index=player_df.index[0], axis=0)
+    player_df.index = [0]
+
+    # Append League Average stats
+    if suffix in ("BR"):
+        # Extract only league average row from Team stats
+        team_df = load_csv(
+            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
+            + "master/stats/2025/streamlit_src/2025TeamBR.csv"
+        )
+        lg_avg = team_df[team_df["Team"] == "League Average"]
+        lg_avg.index = [0]
+        # Get PA from player df
+        lg_avg.at[0, "PA"] = round(df.loc[:, 'PA'].mean(), 0)
+        player_df = pd.concat([player_df, lg_avg])
+        player_df = player_df.astype(str).replace("nan","0.0")
+        # Drop extra concatenated columns
+        stat_cols.append("PA")
+        player_df = player_df[player_df.columns.intersection(stat_cols)]
+    elif suffix in ("PR"):
+        # Extract only league average row from Team stats
+        team_df = load_csv(
+            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
+            + "master/stats/2025/streamlit_src/2025TeamPR.csv"
+        )
+        lg_avg = team_df[team_df["Team"] == "League Average"]
+        lg_avg.index = [0]
+        # Get PA from player df
+        lg_avg.at[0, "IP"] = round(df.loc[:, 'IP'].mean(), 0)
+        player_df = pd.concat([player_df, lg_avg])
+        # Drop extra concatenated columns
+        stat_cols.append("IP")
+        player_df = player_df[player_df.columns.intersection(stat_cols)]
+
+    player_df.insert(0, "Player", [name, "League Average"])
+    return player_df

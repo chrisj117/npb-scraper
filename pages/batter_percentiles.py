@@ -124,6 +124,8 @@ def main():
         "DPR": "{:.1f}",
         "Framing": "{:.1f}",
         "Def Value": "{:.1f}",
+        "ISO": "{:.3f}",
+        "BABIP": "{:.3f}",
     }
     for key, value in format_maps.items():
         cumulative_df[key] = cumulative_df[key].apply(value.format)
