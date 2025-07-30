@@ -44,6 +44,7 @@ def main():
     # Streamlit dataframe displays
     create_lineup(team)
     create_rotation_bullpen(team)
+    create_team_stats(team)
 
 
 def create_lineup(team):
@@ -156,6 +157,7 @@ def create_lineup(team):
     lineup_df = lineup_df.astype(str)
 
     # Display data
+    st.write("Lineup")
     st.dataframe(
         lineup_df, use_container_width=True, hide_index=True, row_height=25
     )
@@ -267,11 +269,75 @@ def create_rotation_bullpen(team):
     ]
 
     # Display data
+    st.write("Rotation")
     st.dataframe(
         sp_df, use_container_width=True, hide_index=True, row_height=25
     )
+    st.write("Bullpen")
     st.dataframe(
         bp_df, use_container_width=True, hide_index=True, row_height=25
+    )
+
+
+def create_team_stats(team):
+    """Displays the related stats for the selected team.
+
+    Loads team batting/pitching data from a remote CSV file, cleans and filters
+    it for the specified team and League Average.
+
+    Parameters:
+        team (str): The name of the team to display the pitching/batting stats
+        for.
+
+    Returns:
+        None
+    """
+    npb_team_bat_df = hp.load_csv(
+        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
+        + "master/stats/2025/streamlit_src/2025TeamBR.csv"
+    )
+    npb_team_pitch_df = hp.load_csv(
+        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
+        + "master/stats/2025/streamlit_src/2025TeamPR.csv"
+    )
+
+    # Get only filtered team + League Average
+    team_bat = npb_team_bat_df.drop(
+        npb_team_bat_df[npb_team_bat_df.Team != team].index
+    )
+    lg_avg = npb_team_bat_df.drop(
+        npb_team_bat_df[npb_team_bat_df.Team != "League Average"].index
+    )
+    bat_final_df = pd.concat([team_bat, lg_avg]).reset_index(drop=True)
+    # Filter batting stats
+    bat_final_df = bat_final_df[
+        ["Team", "HR", "SB", "K%", "BB%", "AVG", "OPS+"]
+    ]
+
+    team_pitch = npb_team_pitch_df.drop(
+        npb_team_pitch_df[npb_team_pitch_df.Team != team].index
+    )
+    lg_avg = npb_team_pitch_df.drop(
+        npb_team_pitch_df[npb_team_pitch_df.Team != "League Average"].index
+    )
+    pitch_final_df = pd.concat([team_pitch, lg_avg]).reset_index(drop=True)
+    # Filter pitch stats
+    pitch_final_df = pitch_final_df[
+        ["Team", "W", "CG", "K%", "BB%", "ERA", "FIP-"]
+    ]
+
+    st.write("Team Statistics")
+    st.dataframe(
+        bat_final_df,
+        use_container_width=True,
+        hide_index=True,
+        row_height=25,
+    )
+    st.dataframe(
+        pitch_final_df,
+        use_container_width=True,
+        hide_index=True,
+        row_height=25,
     )
 
 

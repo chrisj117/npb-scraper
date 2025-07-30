@@ -12,7 +12,6 @@ def main():
     )
     st.title("Yakyu Cosmopolitan Dashboard")
 
-    # TODO Move these descriptions to a dropdown on the according pages?
     st.header("Team Overview")
     st.write(
         "The team overview displays the primary lineup, rotation, and "
