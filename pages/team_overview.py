@@ -313,6 +313,7 @@ def create_team_stats(team):
     bat_final_df = bat_final_df[
         ["Team", "HR", "SB", "K%", "BB%", "AVG", "OPS+"]
     ]
+    bat_final_df = bat_final_df.astype(str)
 
     team_pitch = npb_team_pitch_df.drop(
         npb_team_pitch_df[npb_team_pitch_df.Team != team].index
@@ -325,6 +326,7 @@ def create_team_stats(team):
     pitch_final_df = pitch_final_df[
         ["Team", "W", "CG", "K%", "BB%", "ERA", "FIP-"]
     ]
+    pitch_final_df = pitch_final_df.astype(str)
 
     st.write("Team Statistics")
     st.dataframe(
