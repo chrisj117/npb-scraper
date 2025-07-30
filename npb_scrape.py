@@ -2971,7 +2971,7 @@ def add_roster_data(df, suffix, year):
             df[convert_col]
             .map(player_arm_dict)
             .infer_objects()
-            .fillna(df[convert_col])
+            .fillna("")
             .astype(str)
         )
 
@@ -2989,7 +2989,7 @@ def add_roster_data(df, suffix, year):
         df["keys"]
         .map(player_age_dict)
         .infer_objects()
-        .fillna(df[convert_col])
+        .fillna("")
         .astype(str)
     )
     # Remove trailing zeroes from age
