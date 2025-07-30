@@ -131,7 +131,6 @@ def main():
         cumulative_df[key] = cumulative_df[key].apply(value.format)
 
     hp.display_player_percentile(cumulative_df, player, year, "BR")
-    st.caption("[Yakyu Cosmopolitan](https://www.yakyucosmo.com/)")
 
 
 if __name__ == "__main__":

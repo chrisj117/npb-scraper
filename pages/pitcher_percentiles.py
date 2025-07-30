@@ -50,7 +50,6 @@ def main():
 
     # Display data
     hp.display_player_percentile(pitch_df, pitcher, year, "PR")
-    st.caption("[Yakyu Cosmopolitan](https://www.yakyucosmo.com/)")
 
 
 if __name__ == "__main__":

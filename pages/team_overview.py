@@ -44,7 +44,6 @@ def main():
     # Streamlit dataframe displays
     create_lineup(team)
     create_rotation_bullpen(team)
-    st.caption("[Yakyu Cosmopolitan](https://www.yakyucosmo.com/)")
 
 
 def create_lineup(team):
@@ -74,15 +73,15 @@ def create_lineup(team):
         + "master/stats/2025/streamlit_src/2025FieldingFinalR.csv"
     )
     # Drop all sub-10 PA players to help alleviate merging errors
-    bat_df = bat_df.drop(
-        bat_df[bat_df.PA < 10].index
-    )
+    bat_df = bat_df.drop(bat_df[bat_df.PA < 10].index)
     try:
         cumulative_df = pd.merge(bat_df, field_df, how="left")
     except ValueError:
-        st.error("Error: Batting and fielding dataframes failed to merge. " \
-        "Check Age columns and update name translation + roster data if "\
-        "necessary!")
+        st.error(
+            "Error: Batting and fielding dataframes failed to merge. "
+            "Check Age columns and update name translation + roster data if "
+            "necessary!"
+        )
         cumulative_df = pd.DataFrame()
         exit(-1)
 

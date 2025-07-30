@@ -18,7 +18,7 @@ def load_csv(url=None):
         (dataframe/None): Returns none if link is unable to be loaded, or a
         dataframe if the link is valid.
     """
-    # returns dataframe if good link, otherwise None
+    # Returns dataframe if good link, otherwise None
     response = requests.get(url, timeout=10)
     if response.status_code == 200:
         return pd.read_csv(StringIO(response.text))
