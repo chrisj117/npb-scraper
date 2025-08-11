@@ -313,6 +313,12 @@ def create_team_stats(team):
     bat_final_df = bat_final_df[
         ["Team", "HR", "SB", "K%", "BB%", "AVG", "OPS+"]
     ]
+    # Apply formatting
+    format_maps = {
+        "AVG": "{:.3f}",
+    }
+    for key, value in format_maps.items():
+        bat_final_df[key] = bat_final_df[key].apply(value.format)
     bat_final_df = bat_final_df.astype(str)
 
     team_pitch = npb_team_pitch_df.drop(
@@ -326,6 +332,12 @@ def create_team_stats(team):
     pitch_final_df = pitch_final_df[
         ["Team", "W", "CG", "K%", "BB%", "ERA", "FIP-"]
     ]
+    # Apply formatting
+    format_maps = {
+        "ERA": "{:.2f}",
+    }
+    for key, value in format_maps.items():
+        pitch_final_df[key] = pitch_final_df[key].apply(value.format)
     pitch_final_df = pitch_final_df.astype(str)
 
     st.write("Team Statistics")
