@@ -1,37 +1,39 @@
-npb_scrape.py
-# - Misc short term -
-# TODO: see streamlit before any plot todos
-# TODO: generate_plots() type checking errors
-# TODO: merge npbPlayoffScraper.py functionality
+# - Important -
 # TODO: fix 2020-2024 missing stats, translations, etc
+# TODO: merge npbPlayoffScraper.py functionality
+# TODO: find better source storage + scraping setup
+
+# - Misc -
+# TODO: update + use git filter-repo to reduce repo size
+    # TODO: remove all .png plots + alt files + zips in commit history
+    # TODO: remove alt files from zips
+    # TODO: reduce amount of files committed each auto scrape (I.E. alt files)
+    # TODO: eventually move all stats output off github? (I.E. source code only)
+# TODO: npb_scrape refactors
+    # TODO: continually integrate pylint suggestions for legibility
+    # TODO: more robust error checking in init()s if empty Raw data comes in
+    # TODO: add checking raw file existence in init() (also remove user output warnings)
+    # TODO: refactor any "org" functions (especially player stat org methods similarly to team stat org)
+    # TODO: standardize docstring formats
+    # TODO: standardize all other file names like drop_const
+    # TODO: potential refactors on repeating statements in any stat grab function
+    # TODO: refactor argBypass in main()
+    # TODO: look into type hinting
+    # TODO: split up npb_scrape into modules, reduce huge single script
+    # TODO: multithread scrape, org, and percentiles
+    # TODO: turn into self.constDf, then change player_org? (in StandingsData init()) - goal is to alleviate dependence on reading in files and keep it in memory
+# TODO: streamlit page refactors
+    # TODO: add normal stat pages
+    # TODO: make drop down text boxes for "legend" stuff on current home page
+    # TODO: make drop down/filter components in helper.py
+# TODO: create more thorough unit tests
 # TODO: access SPAIA API using Go (https://github.com/armstjc/Nippon-Baseball-Data-Repository/blob/main/spaia_api_endpoints.md)
-# TODO: find better source storage + scraping PC setup
-# TODO: change all other file names like drop_const (?)
 # TODO: continually update fip_consts, park_factors (need mr yakyu)
-# TODO: standardize docstring formats
-# TODO: refactor player stat org methods similarly to team stat org
-# TODO: more robust error checking in init()s if empty Raw data comes in
-# TODO: add checking raw file existence in init() (also remove user output
-# warnings)
 # TODO: merge and update npbPlayerUrlScraper roster scraping to update
-# roster_data.csv *
-# TODO: auto commit new scrapes
-# TODO: multithread scrape, org, and percentiles
-# TODO: update README for web scraping, no ddos, this is educational, etc
-# TODO: TURN INTO self.constDf, then change player_org? (IN StandingsData
-# init()) - end goal is to alleviate dependence on reading in files, instead
-# keep it in memory
-# TODO: eventually make portable and give to Gio
-    # TODO: put on streamlit/huggingface/etc so people can use it w/o install
-    # TODO: streamlit app for player plots
-# TODO: refactors for any ORG functions
-# TODO: potential refactors on repeating statements in any stat grab function
-# TODO: refactor argBypass in main()
-# TODO: split up npb_scrape into modules
-# TODO: look into type hinting
+# roster_data.csv
 
 # - Possible future stats/data -
-# TODO: projection of future stats (see SPAIA integration)
+# TODO: projection of future stats (see SPAIA integration + pre 2020 stats)
 # TODO: more visual data (plots/graphs)
-# TODO: scrape even more years before 2020
-# TODO: team pages/player pages
+# TODO: scrape even more years before 2020 (good starting point for player pages)
+# TODO: team pages (kinda on streamlit) + player pages (needs historical data)

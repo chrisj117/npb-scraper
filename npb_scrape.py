@@ -1,4 +1,4 @@
-"""Scrapes NPB and Farm League statistics from npb.jp"""
+"""Scrapes NPB and Farm League statistics from various sources"""
 
 from time import sleep
 from random import randint
@@ -49,21 +49,21 @@ def main():
     # Check for scrape_year command line arg
     if len(sys.argv) == 2:
         print("ARGUMENTS DETECTED: " + str(sys.argv))
-        # "A" scrapes current year, else scrape for given year
-        if sys.argv[1] == "A":
+        # "-a" scrapes current year, else scrape for given year
+        if sys.argv[1] == "-a":
             print("Setting year to: " + str(datetime.now().year))
             scrape_year = get_scrape_year(str(datetime.now().year))
         else:
             print("Setting year to: " + str(sys.argv[1]))
             scrape_year = get_scrape_year(sys.argv[1])
-        print("\nProgram will scrape and create upload zip for given year.")
         # Bypass all user input functions and set flags for scraping
         arg_bypass = True
         npb_scrape_yn = "Y"
         farm_scrape_yn = "Y"
-        stat_zip_yn = "Y"
+        stat_zip_yn = "N"
     elif len(sys.argv) > 2:
-        print("Too many arguments. Try passing in the desired stat year.")
+        print("ERROR: Too many arguments. Try using the desired stat year" \
+        " or use '-a' to scrape for the current year.")
         sys.exit("Exiting...")
     else:
         # Give user control if a year argument isn't passed in
@@ -73,7 +73,6 @@ def main():
         farm_scrape_yn = get_user_choice("F")
         stat_zip_yn = get_user_choice("Z")
 
-    # Check for input files (all except player_urls_fix.csv are required)
     if check_input_files(rel_dir, scrape_year) is True:
         input("Press Enter to exit. ")
         return -1
@@ -199,8 +198,9 @@ def main():
     farm_team_fielding.output_final()
     print("Farm statistics finished!\n")
 
-    # Make upload zips for manual uploads
+    # Make upload zips for manual uploads/debugging
     if stat_zip_yn == "Y":
+        print("\nCreating upload zip for given year.")
         make_zip(year_dir, "S", scrape_year)
 
     if arg_bypass is False:
@@ -3272,22 +3272,6 @@ def convert_player_to_html(df, suffix, year):
     # Swap HTML link col with original player name col, drop temp cols
     df[convert_col] = df["Link"]
     df = df.drop(["keys", "Link"], axis=1)
-
-    # Check for the player link fix file (TODO: defunct?)
-    player_link_fix_file = rel_dir + "/input/" + year + "/player_urls_fix.csv"
-    if os.path.exists(player_link_fix_file):
-        fix_df = pd.read_csv(player_link_fix_file)
-        # Check year and suffix, fix if needed
-        if int(year) in fix_df.Year.values and suffix in fix_df.Suffix.values:
-            # Create dict of Player Name:Complete HTML tag
-            fix_dict = dict(zip(fix_df["Original"], fix_df["Corrected"]))
-            df[convert_col] = (
-                df[convert_col]
-                .map(fix_dict)
-                .infer_objects()
-                .fillna(df[convert_col])
-                .astype(str)
-            )
     return df
 
 
@@ -3382,15 +3366,6 @@ def check_input_files(rel_dir, scrape_year=datetime.now().year):
     missing_files (bool): If needed files are missing, this is True, else
     False"""
     missing_files = False
-    # Optional files
-    player_link_fix_file = (
-        rel_dir + "/input/" + scrape_year + "/player_urls_fix.csv"
-    )
-    if not os.path.exists(player_link_fix_file):
-        print(
-            "\nWARNING: No optional player link fix file detected. Provide a "
-            "player_urls_fix.csv file in the /input/ directory to fix this.\n"
-        )
     # Required files
     translation_file = (
         rel_dir + "/input/" + scrape_year + "/name_translations.csv"
