@@ -1,4 +1,5 @@
 # - Important -
+# TODO: make streamlit pages modular for future and past years
 # TODO: fix 2020-2024 missing stats, translations, etc
 # TODO: merge npbPlayoffScraper.py functionality
 # TODO: find better source storage + scraping setup
@@ -6,9 +7,8 @@
 # - Misc -
 # TODO: update + use git filter-repo to reduce repo size
     # TODO: remove all .png plots + alt files + zips in commit history
-    # TODO: remove alt files from zips
     # TODO: reduce amount of files committed each auto scrape (I.E. alt files)
-    # TODO: eventually move all stats output off github? (I.E. source code only)
+    # TODO: eventually move all stats output off github? (keep github for source code only)
 # TODO: npb_scrape refactors
     # TODO: continually integrate pylint suggestions for legibility
     # TODO: more robust error checking in init()s if empty Raw data comes in
@@ -26,6 +26,9 @@
     # TODO: add normal stat pages
     # TODO: make drop down text boxes for "legend" stuff on current home page
     # TODO: make drop down/filter components in helper.py
+# TODO: unit tests
+    # TODO: tests to check output files have valid columns (I.E. no NaNs)
+    # TODO: test cmd line arguments
 # TODO: create more thorough unit tests
 # TODO: access SPAIA API using Go (https://github.com/armstjc/Nippon-Baseball-Data-Repository/blob/main/spaia_api_endpoints.md)
 # TODO: continually update fip_consts, park_factors (need mr yakyu)
