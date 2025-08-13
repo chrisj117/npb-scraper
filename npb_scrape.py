@@ -62,8 +62,10 @@ def main():
         farm_scrape_yn = "Y"
         stat_zip_yn = "N"
     elif len(sys.argv) > 2:
-        print("ERROR: Too many arguments. Try using the desired stat year" \
-        " or use '-a' to scrape for the current year.")
+        print(
+            "ERROR: Too many arguments. Try using the desired stat year"
+            " or use '-a' to scrape for the current year."
+        )
         sys.exit("Exiting...")
     else:
         # Give user control if a year argument isn't passed in
@@ -309,7 +311,7 @@ class PlayerData(Stats):
         alt_filename = self.year + "AltView" + self.suffix + ".csv"
         alt_filename = store_dataframe(self.df, alt_dir, alt_filename, "alt")
 
-        # Store df without HTML for streamlit
+        # Store df without HTML for Streamlit
         st_dir = os.path.join(self.year_dir, "streamlit_src")
         st_filename = self.year + "StatsFinal" + self.suffix + ".csv"
         st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
@@ -353,6 +355,12 @@ class PlayerData(Stats):
             # Drop temp GTeamIP column
             leader_df.drop(["GTeam"], axis=1, inplace=True)
 
+            # Store df without HTML for Streamlit
+            st_filename = self.year + "Leaders" + self.suffix + ".csv"
+            st_filename = store_dataframe(
+                leader_df, st_dir, st_filename, "csv"
+            )
+
             # Convert player/team names to HTML that contains appropriate URLs
             if int(self.year) == datetime.now().year:
                 leader_df = convert_player_to_html(
@@ -364,9 +372,6 @@ class PlayerData(Stats):
             leader_filename = store_dataframe(
                 leader_df, upload_dir, leader_filename, "csv"
             )
-            # Store df without HTML for streamlit
-            st_filename = self.year + "Leaders" + self.suffix + ".csv"
-            st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
 
             print(
                 "The pitching leaders file will be stored in: "
@@ -399,6 +404,12 @@ class PlayerData(Stats):
             # Drop temp GTeamIP column
             leader_df.drop(["GTeam"], axis=1, inplace=True)
 
+            # Store df without HTML for Streamlit
+            st_filename = self.year + "Leaders" + self.suffix + ".csv"
+            st_filename = store_dataframe(
+                leader_df, st_dir, st_filename, "csv"
+            )
+
             # Convert player/team names to HTML that contains appropriate URLs
             if int(self.year) == datetime.now().year:
                 leader_df = convert_player_to_html(
@@ -410,9 +421,6 @@ class PlayerData(Stats):
             leader_filename = store_dataframe(
                 leader_df, upload_dir, leader_filename, "csv"
             )
-            # Store df without HTML for streamlit
-            st_filename = self.year + "Leaders" + self.suffix + ".csv"
-            st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
 
             print(
                 "The batting leaders file will be stored in: "
@@ -2798,7 +2806,7 @@ def get_scrape_year(args_in=None):
         try:
             args_in = int(args_in)
         except ValueError:
-            print("Year argument must be a number (Example: 2024)")
+            print("Year argument must be a number (Example: 2024) or '-a'")
             sys.exit("Exiting...")
         # Bounds for scrapable years
         # Min year on npb.jp is 2008, but scraping is only tested until 2020
@@ -2986,11 +2994,7 @@ def add_roster_data(df, suffix, year):
     )
     df["keys"] = list(zip(df[convert_col], df["Team"]))
     df["Age"] = (
-        df["keys"]
-        .map(player_age_dict)
-        .infer_objects()
-        .fillna("")
-        .astype(str)
+        df["keys"].map(player_age_dict).infer_objects().fillna("").astype(str)
     )
     # Remove trailing zeroes from age
     df["Age"] = df["Age"].astype(str)
