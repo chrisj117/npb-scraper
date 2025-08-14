@@ -16,6 +16,7 @@ def main():
     Returns:
         None
     """
+    st.set_page_config(layout="centered")
     pitch_df = hp.load_csv(
         "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
         + "master/stats/2025/streamlit_src/2025StatsFinalPR.csv"

@@ -18,6 +18,7 @@ def main():
     Returns:
         None
     """
+    st.set_page_config(layout="centered")
     bat_df = hp.load_csv(
         "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
         + "master/stats/2025/streamlit_src/2025StatsFinalBR.csv"
@@ -41,6 +42,10 @@ def main():
     )
     # Drop players below PA threshold
     bat_df = bat_df.drop(bat_df[bat_df.PA < drop_pa].index)
+    # Drop players that have no position (usually due to delayed fielding updates)
+    bat_df = bat_df.dropna(subset=['Pos'])
+    # Drop pitchers
+    bat_df = bat_df.drop(bat_df[bat_df.Pos == "1"].index)
     bat_df = bat_df.sort_values("Player")
     player_list = bat_df["Player"]
     player = st.selectbox("Player", player_list)

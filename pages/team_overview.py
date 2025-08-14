@@ -24,6 +24,7 @@ def main():
         None
     """
 
+    st.set_page_config(layout="centered")
     # User dropdown box
     team_list = [
         "Hanshin Tigers",
