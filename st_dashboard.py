@@ -15,9 +15,22 @@ def main():
         st.Page("pages/pitcher_percentiles.py", title="Pitcher Percentiles"),
     ]
 
+    npb_pages = [
+        #st.Page("pages/daily_scores.py", title="Latest NPB Scores"),
+        st.Page("pages/npb_player_batting.py", title="Player Batting"),
+        st.Page("pages/npb_player_pitching.py", title="Player Pitching"),
+        st.Page("pages/npb_player_fielding.py", title="Player Fielding"),
+        #st.Page("pages/npb_team_bat_stats.py", title="Team Batting"),
+        #st.Page("pages/npb_team_pitch_stats.py",title="Team Pitching"),
+        #st.Page("pages/npb_team_fielding.py", title="Team Fielding"),
+        #st.Page("pages/npb_team_summary.py", title="Team Summary"),
+        #st.Page("pages/npb_standings.py", title="Standings"),
+    ]
+
     pg = st.navigation(
         {
             "⭐ Main Pages": dashboard,
+            "NPB Statistics": npb_pages,
         }
     )
     pg.run()

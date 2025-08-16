@@ -69,7 +69,7 @@ def display_player_percentile(df, name, year, suffix):
         invert_cols = ["HR%", "WHIP", "FIP-", "BB%"]
     elif suffix in ("BR", "BF"):
         # Rename positions
-        pos_map = {
+        pos_dict = {
             "2": "C",
             "3": "1B",
             "4": "2B",
@@ -81,7 +81,7 @@ def display_player_percentile(df, name, year, suffix):
             "DH": "DH",
             "UTL": "UTL",
         }
-        df["Pos"] = df["Pos"].map(pos_map)
+        df["Pos"] = df["Pos"].map(pos_dict)
         name_col = "Player"
         plot_cols = [
             "Def Value",
@@ -285,9 +285,9 @@ def add_league_average(df, player_df, name, stat_cols, suffix):
         lg_avg = team_df[team_df["Team"] == "League Average"]
         lg_avg.index = [0]
         # Get PA from player df
-        lg_avg.at[0, "PA"] = round(df.loc[:, 'PA'].mean(), 0)
+        lg_avg.at[0, "PA"] = round(df.loc[:, "PA"].mean(), 0)
         player_df = pd.concat([player_df, lg_avg])
-        player_df = player_df.astype(str).replace("nan","0.0")
+        player_df = player_df.astype(str).replace("nan", "0.0")
         # Drop extra concatenated columns
         stat_cols.append("PA")
         player_df = player_df[player_df.columns.intersection(stat_cols)]
@@ -300,7 +300,7 @@ def add_league_average(df, player_df, name, stat_cols, suffix):
         lg_avg = team_df[team_df["Team"] == "League Average"]
         lg_avg.index = [0]
         # Get PA from player df
-        lg_avg.at[0, "IP"] = round(df.loc[:, 'IP'].mean(), 0)
+        lg_avg.at[0, "IP"] = round(df.loc[:, "IP"].mean(), 0)
         player_df = pd.concat([player_df, lg_avg])
         # Drop extra concatenated columns
         stat_cols.append("IP")
@@ -308,3 +308,392 @@ def add_league_average(df, player_df, name, stat_cols, suffix):
 
     player_df.insert(0, "Player", [name, "League Average"])
     return player_df
+
+
+def create_pos_filter(df, mode=None):
+    """
+    Creates a Streamlit segmented control filter for player positions.
+
+    Parameters:
+        df (pandas.DataFrame): DataFrame containing a "Pos" column with
+            position codes.
+        mode (str, optional): If set to "player_field", removes pitcher, N/A,
+            and UTL positions from the filter.
+
+    Functionality:
+        - Maps numeric and string position codes to their abbreviations.
+        - Optionally removes certain positions for field player filtering.
+        - Displays a multi-select segmented control for users to choose
+        positions.
+        - Returns the list of selected position abbreviations.
+
+    Returns:
+        list: List of selected position abbreviations.
+    """
+    # Change original data to have abbreviation rather than pos numbers
+    pos_dict = {
+        "1": "P",
+        "2": "C",
+        "3": "1B",
+        "4": "2B",
+        "5": "3B",
+        "6": "SS",
+        "7": "LF",
+        "8": "CF",
+        "9": "RF",
+        "DH": "DH",
+        "UTL": "UTL",
+        "N/A": "N/A",
+    }
+    if mode == "player_field":
+        del pos_dict["1"]
+        del pos_dict["N/A"]
+        del pos_dict["UTL"]
+    df["Pos"] = df["Pos"].map(pos_dict)
+
+    pos_list = st.segmented_control(
+        "Positions",
+        pos_dict.values(),
+        default=pos_dict.values(),
+        selection_mode="multi",
+    )
+
+    return pos_list
+
+
+def create_stat_cols_filter(df, mode=None):
+    """
+    Creates a Streamlit segmented control filter for selecting statistic
+    columns to display.
+
+    Parameters:
+        df (pandas.DataFrame): DataFrame containing available statistic
+            columns.
+        mode (str, optional): If set to "player_bat" or "player_pitch",
+            provides a default selection of common batting or pitching stats.
+            Otherwise, defaults to all columns.
+
+    Functionality:
+        - Displays a multi-select segmented control for users to choose which
+        statistic columns to show.
+        - Sorts the selected columns in the order they appear in the DataFrame.
+
+    Returns:
+        list: List of selected statistic column names.
+    """
+    if mode == "player_bat":
+        filter_default = [
+            "Player",
+            "PA",
+            "HR",
+            "R",
+            "RBI",
+            "SB",
+            "AVG",
+            "OBP",
+            "SLG",
+            "OPS",
+            "OPS+",
+            "ISO",
+            "K%",
+            "BB%",
+            "Team",
+        ]
+    elif mode == "player_pitch":
+        filter_default = [
+            "Pitcher",
+            "IP",
+            "W",
+            "L",
+            "SV",
+            "HLD",
+            "ERA",
+            "FIP",
+            "WHIP",
+            "ERA+",
+            "FIP-",
+            "K%",
+            "BB%",
+            "K-BB%",
+            "Team",
+        ]
+    elif mode == "player_field":
+        filter_default = [
+            "Player",
+            "Pos",
+            "Inn",
+            "TZR",
+            "TZR/143",
+            "RngR",
+            "ARM",
+            "DPR",
+            "ErrR",
+            "Pos Adj",
+            "Framing",
+            "Blocking",
+            "Team",
+        ]
+    else:
+        filter_default = df.columns.tolist()
+
+    cols = st.segmented_control(
+        "Statistics",
+        df.columns.tolist(),
+        default=filter_default,
+        selection_mode="multi",
+    )
+    # Sort cols as dataframe
+    cols = [c for c in df.columns.tolist() if c in cols]
+
+    return cols
+
+
+def create_team_filter(mode=None):
+    """
+    Creates a Streamlit multiselect filter for NPB team selection.
+
+    Parameters:
+        mode (str, optional): If set to "farm", includes farm league teams in
+            the filter.
+
+    Functionality:
+        - Maps team abbreviations to full team names.
+        - Optionally adds farm league teams if mode is "farm".
+        - Displays a multiselect widget for users to choose teams.
+        - Returns a list of selected full team names.
+
+    Returns:
+        list: List of selected full team names.
+    """
+    team_dict = {
+        "Hanshin": "Hanshin Tigers",
+        "Chunichi": "Chunichi Dragons",
+        "DeNA": "DeNA BayStars",
+        "Hiroshima": "Hiroshima Carp",
+        "Lotte": "Lotte Marines",
+        "Nipponham": "Nipponham Fighters",
+        "ORIX": "ORIX Buffaloes",
+        "Rakuten": "Rakuten Eagles",
+        "Seibu": "Seibu Lions",
+        "SoftBank": "SoftBank Hawks",
+        "Yakult": "Yakult Swallows",
+        "Yomiuri": "Yomiuri Giants",
+    }
+    if mode == "farm":
+        team_dict.update(
+            {
+                "HAYATE": "HAYATE Ventures",
+                "Oisix": "Oisix Albirex",
+            }
+        )
+
+    team = st.multiselect(
+        "Team",
+        team_dict.keys(),
+        default=team_dict.keys(),
+    )
+    team = [team_dict[k] for k in team]
+
+    return team
+
+
+def create_pa_num_input(df, mode=None):
+    """
+    Creates a Streamlit number input widget for filtering by minimum plate
+    appearances (PA).
+
+    Parameters:
+        df (pandas.DataFrame): DataFrame containing a "PA" column with plate
+            appearance values.
+        mode (str, optional): If set to "player", allows any PA value.
+            If set to "percentile", sets a higher minimum and default value.
+            Otherwise, uses the minimum PA in the DataFrame.
+
+    Functionality:
+        - Determines the minimum and default PA values based on mode.
+        - Displays a number input widget for users to select the minimum PA.
+        - Returns the selected minimum PA value.
+
+    Returns:
+        int: The user-selected minimum plate appearances value.
+    """
+    if mode == "player":
+        filter_min = 0
+        filter_default = 0
+    elif mode == "percentile":
+        filter_min = 25
+        filter_default = 50
+    else:
+        filter_min = 0
+        filter_default = df["PA"].min()
+
+    pa = st.number_input(
+        "Minimum plate appearances",
+        value=filter_default,
+        min_value=filter_min,
+        step=50,
+        max_value=df["PA"].max(),
+    )
+
+    return pa
+
+
+def create_ip_num_input(df, mode=None):
+    """
+    Creates a Streamlit number input widget for filtering by minimum innings
+    pitched (IP).
+
+    Parameters:
+        df (pandas.DataFrame): DataFrame containing an "IP" column with innings
+            pitched values.
+        mode (str, optional): If set to "player", allows any IP value.
+            If set to "percentile", sets a higher minimum and default value.
+            Otherwise, uses the minimum IP in the DataFrame.
+
+    Functionality:
+        - Determines the minimum and default IP values based on mode.
+        - Displays a number input widget for users to select the minimum IP.
+        - Returns the selected minimum IP value.
+
+    Returns:
+        float: The user-selected minimum innings pitched value.
+    """
+    if mode == "player":
+        filter_min = 0.0
+        filter_default = 0.0
+    elif mode == "percentile":
+        filter_min = 10.0
+        filter_default = 25.0
+    else:
+        filter_min = 0.0
+        filter_default = df["IP"].min()
+
+    ip = st.number_input(
+        "Minimum innings pitched",
+        value=filter_default,
+        min_value=filter_min,
+        step=25.0,
+        max_value=df["IP"].max(),
+        format="%0.1f",
+    )
+
+    return ip
+
+
+def create_inn_num_input(df, mode=None):
+    """
+    Creates a Streamlit number input widget for filtering by minimum innings
+    fielded.
+
+    Parameters:
+        df (pandas.DataFrame): DataFrame containing an "Inn" column with
+            innings fielded values.
+        mode (str, optional): If set to "player", allows any innings value.
+            Otherwise, uses the minimum innings in the DataFrame.
+
+    Functionality:
+        - Determines the minimum and default innings values based on mode.
+        - Displays a number input widget for users to select the minimum
+            innings fielded.
+        - Returns the selected minimum innings value.
+
+    Returns:
+        float: The user-selected minimum innings fielded value.
+    """
+    if mode == "player":
+        filter_min = 0.0
+        filter_default = 0.0
+    else:
+        filter_min = 0.0
+        filter_default = df["Inn"].min()
+
+    inn = st.number_input(
+        "Minimum innings fielded",
+        value=filter_default,
+        min_value=filter_min,
+        step=250.0,
+        max_value=df["Inn"].max(),
+        format="%0.1f",
+    )
+
+    return inn
+
+def create_hand_filter(mode=None):
+    """
+    Creates a Streamlit segmented control filter for selecting batting or
+    pitching hand.
+
+    Parameters:
+        mode (str, optional): If set to "player_pitch", displays pitching hand
+            options ("L", "R"). If set to "player_bat", displays batting hand
+            options ("L", "S", "R"). Otherwise, displays all hand options.
+
+    Functionality:
+        - Sets the filter label and available hand options based on mode.
+        - Displays a multi-select segmented control for users to choose 
+            hand(s).
+        - Returns the list of selected hand options.
+
+    Returns:
+        list: List of selected hand options.
+    """
+    if mode == "player_pitch":
+        filter_label = "Pitching Hand"
+        filter_hands = ["L", "R"]
+        filter_default = ["L", "R"]
+    elif mode == "player_bat":
+        filter_label = "Batting Hand"
+        filter_hands = ["L", "S", "R"]
+        filter_default = ["L", "S", "R"]
+    else:
+        filter_label = "Hand"
+        filter_hands = ["L", "S", "R"]
+        filter_default = ["L", "S", "R"]
+
+    hand = st.segmented_control(
+        filter_label,
+        filter_hands,
+        default=filter_default,
+        selection_mode="multi",
+    )
+
+    return hand
+
+
+def create_league_filter(mode=None):
+    """
+    Creates a Streamlit segmented control filter for selecting NPB or farm
+    league(s).
+
+    Parameters:
+        mode (str, optional): If set to "npb", displays only NPB leagues
+            ("CL", "PL"). If set to "farm", displays only farm leagues
+            ("EL", "WL"). Otherwise, displays all league options.
+
+    Functionality:
+        - Sets available league options and defaults based on mode.
+        - Displays a multi-select segmented control for users to choose
+            league(s).
+        - Returns the list of selected league abbreviations.
+
+    Returns:
+        list: List of selected league abbreviations.
+    """
+    if mode == "npb":
+        filter_leagues = ["CL", "PL"]
+        filter_default = ["CL", "PL"]
+    elif mode == "farm":
+        filter_leagues = ["EL", "WL"]
+        filter_default = ["EL", "WL"]
+    else:
+        filter_leagues = ["CL", "PL", "EL", "WL"]
+        filter_default = ["CL", "PL", "EL", "WL"]
+
+    league = st.segmented_control(
+        "League",
+        filter_leagues,
+        default=filter_default,
+        selection_mode="multi",
+    )
+
+    return league

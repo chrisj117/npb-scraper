@@ -31,15 +31,11 @@ def main():
     bat_df = bat_df.drop(bat_df[bat_df.PA < 10].index)
 
     # User input boxes
+    r1c1, r1c2 = st.columns([1, 1])
     year_list = ["2025"]
-    year = st.selectbox("Year", year_list)
-    drop_pa = st.number_input(
-        "Minimum plate appearances",
-        value=50,
-        min_value=25,
-        step=50,
-        max_value=bat_df["PA"].max(),
-    )
+    year = r1c1.selectbox("Year", year_list)
+    with r1c2:
+        drop_pa = hp.create_pa_num_input(bat_df, "percentile")
     # Drop players below PA threshold
     bat_df = bat_df.drop(bat_df[bat_df.PA < drop_pa].index)
     # Drop players that have no position (usually due to delayed fielding updates)

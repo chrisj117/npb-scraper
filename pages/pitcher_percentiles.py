@@ -27,9 +27,10 @@ def main():
     )
 
     # User input boxes
+    r1c1, r1c2 = st.columns([1, 1])
     year_list = ["2025"]
-    year = st.selectbox("Year", year_list)
-    drop_ip = st.number_input(
+    year = r1c1.selectbox("Year", year_list)
+    drop_ip = r1c2.number_input(
         "Minimum innings pitched",
         value=25.0,
         min_value=10.0,
