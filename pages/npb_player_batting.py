@@ -30,9 +30,7 @@ def main():
     # Split filters away from dataframe
     with st.container(border=True):
         # Smaller filters split by cols, larger filters receive exclusive cols
-        r1c1, r1c2, r1c3, r1c4, r1c5 = st.columns(
-            [1, 2, 1, 1.2, 7], vertical_alignment="center"
-        )
+        r1c1, r1c2, r1c3 = st.columns([2, 1, 6], vertical_alignment="center")
 
         with r1c1:
             leader_view = st.toggle("Qualifiers")
@@ -40,18 +38,16 @@ def main():
                 display_df = lead_bat_df.drop("Rank", axis=1)
             else:
                 display_df = player_bat_df
-        with r1c2:
             display_df = display_df.fillna(value={"Pos": "N/A"})
             user_pa = hp.create_pa_num_input(display_df, "player")
             # Drop players below PA threshold
             display_df = display_df.drop(
                 display_df[display_df.PA < user_pa].index
             )
-        with r1c3:
+        with r1c2:
             user_league = hp.create_league_filter(mode="npb")
-        with r1c4:
             user_batting_hand = hp.create_hand_filter("player_bat")
-        with r1c5:
+        with r1c3:
             user_pos = hp.create_pos_filter(display_df, mode="player_bat")
 
         user_team = hp.create_team_filter(mode="npb")
@@ -63,27 +59,9 @@ def main():
     display_df = display_df[display_df["League"].isin(user_league)]
     display_df = display_df[display_df["Team"].isin(user_team)]
 
-    # Number formatting
-    format_maps = {
-        "OPS+": "{:.0f}",
-        "AVG": "{:.3f}",
-        "OBP": "{:.3f}",
-        "SLG": "{:.3f}",
-        "OPS": "{:.3f}",
-        "ISO": "{:.3f}",
-        "BABIP": "{:.3f}",
-        "BB/K": "{:.2f}",
-        "wSB": "{:.1f}",
-    }
-    for key, value in format_maps.items():
-        display_df[key] = display_df[key].apply(value.format)
-
-    nan_cols = ["BB/K", "BABIP"]
-    for col in nan_cols:
-        if col in display_df:
-            display_df[col] = (
-                display_df[col].astype(str).str.replace("nan", "")
-            )
+    # Convert to best matched type and use column_config for trailing zeroes
+    display_df = hp.convert_pct_cols_to_float(display_df)
+    display_df = display_df.convert_dtypes()
 
     # Display dataframe
     st.dataframe(
@@ -92,6 +70,42 @@ def main():
         hide_index=True,
         row_height=25,
         column_order=user_cols,
+        column_config={
+            "K%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                # help="potential stat explanation",
+            ),
+            "BB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+            ),
+            "TTO%": st.column_config.NumberColumn(
+                format="%.1f%%",
+            ),
+            "AVG": st.column_config.NumberColumn(
+                format="%.3f",
+            ),
+            "OBP": st.column_config.NumberColumn(
+                format="%.3f",
+            ),
+            "SLG": st.column_config.NumberColumn(
+                format="%.3f",
+            ),
+            "OPS": st.column_config.NumberColumn(
+                format="%.3f",
+            ),
+            "ISO": st.column_config.NumberColumn(
+                format="%.3f",
+            ),
+            "BABIP": st.column_config.NumberColumn(
+                format="%.3f",
+            ),
+            "BB/K": st.column_config.NumberColumn(
+                format="%.2f",
+            ),
+            "wSB": st.column_config.NumberColumn(
+                format="%.1f",
+            ),
+        },
     )
 
 

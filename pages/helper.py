@@ -351,11 +351,10 @@ def create_pos_filter(df, mode=None):
         del pos_dict["UTL"]
     df["Pos"] = df["Pos"].map(pos_dict)
 
-    pos_list = st.segmented_control(
+    pos_list = st.multiselect(
         "Positions",
         pos_dict.values(),
         default=pos_dict.values(),
-        selection_mode="multi",
     )
 
     return pos_list
@@ -528,7 +527,7 @@ def create_pa_num_input(df, mode=None):
         filter_default = df["PA"].min()
 
     pa = st.number_input(
-        "Minimum plate appearances",
+        "Min. PA",
         value=filter_default,
         min_value=filter_min,
         step=50,
@@ -569,7 +568,7 @@ def create_ip_num_input(df, mode=None):
         filter_default = df["IP"].min()
 
     ip = st.number_input(
-        "Minimum innings pitched",
+        "Min. IP",
         value=filter_default,
         min_value=filter_min,
         step=25.0,
@@ -608,7 +607,7 @@ def create_inn_num_input(df, mode=None):
         filter_default = df["Inn"].min()
 
     inn = st.number_input(
-        "Minimum innings fielded",
+        "Min. Inn",
         value=filter_default,
         min_value=filter_min,
         step=250.0,
@@ -617,6 +616,7 @@ def create_inn_num_input(df, mode=None):
     )
 
     return inn
+
 
 def create_hand_filter(mode=None):
     """
@@ -630,7 +630,7 @@ def create_hand_filter(mode=None):
 
     Functionality:
         - Sets the filter label and available hand options based on mode.
-        - Displays a multi-select segmented control for users to choose 
+        - Displays a multi-select segmented control for users to choose
             hand(s).
         - Returns the list of selected hand options.
 
@@ -650,7 +650,7 @@ def create_hand_filter(mode=None):
         filter_hands = ["L", "S", "R"]
         filter_default = ["L", "S", "R"]
 
-    hand = st.segmented_control(
+    hand = st.pills(
         filter_label,
         filter_hands,
         default=filter_default,
@@ -689,7 +689,7 @@ def create_league_filter(mode=None):
         filter_leagues = ["CL", "PL", "EL", "WL"]
         filter_default = ["CL", "PL", "EL", "WL"]
 
-    league = st.segmented_control(
+    league = st.pills(
         "League",
         filter_leagues,
         default=filter_default,
@@ -697,3 +697,28 @@ def create_league_filter(mode=None):
     )
 
     return league
+
+
+def convert_pct_cols_to_float(df):
+    """
+    Converts columns containing percentage values (with '%' sign) in a
+    DataFrame to float type.
+
+    Parameters:
+        df (pandas.DataFrame): DataFrame with columns that may contain 
+        percentage strings.
+
+    Functionality:
+        - Identifies columns with percentage values.
+        - Removes the '%' sign and converts the values to float type.
+        - Ensures proper numeric sorting and calculations in downstream usage.
+
+    Returns:
+        pandas.DataFrame: The DataFrame with percentage columns converted to float.
+    """
+    # Format data that has percent format since it breaks sorting
+    for col in df.columns.tolist():
+        if df[col].astype(str).str.contains("%").any():
+            df[col] = df[col].str.rstrip("%").astype("float")
+
+    return df

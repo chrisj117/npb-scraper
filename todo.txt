@@ -21,6 +21,7 @@
     # TODO: look into type hinting
     # TODO: split up npb_scrape into modules, reduce huge single script
     # TODO: multithread scrape, org, and percentiles
+    # TODO: more robust error codes when scraping
     # TODO: turn into self.constDf, then change player_org? (in StandingsData init()) - goal is to alleviate dependence on reading in files and keep it in memory
 # TODO: streamlit page refactors
     # TODO: add dynamic counter column that updates when using sorts

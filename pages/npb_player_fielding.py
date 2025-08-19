@@ -25,7 +25,7 @@ def main():
     # Split filters away from dataframe
     with st.container(border=True):
         # Smaller filters split by cols, larger filters receive exclusive cols
-        r1c1, r1c2, r1c3 = st.columns([2, 1, 9.2], vertical_alignment="center")
+        r1c1, r1c2, r1c3 = st.columns([2, 1, 6], vertical_alignment="center")
 
         with r1c1:
             user_inn = hp.create_inn_num_input(display_df, mode="player")
@@ -45,36 +45,9 @@ def main():
     display_df = display_df[display_df["League"].isin(user_league)]
     display_df = display_df[display_df["Team"].isin(user_team)]
 
-    # Number formatting
-    format_maps = {
-        "Inn": "{:.1f}",
-        "TZR": "{:.1f}",
-        "TZR/143": "{:.1f}",
-        "RngR": "{:.1f}",
-        "ARM": "{:.1f}",
-        "DPR": "{:.1f}",
-        "ErrR": "{:.1f}",
-        "Framing": "{:.1f}",
-        "Blocking": "{:.1f}",
-    }
-    for key, value in format_maps.items():
-        display_df[key] = display_df[key].apply(value.format)
-
-    nan_cols = [
-        "DPR",
-        "Framing",
-        "Blocking",
-        "RngR",
-        "TZR/143",
-        "TZR",
-        "ARM",
-        "ErrR",
-    ]
-    for col in nan_cols:
-        if col in display_df:
-            display_df[col] = (
-                display_df[col].astype(str).str.replace("nan", "")
-            )
+    # Convert to best matched type and use column_config for trailing zeroes
+    display_df = hp.convert_pct_cols_to_float(display_df)
+    display_df = display_df.convert_dtypes()
 
     # Display dataframe
     st.dataframe(
@@ -82,6 +55,39 @@ def main():
         use_container_width=True,
         row_height=25,
         hide_index=True,
+        column_config={
+            "Framing": st.column_config.NumberColumn(
+                format="%.1f",
+                # help="potential stat explanation",
+            ),
+            "Blocking": st.column_config.NumberColumn(
+                format="%.1f",
+            ),
+            "Pos Adj": st.column_config.NumberColumn(
+                format="%.1f",
+            ),
+            "ErrR": st.column_config.NumberColumn(
+                format="%.1f",
+            ),
+            "DPR": st.column_config.NumberColumn(
+                format="%.1f",
+            ),
+            "ARM": st.column_config.NumberColumn(
+                format="%.1f",
+            ),
+            "RngR": st.column_config.NumberColumn(
+                format="%.1f",
+            ),
+            "TZR": st.column_config.NumberColumn(
+                format="%.1f",
+            ),
+            "TZR/143": st.column_config.NumberColumn(
+                format="%.1f",
+            ),
+            "Inn": st.column_config.NumberColumn(
+                format="%.1f",
+            ),
+        },
     )
 
 
