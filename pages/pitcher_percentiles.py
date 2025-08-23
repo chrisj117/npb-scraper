@@ -1,7 +1,7 @@
 """Displays NPB pitcher percentiles with Streamlit"""
 
-import pages.helper as hp
 import streamlit as st
+import pages.helper as hp
 
 
 def main():
@@ -9,49 +9,37 @@ def main():
     Main entry point for the Streamlit NPB pitcher percentile dashboard.
 
     Loads pitching data from GitHub, allows user selection of year,
-    minimum innings pitched, and player. Displays a percentile bar chart and 
-    raw statistics for the selected player using the 
+    minimum innings pitched, and player. Displays a percentile bar chart and
+    raw statistics for the selected player using the
     display_player_percentile() function.
 
     Returns:
         None
     """
     st.set_page_config(layout="centered")
-    pitch_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025StatsFinalPR.csv"
-    )
-    # Drop all sub-5 IP players to help alleviate merging errors
-    pitch_df = pitch_df.drop(
-        pitch_df[pitch_df.IP < 5].index
-    )
 
     # User input boxes
     r1c1, r1c2 = st.columns([1, 1])
-    year_list = ["2025"]
-    year = r1c1.selectbox("Year", year_list)
-    drop_ip = r1c2.number_input(
-        "Minimum innings pitched",
-        value=25.0,
-        min_value=10.0,
-        step=25.0,
-        max_value=pitch_df["IP"].max(),
-        format="%0.1f",
-    )
+    with r1c1:
+        user_year = hp.create_year_filter()
+        pitch_df = hp.load_csv(
+            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs"
+            + "/heads/master/stats/"
+            + user_year
+            + "/streamlit_src/"
+            + user_year
+            + "StatsFinalPR.csv"
+        )
+        # Drop all sub-5 IP players to help alleviate merging errors
+        pitch_df = pitch_df.drop(pitch_df[pitch_df.IP < 5].index)
+    with r1c2:
+        drop_ip = hp.create_ip_filter(pitch_df, "percentile")
+    # Drop players below IP threshold
     pitch_df = pitch_df.drop(pitch_df[pitch_df.IP < drop_ip].index)
-    pitch_df = pitch_df.sort_values('Pitcher')
-    pitcher_list = pitch_df["Pitcher"]
-    pitcher = st.selectbox("Pitcher", pitcher_list)
-
-    # Number formatting
-    format_maps = {
-        "WHIP": "{:.2f}",
-    }
-    for key, value in format_maps.items():
-        pitch_df[key] = pitch_df[key].apply(value.format)
+    user_pitcher = hp.create_player_filter(pitch_df, "Pitcher")
 
     # Display data
-    hp.display_player_percentile(pitch_df, pitcher, year, "PR")
+    hp.display_player_percentile(pitch_df, user_pitcher, user_year, "PR")
 
 
 if __name__ == "__main__":

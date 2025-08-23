@@ -1,8 +1,8 @@
 """Displays lineup, rotation, and bullpen data with Streamlit"""
 
-import pages.helper as hp
 import streamlit as st
 import pandas as pd
+import pages.helper as hp
 
 
 def main():
@@ -144,23 +144,16 @@ def create_lineup(team):
             "OPS+",
         ]
     ]
-
-    # Keep trailing zeroes
-    format_maps = {
-        "AVG": "{:.3f}",
-        "HR": "{:.0f}",
-        "PA": "{:.0f}",
-        "SB": "{:.0f}",
-        "OPS+": "{:.0f}",
-    }
-    for key, value in format_maps.items():
-        lineup_df[key] = lineup_df[key].apply(value.format)
-    lineup_df = lineup_df.astype(str)
+    lineup_df = hp.convert_pct_cols_to_float(lineup_df)
 
     # Display data
     st.write("Lineup")
     st.dataframe(
-        lineup_df, use_container_width=True, hide_index=True, row_height=25
+        lineup_df,
+        use_container_width=True,
+        hide_index=True,
+        row_height=25,
+        column_config=hp.get_column_config("BR"),
     )
 
 
@@ -186,7 +179,7 @@ def create_rotation_bullpen(team):
     # Only look at one team
     pitch_df = pitch_df.drop(pitch_df[pitch_df.Team != team].index)
 
-    # Rotation
+    # Rotation (starting pitchers)
     # Determine starters
     pitch_df["HLDSV"] = pitch_df["HLD"] + pitch_df["SV"]
     sp_df = pitch_df.drop(pitch_df[pitch_df.HLDSV >= 7].index)
@@ -219,14 +212,7 @@ def create_rotation_bullpen(team):
             "FIP-",
         ]
     ]
-
-    # Keep trailing zeroes
-    format_maps = {
-        "ERA": "{:.2f}",
-    }
-    for key, value in format_maps.items():
-        sp_df[key] = sp_df[key].apply(value.format)
-    sp_df = sp_df.astype(str)
+    sp_df = hp.convert_pct_cols_to_float(sp_df)
 
     # Bullpen
     closer = pitch_df.sort_values("SV", ascending=False).head(1)
@@ -234,14 +220,6 @@ def create_rotation_bullpen(team):
     pitch_df = pitch_df.drop(closer.index)
     reliever = pitch_df.sort_values("HLD", ascending=False).head(6)
     bp_df = pd.concat([closer, reliever])
-
-    # Keep trailing zeroes
-    format_maps = {
-        "ERA": "{:.2f}",
-    }
-    for key, value in format_maps.items():
-        bp_df[key] = bp_df[key].apply(value.format)
-    bp_df = bp_df.astype(str)
 
     # Column reordering
     bp_df["Role"] = [
@@ -268,15 +246,24 @@ def create_rotation_bullpen(team):
             "FIP-",
         ]
     ]
+    bp_df = hp.convert_pct_cols_to_float(bp_df)
 
     # Display data
     st.write("Rotation")
     st.dataframe(
-        sp_df, use_container_width=True, hide_index=True, row_height=25
+        sp_df,
+        use_container_width=True,
+        hide_index=True,
+        row_height=25,
+        column_config=hp.get_column_config("PR"),
     )
     st.write("Bullpen")
     st.dataframe(
-        bp_df, use_container_width=True, hide_index=True, row_height=25
+        bp_df,
+        use_container_width=True,
+        hide_index=True,
+        row_height=25,
+        column_config=hp.get_column_config("PR"),
     )
 
 
@@ -314,12 +301,7 @@ def create_team_stats(team):
     bat_final_df = bat_final_df[
         ["Team", "HR", "SB", "K%", "BB%", "AVG", "OPS+"]
     ]
-    # Apply formatting
-    format_maps = {
-        "AVG": "{:.3f}",
-    }
-    for key, value in format_maps.items():
-        bat_final_df[key] = bat_final_df[key].apply(value.format)
+    bat_final_df = hp.convert_pct_cols_to_float(bat_final_df)
     bat_final_df = bat_final_df.astype(str)
 
     team_pitch = npb_team_pitch_df.drop(
@@ -333,12 +315,7 @@ def create_team_stats(team):
     pitch_final_df = pitch_final_df[
         ["Team", "W", "CG", "K%", "BB%", "ERA", "FIP-"]
     ]
-    # Apply formatting
-    format_maps = {
-        "ERA": "{:.2f}",
-    }
-    for key, value in format_maps.items():
-        pitch_final_df[key] = pitch_final_df[key].apply(value.format)
+    pitch_final_df = hp.convert_pct_cols_to_float(pitch_final_df)
     pitch_final_df = pitch_final_df.astype(str)
 
     st.write("Team Statistics")
@@ -347,12 +324,14 @@ def create_team_stats(team):
         use_container_width=True,
         hide_index=True,
         row_height=25,
+        column_config=hp.get_column_config("BR"),
     )
     st.dataframe(
         pitch_final_df,
         use_container_width=True,
         hide_index=True,
         row_height=25,
+        column_config=hp.get_column_config("PR"),
     )
 
 

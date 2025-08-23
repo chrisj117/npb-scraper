@@ -1,7 +1,7 @@
 """Displays NPB batting data with Streamlit"""
 
-import pages.helper as hp
 import streamlit as st
+import pages.helper as hp
 
 
 def main():
@@ -39,7 +39,7 @@ def main():
             else:
                 display_df = player_bat_df
             display_df = display_df.fillna(value={"Pos": "N/A"})
-            user_pa = hp.create_pa_num_input(display_df, "player")
+            user_pa = hp.create_pa_filter(display_df, "player")
             # Drop players below PA threshold
             display_df = display_df.drop(
                 display_df[display_df.PA < user_pa].index
@@ -70,42 +70,7 @@ def main():
         hide_index=True,
         row_height=25,
         column_order=user_cols,
-        column_config={
-            "K%": st.column_config.NumberColumn(
-                format="%.1f%%",
-                # help="potential stat explanation",
-            ),
-            "BB%": st.column_config.NumberColumn(
-                format="%.1f%%",
-            ),
-            "TTO%": st.column_config.NumberColumn(
-                format="%.1f%%",
-            ),
-            "AVG": st.column_config.NumberColumn(
-                format="%.3f",
-            ),
-            "OBP": st.column_config.NumberColumn(
-                format="%.3f",
-            ),
-            "SLG": st.column_config.NumberColumn(
-                format="%.3f",
-            ),
-            "OPS": st.column_config.NumberColumn(
-                format="%.3f",
-            ),
-            "ISO": st.column_config.NumberColumn(
-                format="%.3f",
-            ),
-            "BABIP": st.column_config.NumberColumn(
-                format="%.3f",
-            ),
-            "BB/K": st.column_config.NumberColumn(
-                format="%.2f",
-            ),
-            "wSB": st.column_config.NumberColumn(
-                format="%.1f",
-            ),
-        },
+        column_config=hp.get_column_config("BR"),
     )
 
 

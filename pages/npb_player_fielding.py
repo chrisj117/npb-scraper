@@ -1,7 +1,7 @@
 """Displays NPB fielding data with Streamlit"""
 
-import pages.helper as hp
 import streamlit as st
+import pages.helper as hp
 
 
 def main():
@@ -28,7 +28,7 @@ def main():
         r1c1, r1c2, r1c3 = st.columns([2, 1, 6], vertical_alignment="center")
 
         with r1c1:
-            user_inn = hp.create_inn_num_input(display_df, mode="player")
+            user_inn = hp.create_inn_filter(display_df, mode="player")
             # Drop players below Inn threshold
             display_df = display_df.drop(
                 display_df[display_df.Inn < user_inn].index
@@ -55,39 +55,7 @@ def main():
         use_container_width=True,
         row_height=25,
         hide_index=True,
-        column_config={
-            "Framing": st.column_config.NumberColumn(
-                format="%.1f",
-                # help="potential stat explanation",
-            ),
-            "Blocking": st.column_config.NumberColumn(
-                format="%.1f",
-            ),
-            "Pos Adj": st.column_config.NumberColumn(
-                format="%.1f",
-            ),
-            "ErrR": st.column_config.NumberColumn(
-                format="%.1f",
-            ),
-            "DPR": st.column_config.NumberColumn(
-                format="%.1f",
-            ),
-            "ARM": st.column_config.NumberColumn(
-                format="%.1f",
-            ),
-            "RngR": st.column_config.NumberColumn(
-                format="%.1f",
-            ),
-            "TZR": st.column_config.NumberColumn(
-                format="%.1f",
-            ),
-            "TZR/143": st.column_config.NumberColumn(
-                format="%.1f",
-            ),
-            "Inn": st.column_config.NumberColumn(
-                format="%.1f",
-            ),
-        },
+        column_config=hp.get_column_config("RF"),
     )
 
 

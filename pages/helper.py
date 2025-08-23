@@ -231,83 +231,64 @@ def display_player_percentile(df, name, year, suffix):
         selection_mode=None,
     )
 
-    # Display the actual stats the player has + league averages
-    raw_data = add_league_average(df, raw_data, name, plot_cols, suffix)
-    # Convert all of dataframe to string to avoid pyarrow.lib.ArrowInvalid
-    raw_data = raw_data.astype(str)
-    st.dataframe(
-        raw_data, use_container_width=True, hide_index=True, row_height=25
-    )
-
-
-def add_league_average(df, player_df, name, stat_cols, suffix):
-    """
-    Adds league average statistics to a player's raw data DataFrame for
-    comparison.
-
-    Parameters:
-        df (pandas.DataFrame): The full DataFrame containing all player
-        statistics.
-        player_df (pandas.DataFrame): DataFrame containing the selected
-        player's raw statistics.
-        name (str): The name of the player.
-        stat_cols (list): List of statistic column names to include.
-        suffix (str): Indicates stat type and determines which team stats to
-        use ('BR', 'PR', etc.).
-
-    Functionality:
-        - Loads league average stats from the appropriate team CSV file based
-        on suffix.
-        - Appends league average values to the player's stats for side-by-side
-        comparison.
-        - Ensures relevant columns (including PA or IP) are included for
-        display.
-        - Inserts a "Player" column to label rows as either the player or
-        "League Average".
-
-    Returns:
-        pandas.DataFrame: DataFrame containing both the player's and league
-        average statistics.
-    """
+    # Update player's raw data with a League Average row
     # Transpose vertical df, reset index, and drop
-    player_df = player_df.T
-    player_df.columns = player_df.iloc[0]
-    player_df = player_df.drop(index=player_df.index[0], axis=0)
-    player_df.index = [0]
+    raw_data = raw_data.T
+    raw_data.columns = raw_data.iloc[0]
+    raw_data = raw_data.drop(index=raw_data.index[0], axis=0)
+    raw_data.index = [0]
 
     # Append League Average stats
     if suffix in ("BR"):
         # Extract only league average row from Team stats
         team_df = load_csv(
-            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-            + "master/stats/2025/streamlit_src/2025TeamBR.csv"
+            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs"
+            + "/heads/master/stats/"
+            + year
+            + "/streamlit_src/"
+            + year
+            + "TeamBR.csv"
         )
         lg_avg = team_df[team_df["Team"] == "League Average"]
         lg_avg.index = [0]
         # Get PA from player df
         lg_avg.at[0, "PA"] = round(df.loc[:, "PA"].mean(), 0)
-        player_df = pd.concat([player_df, lg_avg])
-        player_df = player_df.astype(str).replace("nan", "0.0")
+        raw_data = pd.concat([raw_data, lg_avg])
+        raw_data = raw_data.astype(str).replace("nan", "0.0")
         # Drop extra concatenated columns
-        stat_cols.append("PA")
-        player_df = player_df[player_df.columns.intersection(stat_cols)]
+        plot_cols.append("PA")
+        raw_data = raw_data[raw_data.columns.intersection(plot_cols)]
     elif suffix in ("PR"):
         # Extract only league average row from Team stats
         team_df = load_csv(
-            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-            + "master/stats/2025/streamlit_src/2025TeamPR.csv"
+            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs"
+            + "/heads/master/stats/"
+            + year
+            + "/streamlit_src/"
+            + year
+            + "TeamPR.csv"
         )
         lg_avg = team_df[team_df["Team"] == "League Average"]
         lg_avg.index = [0]
         # Get PA from player df
         lg_avg.at[0, "IP"] = round(df.loc[:, "IP"].mean(), 0)
-        player_df = pd.concat([player_df, lg_avg])
+        raw_data = pd.concat([raw_data, lg_avg])
         # Drop extra concatenated columns
-        stat_cols.append("IP")
-        player_df = player_df[player_df.columns.intersection(stat_cols)]
+        plot_cols.append("IP")
+        raw_data = raw_data[raw_data.columns.intersection(plot_cols)]
 
-    player_df.insert(0, "Player", [name, "League Average"])
-    return player_df
+    raw_data.insert(0, "Player", [name, "League Average"])
+    raw_data = convert_pct_cols_to_float(raw_data)
+    raw_data = raw_data.dropna()
+    raw_data = raw_data.convert_dtypes()
+    # Display the actual stats the player has + league averages
+    st.dataframe(
+        raw_data,
+        use_container_width=True,
+        hide_index=True,
+        row_height=25,
+        column_config=get_column_config(suffix),
+    )
 
 
 def create_pos_filter(df, mode=None):
@@ -356,7 +337,6 @@ def create_pos_filter(df, mode=None):
         pos_dict.values(),
         default=pos_dict.values(),
     )
-
     return pos_list
 
 
@@ -443,7 +423,6 @@ def create_stat_cols_filter(df, mode=None):
     )
     # Sort cols as dataframe
     cols = [c for c in df.columns.tolist() if c in cols]
-
     return cols
 
 
@@ -492,11 +471,10 @@ def create_team_filter(mode=None):
         default=team_dict.keys(),
     )
     team = [team_dict[k] for k in team]
-
     return team
 
 
-def create_pa_num_input(df, mode=None):
+def create_pa_filter(df, mode=None):
     """
     Creates a Streamlit number input widget for filtering by minimum plate
     appearances (PA).
@@ -533,11 +511,10 @@ def create_pa_num_input(df, mode=None):
         step=50,
         max_value=df["PA"].max(),
     )
-
     return pa
 
 
-def create_ip_num_input(df, mode=None):
+def create_ip_filter(df, mode=None):
     """
     Creates a Streamlit number input widget for filtering by minimum innings
     pitched (IP).
@@ -575,11 +552,10 @@ def create_ip_num_input(df, mode=None):
         max_value=df["IP"].max(),
         format="%0.1f",
     )
-
     return ip
 
 
-def create_inn_num_input(df, mode=None):
+def create_inn_filter(df, mode=None):
     """
     Creates a Streamlit number input widget for filtering by minimum innings
     fielded.
@@ -614,7 +590,6 @@ def create_inn_num_input(df, mode=None):
         max_value=df["Inn"].max(),
         format="%0.1f",
     )
-
     return inn
 
 
@@ -656,7 +631,6 @@ def create_hand_filter(mode=None):
         default=filter_default,
         selection_mode="multi",
     )
-
     return hand
 
 
@@ -695,7 +669,6 @@ def create_league_filter(mode=None):
         default=filter_default,
         selection_mode="multi",
     )
-
     return league
 
 
@@ -705,8 +678,8 @@ def convert_pct_cols_to_float(df):
     DataFrame to float type.
 
     Parameters:
-        df (pandas.DataFrame): DataFrame with columns that may contain 
-        percentage strings.
+        df (pandas.DataFrame): DataFrame with columns that may contain
+            percentage strings.
 
     Functionality:
         - Identifies columns with percentage values.
@@ -714,11 +687,452 @@ def convert_pct_cols_to_float(df):
         - Ensures proper numeric sorting and calculations in downstream usage.
 
     Returns:
-        pandas.DataFrame: The DataFrame with percentage columns converted to float.
+        pandas.DataFrame: The DataFrame with percentage columns converted to
+        float.
     """
     # Format data that has percent format since it breaks sorting
     for col in df.columns.tolist():
         if df[col].astype(str).str.contains("%").any():
             df[col] = df[col].str.rstrip("%").astype("float")
-
     return df
+
+
+def create_year_filter():
+    """
+    Creates a Streamlit select box filter for selecting statistic years.
+
+    Parameters:
+        N/A
+
+    Functionality:
+        - Streamlines controlling what years users can request.
+
+    Returns:
+        string: The user's chosen year.
+    """
+    year = st.selectbox("Year", ["2025"])
+    return year
+
+
+def create_player_filter(df, player_col):
+    """
+    Creates a Streamlit select box filter for selecting players.
+
+    Parameters:
+        df (pandas.DataFrame): DataFrame with a "Pitcher" or "Player" column.
+        player_col (string): The column containing player names.
+
+    Functionality:
+        - Sorts name columns for consistent display across pages.
+
+    Returns:
+        string: The user's chosen year.
+    """
+    df = df.sort_values(player_col)
+    player_list = df[player_col]
+    player = st.selectbox(player_col, player_list)
+    return player
+
+
+def get_column_config(suffix=None):
+    """
+    Provides statistic hover labels and trailing zeroes for DataFrames on
+    Streamlit.
+
+    Parameters:
+        suffix (str, optional): If set to "None", no trailing zeroes or labels
+            are enforced. Otherwise, provides the appropriate column config for
+            the DataFrame.
+
+    Functionality:
+        - Ensures statistics displayed on one page appear the same across the
+        whole site.
+
+    Returns:
+        set: The appropriate column_config arguments.
+    """
+    if suffix in ("P", "PR", "PF"):
+        column_config = {
+            "G": st.column_config.NumberColumn(
+                help="Games Played: The number of games in which a pitcher "
+                + "appears.",
+            ),
+            "W": st.column_config.NumberColumn(
+                help="Wins: The number of games a pitcher is credited with "
+                + "a winning decision.",
+            ),
+            "L": st.column_config.NumberColumn(
+                help="Losses: The number of games a pitcher is credited "
+                + "with a losing decision.",
+            ),
+            "IP": st.column_config.NumberColumn(
+                help="Innings Pitched: The total number of innings a "
+                + "pitcher completes, recorded in one-third increments.",
+            ),
+            "BF": st.column_config.NumberColumn(
+                help="Batters Faced: The total number of hitters a pitcher "
+                + "faces.",
+            ),
+            "R": st.column_config.NumberColumn(
+                help="Runs: The total number of runs a pitcher allows.",
+            ),
+            "ER": st.column_config.NumberColumn(
+                help="Earned Runs: The number of runs scored against the "
+                + "pitcher that are not the result of errors or passed balls.",
+            ),
+            "H": st.column_config.NumberColumn(
+                help="Hits: The number of hits a pitcher allows.",
+            ),
+            "HR": st.column_config.NumberColumn(
+                help="Home Runs: The number of home runs a pitcher allows.",
+            ),
+            "HR%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Home Run Rate: The percentage of batters faced by a "
+                + "pitcher that results in home runs.",
+            ),
+            "BB": st.column_config.NumberColumn(
+                help="Walks: The number of times a pitcher allows a batter "
+                + "to reach first base by throwing four balls.",
+            ),
+            "BB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Walk Rate: The percentage of batters faced by a "
+                + "pitcher that result in walks.",
+            ),
+            "IBB": st.column_config.NumberColumn(
+                help="Intentional Walks: The number of walks a pitcher "
+                + "intentionally issues.",
+            ),
+            "HB": st.column_config.NumberColumn(
+                help="Hit By Pitches: The number of batters a pitcher hits "
+                + "with a pitch.",
+            ),
+            "SO": st.column_config.NumberColumn(
+                help="Strikeouts: The number of batters a pitcher retires "
+                + "on strikes.",
+            ),
+            "K%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Strikeout Rate: The percentage of batters faced by "
+                + "a pitcher that result in strikeouts.",
+            ),
+            "K-BB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Strikeout Rate minus Walk Rate: The difference "
+                + "between a pitcher's strikeout rate and walk rate.",
+            ),
+            "WHIP": st.column_config.NumberColumn(
+                format="%.2f",
+                help="Walks plus Hits per Inning Pitched: The average "
+                + "number of walks and hits allowed by a pitcher per inning.",
+            ),
+            "ERA+": st.column_config.NumberColumn(
+                help="Earned Run Average Plus: A normalized version of ERA "
+                + "that adjusts for park factors, with 100 always being the "
+                + "league average. Higher values are better.",
+            ),
+            "FIP": st.column_config.NumberColumn(
+                format="%.2f",
+                help="Fielding Independent Pitching: A measure of a "
+                + "pitcher's effectiveness based on strikeouts, walks, and "
+                + "home runs, independent of defensive performance.",
+            ),
+            "FIP-": st.column_config.NumberColumn(
+                help="Fielding Independent Pitching Minus: A normalized "
+                + "version of FIP that adjusts for park factors, with 100 "
+                + "always being the league average. Lower values are better.",
+            ),
+            "Diff": st.column_config.NumberColumn(
+                format="%.2f",
+                help="ERA-FIP Differential: The differential of a pitcher's "
+                + "ERA and FIP. Higher values indicate underperformance and "
+                + "lower values indicate overperformance relative to "
+                + "expectations.",
+            ),
+            "kwERA": st.column_config.NumberColumn(
+                format="%.2f",
+                help="Strikeout-Walk based Earned Run Average: An estimate "
+                + "of a pitcher's ERA based on strikeout and walk rates.",
+            ),
+            "kwERA-": st.column_config.NumberColumn(
+                help="Strikeout-Walk based Earned Run Average Minus: A "
+                + "normalized version of kwERA with 100 always being the "
+                + "league average. Lower values are better.",
+            ),
+            "SV": st.column_config.NumberColumn(
+                help="Saves: The number of games a pitcher finishes while "
+                + "preserving a lead of three runs or fewer.",
+            ),
+            "HLD": st.column_config.NumberColumn(
+                help="Holds: The number of games a relief pitcher enters in "
+                + "a save situation, maintains the lead, but does not finish.",
+            ),
+            "CG": st.column_config.NumberColumn(
+                help="Complete Games: The number of games where a pitcher "
+                + "pitches the entire game.",
+            ),
+            "SHO": st.column_config.NumberColumn(
+                help="Shutouts: The number of complete games a pitcher "
+                + "finishes without allowing any runs.",
+            ),
+            "WP": st.column_config.NumberColumn(
+                help="Wild Pitches: The number of pitches a pitcher throws "
+                + "that are too wild for the catcher to handle, allowing "
+                + "baserunners to advance.",
+            ),
+            "Qualifier": st.column_config.TextColumn(
+                help="Qualified Pitcher: A pitcher is qualified for titles "
+                + "with 1.0 IP per team game played (NPB) or 0.8 IP per team "
+                + "game played (Farm).",
+            ),
+            "ERA": st.column_config.NumberColumn(
+                format="%.2f",
+                help="Earned Run Average: The average number of earned "
+                + "runs a pitcher allows per nine innings pitched.",
+            ),
+            "Age": st.column_config.TextColumn(
+                help="Age: How old a pitcher is on June 30th of that year.",
+            ),
+            "T": st.column_config.TextColumn(
+                help="Throws: A pitcher's throwing hand.",
+            ),
+        }
+    elif suffix in ("B", "BR", "BF"):
+        column_config = {
+            "AB": st.column_config.NumberColumn(
+                help="At-bats: The number of times a player bats, excluding "
+                + "walks, hit-by-pitches, sacrifices, errors, fielder's "
+                + "choices, and catcher's interferences.",
+            ),
+            "K%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Strikeout Rate: The percentage of a player's plate "
+                + "appearances that end in a strikeout.",
+            ),
+            "BB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Walk Rate: The percentage of a player's plate "
+                + "appearances that result in a walk.",
+            ),
+            "TTO%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Three True Outcomes Rate: The percentage of a player's "
+                + "plate appearances that result in one of the three true "
+                + "outcomes: a home run, a strikeout, or a walk.",
+            ),
+            "AVG": st.column_config.NumberColumn(
+                format="%.3f",
+                help="Batting Average: The ratio of a player's hits to "
+                + "their at-bats.",
+            ),
+            "OBP": st.column_config.NumberColumn(
+                format="%.3f",
+                help="On Base Percentage: The percentage of plate "
+                + "appearances in which a player reaches base.",
+            ),
+            "SLG": st.column_config.NumberColumn(
+                format="%.3f",
+                help="Slugging Percentage: The total number of bases a "
+                + "player records per at-bat.",
+            ),
+            "OPS": st.column_config.NumberColumn(
+                format="%.3f",
+                help="On Base plus Slugging: The sum of a player's on-base "
+                + "percentage and slugging percentage.",
+            ),
+            "ISO": st.column_config.NumberColumn(
+                format="%.3f",
+                help="Isolated Power: A measure of a hitter's raw power, "
+                + "calculated as SLG - AVG.",
+            ),
+            "BABIP": st.column_config.NumberColumn(
+                format="%.3f",
+                help="Batting Average on Balls in Play: The batting average "
+                + "for balls hit into play, excluding home runs.",
+            ),
+            "BB/K": st.column_config.NumberColumn(
+                format="%.2f",
+                help="Walk to Strikeout Ratio: A comparison of how often "
+                + "a player walks versus how often they strike out.",
+            ),
+            "wSB": st.column_config.NumberColumn(
+                format="%.1f",
+                help="Weighted Stolen Base Runs: An estimate of the number "
+                + "of runs a player contributes to his team by stealing "
+                + "bases, with 0.0 being league-average.",
+            ),
+            "G": st.column_config.NumberColumn(
+                help="Games Played: The number of games in which a player "
+                + "appears.",
+            ),
+            "PA": st.column_config.NumberColumn(
+                help="Plate Appearances: The total number of times a "
+                + "player comes to bat.",
+            ),
+            "R": st.column_config.NumberColumn(
+                help="Runs: The number of times a player crosses home plate "
+                + "to score.",
+            ),
+            "RBI": st.column_config.NumberColumn(
+                help="Runs Batted In: The number of runs a player drives "
+                + "in with their at-bats, except when grounding into a double "
+                + "play or reaching on an error.",
+            ),
+            "1B": st.column_config.NumberColumn(
+                help="Singles: The number of hits where a player safely "
+                + "reaches first base without an error or fielder's choice.",
+            ),
+            "2B": st.column_config.NumberColumn(
+                help="Doubles: The number of hits where a player safely "
+                + "reaches second base without an error or fielder's choice.",
+            ),
+            "3B": st.column_config.NumberColumn(
+                help="Triples: The number of hits where a player safely "
+                + "reaches third base without an error or fielder's choice.",
+            ),
+            "HR": st.column_config.NumberColumn(
+                help="Home Runs: The number of hits where a player safely "
+                + "reaches home plate without an error or fielder's choice.",
+            ),
+            "TB": st.column_config.NumberColumn(
+                help="Total Bases: The total number of bases a player "
+                + "records from hits.",
+            ),
+            "BB": st.column_config.NumberColumn(
+                help="Walks: The number of times a player is awarded first "
+                + "base after receiving four balls outside the strike zone.",
+            ),
+            "IBB": st.column_config.NumberColumn(
+                help="Intentional Walks: The number of times a player is "
+                + "intentionally awarded first base by the opposing team.",
+            ),
+            "SO": st.column_config.NumberColumn(
+                help="Strikeouts: The number of times a player is put out "
+                + "on three strikes.",
+            ),
+            "HP": st.column_config.NumberColumn(
+                help="Hit By Pitches: The number of times a player reaches "
+                + "first base after being hit by a pitched ball.",
+            ),
+            "SB": st.column_config.NumberColumn(
+                help="Stolen Bases: The number of times a player "
+                + "successfully steals a base.",
+            ),
+            "CS": st.column_config.NumberColumn(
+                help="Caught Stealing: The number of times a player is "
+                + "tagged out while attempting to steal a base.",
+            ),
+            "SF": st.column_config.NumberColumn(
+                help="Sacrifice Flies: A fly ball that results in a run "
+                + "being scored, but the batter is out.",
+            ),
+            "SH": st.column_config.NumberColumn(
+                help="Sacrifice Hits: A bunt that allows a runner to "
+                + "advance to the next base, but the batter is out.",
+            ),
+            "GDP": st.column_config.NumberColumn(
+                help="Grounded into Double Plays: The number of times a "
+                + "player hits a ground ball that results in two outs.",
+            ),
+            "OPS+": st.column_config.NumberColumn(
+                help="On Base plus Slugging Plus: A normalized version of "
+                + "OPS that adjusts for park factors, with 100 always being "
+                + "the league average. Higher values are better.",
+            ),
+            "Qualifier": st.column_config.TextColumn(
+                help="Qualified Hitter: A player is qualified for titles "
+                + "with 3.1 PA per team game played (NPB) or 2.7 PA per team "
+                + "game played (Farm).",
+            ),
+            "H": st.column_config.TextColumn(
+                help="Hits: The number of times a player reaches safely on "
+                + "a ball put in play without an error or fielder's choice.",
+            ),
+            "Age": st.column_config.TextColumn(
+                help="Age: How old a player is on June 30th of that year.",
+            ),
+            "B": st.column_config.TextColumn(
+                help="Bats: A player's batting hand.",
+            ),
+            "Pos": st.column_config.TextColumn(
+                help="Position: A player's position on the field.",
+            ),
+            "Range": st.column_config.NumberColumn(
+                help="Range Runs: Defensive runs through fielding batted "
+                + "balls.",
+            ),
+            "Def Value": st.column_config.NumberColumn(
+                help="Position-Adjusted Total Zone Runs: A player's "
+                + "position-adjusted fielding value per 143 games or 1287 "
+                + "innings (a full NPB season).",
+            ),
+            "Arm": st.column_config.NumberColumn(
+                help="Arm Runs: Defensive runs through throwing. For "
+                + "outfielders, this includes throwing out and preventing "
+                + "runners from advancing bases. For catchers, this includes "
+                + "preventing stolen bases.",
+            ),
+            "Framing": st.column_config.NumberColumn(
+                help="Framing: A catcher's framing value.",
+            ),
+            "DPR": st.column_config.NumberColumn(
+                help="Double Play Runs: Defensive runs through fielding "
+                + "ground ball double plays.",
+            ),
+        }
+    elif suffix in ("RF"):
+        column_config = {
+            "ARM": st.column_config.NumberColumn(
+                help="Arm Runs: Defensive runs through throwing. For "
+                + "outfielders, this includes throwing out and preventing "
+                + "runners from advancing bases. For catchers, this includes "
+                + "preventing stolen bases.",
+            ),
+            "Blocking": st.column_config.NumberColumn(
+                help="Blocking: A catcher's blocking value.",
+            ),
+            "DPR": st.column_config.NumberColumn(
+                help="Double Play Runs: Defensive runs through fielding "
+                + "ground ball double plays.",
+            ),
+            "ErrR": st.column_config.NumberColumn(
+                help="Error Runs: Defensive runs through preventing errors.",
+            ),
+            "Framing": st.column_config.NumberColumn(
+                help="Framing: A catcher's framing value.",
+            ),
+            "Inn": st.column_config.NumberColumn(
+                help="Innings Played: Total innings played at the position, "
+                + "recorded in one-third increments.",
+            ),
+            "Pos": st.column_config.TextColumn(
+                help="Position: A player's position on the field.",
+            ),
+            "Pos Adj": st.column_config.NumberColumn(
+                help="Positional Adjustment: Adjustment to value premium "
+                + "positions higher. Hierarchy: Catcher > Shortstop > Center "
+                + "Field > Second Base > Third Base > Right Field > Left "
+                + "Field > Designated Hitter.",
+            ),
+            "RngR": st.column_config.NumberColumn(
+                help="Range Runs: Defensive runs through fielding batted "
+                + "balls.",
+            ),
+            "TZR": st.column_config.NumberColumn(
+                help="Total Zone Runs: Combined fielding value of defensive "
+                + "metrics. Infield/Outfield = RngR + DPR + ARM + ErrR; "
+                + "Catchers = ARM + ErrR. Does not include framing or "
+                + "blocking.",
+            ),
+            "TZR/143": st.column_config.NumberColumn(
+                help="Total Zone Runs per 143 games: Approximate TZR per "
+                + "143 games or 1287 innings (a full NPB season).",
+            ),
+            "Age": st.column_config.TextColumn(
+                help="Age: How old a player is on June 30th of that year.",
+            ),
+        }
+    else:
+        column_config = {}
+    return column_config

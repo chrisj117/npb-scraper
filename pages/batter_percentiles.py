@@ -1,8 +1,8 @@
 """Displays NPB batter percentiles with Streamlit"""
 
-import pages.helper as hp
 import streamlit as st
 import pandas as pd
+import pages.helper as hp
 
 
 def main():
@@ -19,32 +19,38 @@ def main():
         None
     """
     st.set_page_config(layout="centered")
-    bat_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025StatsFinalBR.csv"
-    )
-    field_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025FieldingFinalR.csv"
-    )
-    # Drop all sub-10 PA players to help alleviate merging errors
-    bat_df = bat_df.drop(bat_df[bat_df.PA < 10].index)
 
     # User input boxes
     r1c1, r1c2 = st.columns([1, 1])
-    year_list = ["2025"]
-    year = r1c1.selectbox("Year", year_list)
+    with r1c1:
+        user_year = hp.create_year_filter()
+        bat_df = hp.load_csv(
+            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs"
+            + "/heads/master/stats/"
+            + user_year
+            + "/streamlit_src/"
+            + user_year
+            + "StatsFinalBR.csv"
+        )
+        field_df = hp.load_csv(
+            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs"
+            + "/heads/master/stats/"
+            + user_year
+            + "/streamlit_src/"
+            + user_year
+            + "FieldingFinalR.csv"
+        )
+        # Drop all sub-10 PA players to help alleviate merging errors
+        bat_df = bat_df.drop(bat_df[bat_df.PA < 10].index)
     with r1c2:
-        drop_pa = hp.create_pa_num_input(bat_df, "percentile")
+        drop_pa = hp.create_pa_filter(bat_df, "percentile")
     # Drop players below PA threshold
     bat_df = bat_df.drop(bat_df[bat_df.PA < drop_pa].index)
-    # Drop players that have no position (usually due to delayed fielding updates)
-    bat_df = bat_df.dropna(subset=['Pos'])
+    # Drop players that have no position (delayed fielding updates)
+    bat_df = bat_df.dropna(subset=["Pos"])
     # Drop pitchers
     bat_df = bat_df.drop(bat_df[bat_df.Pos == "1"].index)
-    bat_df = bat_df.sort_values("Player")
-    player_list = bat_df["Player"]
-    player = st.selectbox("Player", player_list)
+    user_player = hp.create_player_filter(bat_df, "Player")
 
     # Def Value stat calculation
     temp_df = field_df["Player"].drop_duplicates()
@@ -131,7 +137,7 @@ def main():
     for key, value in format_maps.items():
         cumulative_df[key] = cumulative_df[key].apply(value.format)
 
-    hp.display_player_percentile(cumulative_df, player, year, "BR")
+    hp.display_player_percentile(cumulative_df, user_player, user_year, "BR")
 
 
 if __name__ == "__main__":

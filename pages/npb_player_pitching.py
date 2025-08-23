@@ -1,7 +1,7 @@
 """Displays NPB pitching data with Streamlit"""
 
-import pages.helper as hp
 import streamlit as st
+import pages.helper as hp
 
 
 def main():
@@ -38,7 +38,7 @@ def main():
                 display_df = lead_pitch_df.drop("Rank", axis=1)
             else:
                 display_df = player_pitch_df
-            user_ip = hp.create_ip_num_input(display_df, mode="player")
+            user_ip = hp.create_ip_filter(display_df, mode="player")
             # Drop players below IP threshold
             display_df = display_df.drop(
                 display_df[display_df.IP < user_ip].index
@@ -64,39 +64,7 @@ def main():
         use_container_width=True,
         hide_index=True,
         row_height=25,
-        column_config={
-            "K%": st.column_config.NumberColumn(
-                format="%.1f%%",
-                # help="potential stat explanation",
-            ),
-            "HR%": st.column_config.NumberColumn(
-                format="%.1f%%",
-            ),
-            "BB%": st.column_config.NumberColumn(
-                format="%.1f%%",
-            ),
-            "K-BB%": st.column_config.NumberColumn(
-                format="%.1f%%",
-            ),
-            "IP": st.column_config.NumberColumn(
-                format="%.1f",
-            ),
-            "ERA": st.column_config.NumberColumn(
-                format="%.2f",
-            ),
-            "FIP": st.column_config.NumberColumn(
-                format="%.2f",
-            ),
-            "kwERA": st.column_config.NumberColumn(
-                format="%.2f",
-            ),
-            "WHIP": st.column_config.NumberColumn(
-                format="%.2f",
-            ),
-            "Diff": st.column_config.NumberColumn(
-                format="%.2f",
-            ),
-        },
+        column_config=hp.get_column_config("PR"),
     )
 
 
