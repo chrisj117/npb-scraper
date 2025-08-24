@@ -766,6 +766,7 @@ def get_column_config(suffix=None):
                 + "with a losing decision.",
             ),
             "IP": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Innings Pitched: The total number of innings a "
                 + "pitcher completes, recorded in one-third increments.",
             ),
@@ -1084,25 +1085,31 @@ def get_column_config(suffix=None):
     elif suffix in ("RF"):
         column_config = {
             "ARM": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Arm Runs: Defensive runs through throwing. For "
                 + "outfielders, this includes throwing out and preventing "
                 + "runners from advancing bases. For catchers, this includes "
                 + "preventing stolen bases.",
             ),
             "Blocking": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Blocking: A catcher's blocking value.",
             ),
             "DPR": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Double Play Runs: Defensive runs through fielding "
                 + "ground ball double plays.",
             ),
             "ErrR": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Error Runs: Defensive runs through preventing errors.",
             ),
             "Framing": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Framing: A catcher's framing value.",
             ),
             "Inn": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Innings Played: Total innings played at the position, "
                 + "recorded in one-third increments.",
             ),
@@ -1110,22 +1117,26 @@ def get_column_config(suffix=None):
                 help="Position: A player's position on the field.",
             ),
             "Pos Adj": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Positional Adjustment: Adjustment to value premium "
                 + "positions higher. Hierarchy: Catcher > Shortstop > Center "
                 + "Field > Second Base > Third Base > Right Field > Left "
                 + "Field > Designated Hitter.",
             ),
             "RngR": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Range Runs: Defensive runs through fielding batted "
                 + "balls.",
             ),
             "TZR": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Total Zone Runs: Combined fielding value of defensive "
                 + "metrics. Infield/Outfield = RngR + DPR + ARM + ErrR; "
                 + "Catchers = ARM + ErrR. Does not include framing or "
                 + "blocking.",
             ),
             "TZR/143": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Total Zone Runs per 143 games: Approximate TZR per "
                 + "143 games or 1287 innings (a full NPB season).",
             ),
