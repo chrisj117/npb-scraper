@@ -57,6 +57,11 @@ def display_player_percentile(df, name, year, suffix):
     if suffix in ("PR", "PF"):
         name_col = "Pitcher"
         plot_cols = [
+            "FB Velo",
+            "CSW%",
+            "SwStr%",
+            "Chase%",
+            "GB%",
             "K-BB%",
             "BB%",
             "K%",
@@ -270,7 +275,7 @@ def display_player_percentile(df, name, year, suffix):
         )
         lg_avg = team_df[team_df["Team"] == "League Average"]
         lg_avg.index = [0]
-        # Get PA from player df
+        # Get IP from player df
         lg_avg.at[0, "IP"] = round(df.loc[:, "IP"].mean(), 0)
         raw_data = pd.concat([raw_data, lg_avg])
         # Drop extra concatenated columns
@@ -753,6 +758,44 @@ def get_column_config(suffix=None):
     """
     if suffix in ("P", "PR", "PF"):
         column_config = {
+            "GB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Ground Ball Rate: The percentage of balls in play " +
+                "against a pitcher that are hit on the ground.",
+            ),
+            "Chase%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Chase Rate: The percentage of pitches outside the " +
+                "strike zone that batters swing at. Recognized by " +
+                "PitcherList.com in 2018 as one of the “Big Three” plate " +
+                "discipline metrics.",
+            ),
+            "Con%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Contact Rate: The percentage of swings against a " +
+                "pitcher that result in contact, including both fair and " +
+                "foul balls. Recognized by PitcherList.com in 2018 as one " +
+                "of the “Big Three” plate discipline metrics.",
+            ),
+            "SwStr%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Swinging Strike Rate: The percentage of a pitcher's " +
+                "total pitches that result in swinging strikes. Recognized " +
+                "by PitcherList.com in 2018 as one of the “Big Three” plate " +
+                "discipline metrics.",
+            ),
+            "CSW%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Called Strike plus Whiff Rate: The percentage of a " +
+                "pitcher's pitches that result in either a called strike or "
+                "a swinging strike.",
+            ),
+            "FB Velo": st.column_config.NumberColumn(
+                format="%.1f",
+                help="Average Fastball Velocity: The average speed of a " +
+                "pitcher's fastball, measured in miles per hour (mph). The "
+                "NPB league average in 2025 is about 91.5 mph.",
+            ),
             "G": st.column_config.NumberColumn(
                 help="Games Played: The number of games in which a pitcher "
                 + "appears.",
