@@ -31,3 +31,4 @@ This project was developed by **[Christian Johnson](https://github.com/chrisj117
 Additional contributors include:
 - **[Yuri Karasawa](https://www.yakyucosmo.com/)** - Main co-contributor and maintainer of https://www.yakyucosmo.com/
 - **[ぼーの (Bouno)](https://bo-no05.hatenadiary.org/)** - Source for all fielding statistics
+- **[Ramos & Ramos](https://ramos-ramos.github.io/)** - Source for advanced pitching data
