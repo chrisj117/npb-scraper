@@ -515,6 +515,10 @@ class PlayerData(Stats):
         self.df["kwERA-"] = 100 * (self.df["kwERA"] / (total_kwera))
         self.df["Diff"] = self.df["ERA"] - self.df["FIP"]
 
+        # Import additional NPB data from Google Sheets
+        if self.suffix == "PR":
+            self.append_gsheets_pitcher_data()
+
         # Data cleaning/reformatting
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
@@ -538,9 +542,15 @@ class PlayerData(Stats):
             "kwERA-": "{:.0f}",
             "ERA+": "{:.0f}",
             "FIP-": "{:.0f}",
+            "GB%": "{:.1%}",
+            "Chase%": "{:.1%}",
+            "Con%": "{:.1%}",
+            "SwStr%": "{:.1%}",
+            "CSW%": "{:.1%}",
         }
         for key, value in format_maps.items():
-            self.df[key] = self.df[key].apply(value.format)
+            if key in self.df.columns.to_list():
+                self.df[key] = self.df[key].apply(value.format)
 
         # Replace infs/nans in select stat cols
         self.df["ERA"] = self.df["ERA"].astype(str).replace("inf", "")
@@ -581,8 +591,28 @@ class PlayerData(Stats):
             "K%",
             "BB%",
             "K-BB%",
+            "GB%",
+            "Chase%",
+            "Con%",
+            "SwStr%",
+            "CSW%",
+            "FB Velo",
             "Team",
         ]
+        # Farm pitcher does not have Google Sheets stats
+        if self.suffix != "PR":
+            gsheet_stat_cols = [
+                "GB%",
+                "Chase%",
+                "Con%",
+                "SwStr%",
+                "CSW%",
+                "FB Velo",
+            ]
+            for col in gsheet_stat_cols:
+                if col in col_order:
+                    col_order.remove(col)
+
         # Reordering for age and throwing arm if correct year
         if int(self.year) == datetime.now().year:
             self.df = add_roster_data(self.df, self.suffix, self.year)
@@ -775,6 +805,76 @@ class PlayerData(Stats):
         # ".csv")
         # constFile = ip_pa_df.to_string(new_csv_name)
         return ip_pa_df
+
+    def append_gsheets_pitcher_data(self):
+        """Adds GB%, Chase%, Contact%, SwStr%, CSW%, FB Velo for NPB pitchers
+        """
+        # Read in raw Google Sheet file
+        gsheet_df = pd.read_csv(
+            self.year_dir
+            + "/raw/"
+            + self.year
+            + "GSheetsRaw"
+            + self.suffix
+            + ".csv"
+        )
+
+        # Convert abbreviated names to full team names
+        abbr_dict = {
+            "Hanshin": "Hanshin Tigers",
+            "Hiroshima": "Hiroshima Carp",
+            "DeNA": "DeNA BayStars",
+            "Yomiuri": "Yomiuri Giants",
+            "Yakult": "Yakult Swallows",
+            "Chunichi": "Chunichi Dragons",
+            "ORIX": "ORIX Buffaloes",
+            "Lotte": "Lotte Marines",
+            "SoftBank": "SoftBank Hawks",
+            "Rakuten": "Rakuten Eagles",
+            "Seibu": "Seibu Lions",
+            "Nipponham": "Nipponham Fighters",
+            "Oisix": "Oisix Albirex",
+            "HAYATE": "HAYATE Ventures",
+        }
+        gsheet_df["Team"] = (
+            gsheet_df["Team"]
+            .map(abbr_dict)
+            .infer_objects()
+            .fillna(gsheet_df["Team"])
+            .astype(str)
+        )
+        # Shorten Contact% column name
+        gsheet_df["Con%"] = gsheet_df["Contact%"]
+
+        # Merge only needed columns from gsheet_df
+        self.df = pd.merge(
+            gsheet_df[
+                [
+                    "Pitcher",
+                    "Team",
+                    "GB%",
+                    "Chase%",
+                    "Con%",
+                    "SwStr%",
+                    "CSW%",
+                    "FB Velo",
+                ]
+            ],
+            self.df,
+            on=["Pitcher", "Team"],
+            how="right",
+        )
+
+        # Rescale whole numbers
+        new_pct_stats = [
+            "GB%",
+            "Chase%",
+            "Con%",
+            "SwStr%",
+            "CSW%",
+        ]
+        for x in new_pct_stats:
+            self.df[x] = self.df[x] / 100
 
     def append_positions(self, field_df, pitch_df):
         """Adds the primary position of a player to the player dataframe
@@ -2274,7 +2374,7 @@ def get_stats(year_dir, suffix, year):
     "PR" = reg season pitching stat URLs passed in
     "BF" = farm batting stat URLs passed in
     "PF" = farm pitching stat URLs passed in
-    year (string): The desired npb year to scrape"""
+    year (string): The desired NPB year to scrape"""
     # Make output file
     output_file = make_raw_player_file(year_dir, suffix, year)
     # Grab URLs to scrape
@@ -2290,6 +2390,8 @@ def get_stats(year_dir, suffix, year):
             "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,"
             "HB,SO,WP,BK,R,ER,ERA,Team,\n"
         )
+        # Scrape additional stats from Google Sheets for NPB pitchers only
+        get_gsheets_pitcher_data(year_dir, suffix, year)
     elif suffix == "BF":
         output_file.write(
             "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,"
@@ -2375,6 +2477,37 @@ def get_stats(year_dir, suffix, year):
         sleep(randint(1, 3))
     # After all URLs are scraped, close output file
     output_file.close()
+
+
+def get_gsheets_pitcher_data(year_dir, suffix, year):
+    """Scrapes a Google Sheet to provide additional NPB pitching data.
+
+    Parameters:
+    year_dir (string): The directory that stores the raw, scraped NPB stats
+    suffix (string): Determines header row of csv file and indicates the stats
+    that the URLs point to:
+    "BR" = reg season batting stat URLs passed in
+    "PR" = reg season pitching stat URLs passed in
+    "BF" = farm batting stat URLs passed in
+    "PF" = farm pitching stat URLs passed in
+    year (string): The desired NPB year to scrape"""
+    # Scrape
+    gsheet_url = "https://docs.google.com/spreadsheets/d/1CXYZQwjhfKw-g85V128DBit1TLpquoYKZ6WqgD5GVP4/export?format=csv"
+    print("Connecting to: " + gsheet_url)
+    df = pd.read_csv(gsheet_url)
+
+    # Save file
+    new_csv_name = year + "GSheetsRaw" + suffix + ".csv"
+    raw_dir = os.path.join(year_dir, "raw")
+    if not os.path.exists(raw_dir):
+        os.mkdir(raw_dir)
+    raw_gsheet_name = store_dataframe(df, raw_dir, new_csv_name, "csv")
+
+    # Output to user
+    print(
+        "Raw NPB Pitching statistics from Google Sheets will be stored in: "
+        + raw_gsheet_name
+    )
 
 
 def get_standings(year_dir, suffix, year):
