@@ -400,6 +400,9 @@ def create_stat_cols_filter(df, mode=None):
             "BB%",
             "K-BB%",
             "Team",
+            "GB%",
+            "CSW%",
+            "FB Velo",
         ]
     elif mode == "player_field":
         filter_default = [
@@ -417,15 +420,82 @@ def create_stat_cols_filter(df, mode=None):
             "Blocking",
             "Team",
         ]
+    elif mode == "team_bat":
+        filter_default = [
+            "Team",
+            "PA",
+            "HR",
+            "R",
+            "RBI",
+            "SB",
+            "AVG",
+            "OBP",
+            "SLG",
+            "OPS",
+            "OPS+",
+            "ISO",
+            "K%",
+            "BB%",
+        ]
+    elif mode == "team_pitch":
+        filter_default = [
+            "Team",
+            "IP",
+            "W",
+            "L",
+            "SV",
+            "HLD",
+            "ERA",
+            "FIP",
+            "WHIP",
+            "ERA+",
+            "FIP-",
+            "K%",
+            "BB%",
+            "K-BB%",
+        ]
+    elif mode == "team_field":
+        filter_default = [
+            "TZR",
+            "TZR/143",
+            "RngR",
+            "ARM",
+            "DPR",
+            "ErrR",
+            "Framing",
+            "Blocking",
+            "Team",
+        ]
     else:
         filter_default = df.columns.tolist()
 
-    cols = st.segmented_control(
-        "Statistics",
-        df.columns.tolist(),
-        default=filter_default,
-        selection_mode="multi",
+    # Add "select all" and "select none" columns option (checkbox ver)
+    filter_container = st.container()
+    all_none_filter = st.segmented_control(
+        "Select Stats", options=["All", "None"], selection_mode="single"
     )
+    if all_none_filter == "All":
+        cols = filter_container.segmented_control(
+            "Statistics",
+            df.columns.tolist(),
+            default=df.columns.tolist(),
+            selection_mode="multi",
+        )
+    elif all_none_filter == "None":
+        cols = filter_container.segmented_control(
+            "Statistics",
+            df.columns.tolist(),
+            default=df.columns.tolist()[0],
+            selection_mode="multi",
+        )
+    else:
+        cols = filter_container.segmented_control(
+            "Statistics",
+            df.columns.tolist(),
+            default=filter_default,
+            selection_mode="multi",
+        )
+
     # Sort cols as dataframe
     cols = [c for c in df.columns.tolist() if c in cols]
     return cols
@@ -760,40 +830,40 @@ def get_column_config(suffix=None):
         column_config = {
             "GB%": st.column_config.NumberColumn(
                 format="%.1f%%",
-                help="Ground Ball Rate: The percentage of balls in play " +
-                "against a pitcher that are hit on the ground.",
+                help="Ground Ball Rate: The percentage of balls in play "
+                + "against a pitcher that are hit on the ground.",
             ),
             "Chase%": st.column_config.NumberColumn(
                 format="%.1f%%",
-                help="Chase Rate: The percentage of pitches outside the " +
-                "strike zone that batters swing at. Recognized by " +
-                "PitcherList.com in 2018 as one of the “Big Three” plate " +
-                "discipline metrics.",
+                help="Chase Rate: The percentage of pitches outside the "
+                + "strike zone that batters swing at. Recognized by "
+                + "PitcherList.com in 2018 as one of the “Big Three” plate "
+                + "discipline metrics.",
             ),
             "Con%": st.column_config.NumberColumn(
                 format="%.1f%%",
-                help="Contact Rate: The percentage of swings against a " +
-                "pitcher that result in contact, including both fair and " +
-                "foul balls. Recognized by PitcherList.com in 2018 as one " +
-                "of the “Big Three” plate discipline metrics.",
+                help="Contact Rate: The percentage of swings against a "
+                + "pitcher that result in contact, including both fair and "
+                + "foul balls. Recognized by PitcherList.com in 2018 as one "
+                + "of the “Big Three” plate discipline metrics.",
             ),
             "SwStr%": st.column_config.NumberColumn(
                 format="%.1f%%",
-                help="Swinging Strike Rate: The percentage of a pitcher's " +
-                "total pitches that result in swinging strikes. Recognized " +
-                "by PitcherList.com in 2018 as one of the “Big Three” plate " +
-                "discipline metrics.",
+                help="Swinging Strike Rate: The percentage of a pitcher's "
+                + "total pitches that result in swinging strikes. Recognized "
+                + "by PitcherList.com in 2018 as one of the “Big Three” plate "
+                + "discipline metrics.",
             ),
             "CSW%": st.column_config.NumberColumn(
                 format="%.1f%%",
-                help="Called Strike plus Whiff Rate: The percentage of a " +
-                "pitcher's pitches that result in either a called strike or "
+                help="Called Strike plus Whiff Rate: The percentage of a "
+                + "pitcher's pitches that result in either a called strike or "
                 "a swinging strike.",
             ),
             "FB Velo": st.column_config.NumberColumn(
                 format="%.1f",
-                help="Average Fastball Velocity: The average speed of a " +
-                "pitcher's fastball, measured in miles per hour (mph). The "
+                help="Average Fastball Velocity: The average speed of a "
+                + "pitcher's fastball, measured in miles per hour (mph). The "
                 "NPB league average in 2025 is about 91.5 mph.",
             ),
             "G": st.column_config.NumberColumn(
