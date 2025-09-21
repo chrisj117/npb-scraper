@@ -66,14 +66,8 @@ def create_lineup(team):
     Returns:
         None
     """
-    bat_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025StatsFinalBR.csv"
-    )
-    field_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025FieldingFinalR.csv"
-    )
+    bat_df = hp.load_csv(st.secrets["2025StatsFinalBR_link"])
+    field_df = hp.load_csv(st.secrets["2025FieldingFinalR_link"])
     # Drop all sub-10 PA players to help alleviate merging errors
     bat_df = bat_df.drop(bat_df[bat_df.PA < 10].index)
     try:
@@ -85,7 +79,6 @@ def create_lineup(team):
             "necessary!"
         )
         cumulative_df = pd.DataFrame()
-        exit(-1)
 
     # Drop everyone not in team
     cumulative_df = cumulative_df.drop(
@@ -172,10 +165,7 @@ def create_rotation_bullpen(team):
     Returns:
         None
     """
-    pitch_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025StatsFinalPR.csv"
-    )
+    pitch_df = hp.load_csv(st.secrets["2025StatsFinalPR_link"])
     # Only look at one team
     pitch_df = pitch_df.drop(pitch_df[pitch_df.Team != team].index)
 
@@ -280,14 +270,8 @@ def create_team_stats(team):
     Returns:
         None
     """
-    npb_team_bat_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025TeamBR.csv"
-    )
-    npb_team_pitch_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025TeamPR.csv"
-    )
+    npb_team_bat_df = hp.load_csv(st.secrets["2025TeamBR_link"])
+    npb_team_pitch_df = hp.load_csv(st.secrets["2025TeamPR_link"])
 
     # Get only filtered team + League Average
     team_bat = npb_team_bat_df.drop(

@@ -22,14 +22,7 @@ def main():
     r1c1, r1c2 = st.columns([1, 1])
     with r1c1:
         user_year = hp.create_year_filter()
-        pitch_df = hp.load_csv(
-            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs"
-            + "/heads/master/stats/"
-            + user_year
-            + "/streamlit_src/"
-            + user_year
-            + "StatsFinalPR.csv"
-        )
+        pitch_df = hp.load_csv(st.secrets[user_year + "StatsFinalPR_link"])
         # Drop all sub-5 IP players to help alleviate merging errors
         pitch_df = pitch_df.drop(pitch_df[pitch_df.IP < 5].index)
     with r1c2:

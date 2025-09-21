@@ -24,22 +24,8 @@ def main():
     r1c1, r1c2 = st.columns([1, 1])
     with r1c1:
         user_year = hp.create_year_filter()
-        bat_df = hp.load_csv(
-            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs"
-            + "/heads/master/stats/"
-            + user_year
-            + "/streamlit_src/"
-            + user_year
-            + "StatsFinalBR.csv"
-        )
-        field_df = hp.load_csv(
-            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs"
-            + "/heads/master/stats/"
-            + user_year
-            + "/streamlit_src/"
-            + user_year
-            + "FieldingFinalR.csv"
-        )
+        bat_df = hp.load_csv(st.secrets[user_year + "StatsFinalBR_link"])
+        field_df = hp.load_csv(st.secrets[user_year + "FieldingFinalR_link"])
         # Drop all sub-10 PA players to help alleviate merging errors
         bat_df = bat_df.drop(bat_df[bat_df.PA < 10].index)
     with r1c2:

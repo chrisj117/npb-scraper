@@ -7,7 +7,7 @@ def main():
     """Main navigational driver for the Streamlit app"""
 
     st.set_page_config(page_title="YC Dashboard", page_icon="⚾")
-    st.logo("https://sp-ao.shortpixel.ai/client/to_webp,q_glossy,ret_img,w_120,h_120/https://www.yakyucosmo.com/wp-content/uploads/2024/08/Yakyu-Cosmo-Logo3-transparent.png")
+    st.logo(st.secrets["logo_link"])
 
     dashboard = [
         st.Page("pages/home.py", title="Home"),

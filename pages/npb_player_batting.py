@@ -18,14 +18,8 @@ def main():
         None
     """
     st.set_page_config(layout="wide")
-    lead_bat_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025LeadersBR.csv"
-    )
-    player_bat_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025StatsFinalBR.csv"
-    )
+    lead_bat_df = hp.load_csv(st.secrets["2025LeadersBR_link"])
+    player_bat_df = hp.load_csv(st.secrets["2025StatsFinalBR_link"])
 
     # Split filters away from dataframe
     with st.container(border=True):

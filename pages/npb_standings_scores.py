@@ -17,10 +17,7 @@ def main():
     """
     st.set_page_config(layout="wide")
     st.write("Central Standings")
-    central_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025StandingsFinalC.csv"
-    )
+    central_df = hp.load_csv(st.secrets["2025StandingsFinalC_link"])
     st.dataframe(
         central_df,
         use_container_width=True,
@@ -30,10 +27,7 @@ def main():
     )
 
     st.write("Pacific Standings")
-    pacific_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025StandingsFinalP.csv"
-    )
+    pacific_df = hp.load_csv(st.secrets["2025StandingsFinalP_link"])
     st.dataframe(
         pacific_df,
         use_container_width=True,
@@ -43,20 +37,17 @@ def main():
     )
 
     st.write("Latest Scores")
-    display_df = hp.load_csv(
-        "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs/heads/"
-        + "master/stats/2025/streamlit_src/2025DailyScoresFinalR.csv"
-    )
+    daily_df = hp.load_csv(st.secrets["2025DailyScoresFinalR_link"])
     # Compress columns into one
-    display_df = display_df.astype(str)
-    display_df["Scores"] = display_df[["RunsHome", "RunsAway"]].agg(
+    daily_df = daily_df.astype(str)
+    daily_df["Scores"] = daily_df[["RunsHome", "RunsAway"]].agg(
         " - ".join, axis=1
     )
-    display_df["Results"] = display_df[["HomeTeam", "Scores", "AwayTeam"]].agg(
+    daily_df["Results"] = daily_df[["HomeTeam", "Scores", "AwayTeam"]].agg(
         " ".join, axis=1
     )
     st.dataframe(
-        display_df["Results"],
+        daily_df["Results"],
         use_container_width=True,
         hide_index=True,
         row_height=25,

@@ -9,10 +9,10 @@ import requests
 
 def load_csv(url=None):
     """
-    Loads a csv from a Github link and returns it as a dataframe.
+    Loads a csv from a link and returns it as a dataframe.
 
     Parameters:
-        url (str): The Github raw csv link to load.
+        url (str): The raw csv link to load.
 
     Returns:
         (dataframe/None): Returns none if link is unable to be loaded, or a
@@ -22,7 +22,7 @@ def load_csv(url=None):
     response = requests.get(url, timeout=10)
     if response.status_code == 200:
         return pd.read_csv(StringIO(response.text))
-    st.error("Failed to load data from GitHub.")
+    st.error("Failed to load raw data.")
     return None
 
 
@@ -246,14 +246,7 @@ def display_player_percentile(df, name, year, suffix):
     # Append League Average stats
     if suffix in ("BR"):
         # Extract only league average row from Team stats
-        team_df = load_csv(
-            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs"
-            + "/heads/master/stats/"
-            + year
-            + "/streamlit_src/"
-            + year
-            + "TeamBR.csv"
-        )
+        team_df = load_csv(st.secrets[year + "TeamBR_link"])
         lg_avg = team_df[team_df["Team"] == "League Average"]
         lg_avg.index = [0]
         # Get PA from player df
@@ -265,14 +258,7 @@ def display_player_percentile(df, name, year, suffix):
         raw_data = raw_data[raw_data.columns.intersection(plot_cols)]
     elif suffix in ("PR"):
         # Extract only league average row from Team stats
-        team_df = load_csv(
-            "https://raw.githubusercontent.com/chrisj117/npb-scraper/refs"
-            + "/heads/master/stats/"
-            + year
-            + "/streamlit_src/"
-            + year
-            + "TeamPR.csv"
-        )
+        team_df = load_csv(st.secrets[year + "TeamPR_link"])
         lg_avg = team_df[team_df["Team"] == "League Average"]
         lg_avg.index = [0]
         # Get IP from player df
