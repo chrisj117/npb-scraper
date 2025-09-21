@@ -106,12 +106,12 @@ def create_lineup(team):
         starter = pos_df[pos_df["Inn"] == pos_df["Inn"].max()]
         lineup_df = pd.concat([starter, lineup_df])
 
-    # Reserves = top 3 guys with most PA but not in top 9
+    # Reserves = top 4 guys with most PA but not in top 9
     starter_list = lineup_df["Player"].tolist()
     reserve = (
         cumulative_df[~cumulative_df["Player"].isin(starter_list)]
         .sort_values("PA", ascending=False)
-        .head(3)
+        .head(4)
     )
     lineup_df = pd.concat([lineup_df, reserve])
 

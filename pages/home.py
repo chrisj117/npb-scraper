@@ -7,10 +7,6 @@ def main():
     """Home page that provides descriptions of stats offered"""
 
     st.set_page_config(layout="centered")
-    st.image(
-        "https://sp-ao.shortpixel.ai/client/to_webp,q_glossy,ret_img,w_120,h_120/https://www.yakyucosmo.com/wp-content/uploads/2024/08/Yakyu-Cosmo-Logo3-transparent.png",
-        width=50,
-    )
     st.title("Yakyu Cosmopolitan Dashboard")
 
     st.write(

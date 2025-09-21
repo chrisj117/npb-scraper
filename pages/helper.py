@@ -1195,7 +1195,7 @@ def get_column_config(suffix=None):
                 + "ground ball double plays.",
             ),
         }
-    elif suffix in ("RF"):
+    elif suffix in ("fielding"):
         column_config = {
             "ARM": st.column_config.NumberColumn(
                 format="%.1f",
@@ -1255,6 +1255,131 @@ def get_column_config(suffix=None):
             ),
             "Age": st.column_config.TextColumn(
                 help="Age: How old a player is on June 30th of that year.",
+            ),
+        }
+    elif suffix in ("standings"):
+        column_config = {
+            "G": st.column_config.NumberColumn(
+                help="Games",
+            ),
+            "W": st.column_config.NumberColumn(
+                help="Wins",
+            ),
+            "L": st.column_config.NumberColumn(
+                help="Losses",
+            ),
+            "T": st.column_config.NumberColumn(
+                help="Ties",
+            ),
+            "PCT": st.column_config.NumberColumn(
+                format="%.3f",
+                help="Winning Percentage",
+            ),
+            "GB": st.column_config.TextColumn(
+                help="Games Behind",
+            ),
+            "RS": st.column_config.TextColumn(
+                help="Runs Scored",
+            ),
+            "RA": st.column_config.NumberColumn(
+                help="Runs Against",
+            ),
+            "Diff": st.column_config.NumberColumn(
+                format="%.0f",
+                help="Run Differential",
+            ),
+            "XPCT": st.column_config.NumberColumn(
+                format="%.3f",
+                help="Pythagorean Winning Percentage",
+            ),
+            "Home": st.column_config.TextColumn(
+                help="Home Record",
+            ),
+            "Road": st.column_config.TextColumn(
+                help="Road Record",
+            ),
+            "vs T": st.column_config.TextColumn(
+                help="Record vs. Hanshin Tigers",
+            ),
+            "vs DB": st.column_config.TextColumn(
+                help="Record vs. DeNA BayStars",
+            ),
+            "vs G": st.column_config.TextColumn(
+                help="Record vs. Yomiuri Giants",
+            ),
+            "vs C": st.column_config.TextColumn(
+                help="Record vs. Hiroshima Carp",
+            ),
+            "vs D": st.column_config.TextColumn(
+                help="Record vs. Chunichi Dragons",
+            ),
+            "vs S": st.column_config.TextColumn(
+                help="Record vs. Yakult Swallows",
+            ),
+            "Inter": st.column_config.TextColumn(
+                help="Interleague Record",
+            ),
+            "vs H": st.column_config.TextColumn(
+                help="Record vs. SoftBank Hawks",
+            ),
+            "vs F": st.column_config.TextColumn(
+                help="Record vs. Nipponham Fighters",
+            ),
+            "vs B": st.column_config.TextColumn(
+                help="Record vs. ORIX Buffaloes",
+            ),
+            "vs E": st.column_config.TextColumn(
+                help="Record vs. Rakuten Eagles",
+            ),
+            "vs L": st.column_config.TextColumn(
+                help="Record vs. Seibu Lions",
+            ),
+            "vs M": st.column_config.TextColumn(
+                help="Record vs. Lotte Marines",
+            ),
+        }
+    elif suffix in ("team_summary"):
+        column_config = {
+            "W": st.column_config.NumberColumn(
+                help="Wins",
+            ),
+            "L": st.column_config.NumberColumn(
+                help="Losses",
+            ),
+            "PCT": st.column_config.NumberColumn(
+                format="%.3f",
+                help="Winning Percentage",
+            ),
+            "Diff": st.column_config.NumberColumn(
+                format="%.0f",
+                help="Run Differential",
+            ),
+            "HR": st.column_config.NumberColumn(
+                help="Home Runs",
+            ),
+            "SB": st.column_config.NumberColumn(
+                help="Stolen Bases",
+            ),
+            "OPS+": st.column_config.NumberColumn(
+                help="On Base plus Slugging Plus",
+            ),
+            "ERA+": st.column_config.NumberColumn(
+                help="Earned Run Average Plus",
+            ),
+            "FIP-": st.column_config.NumberColumn(
+                help="Fielding Independent Pitching Minus",
+            ),
+            "K-BB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Strikeout Rate minus Walk Rate",
+            ),
+            "wSB": st.column_config.NumberColumn(
+                format="%.1f",
+                help="Weighted Stolen Base Runs",
+            ),
+            "TZR": st.column_config.NumberColumn(
+                format="%.1f",
+                help="Total Zone Runs",
             ),
         }
     else:
