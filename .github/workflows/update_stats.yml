@@ -2,8 +2,9 @@ name: Update stats
 
 on:
   # Runs at 06:15PM/18:15 UTC everyday and can run manually
-  schedule:
-    - cron: "15 18 * * *"
+  #schedule:
+  #  - cron: "15 18 * * *"
+  # 9/21/2025 - daily trigger is deprecated, migrated to another update service
   workflow_dispatch:
 
 jobs:
