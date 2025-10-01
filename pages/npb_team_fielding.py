@@ -44,7 +44,7 @@ def main():
         use_container_width=True,
         row_height=25,
         hide_index=True,
-        column_config=hp.get_column_config("RF"),
+        column_config=hp.get_column_config("fielding"),
     )
 
 

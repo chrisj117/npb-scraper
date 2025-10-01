@@ -1159,24 +1159,29 @@ def get_column_config(suffix=None):
                 help="Position: A player's position on the field.",
             ),
             "Range": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Range Runs: Defensive runs through fielding batted "
                 + "balls.",
             ),
             "Def Value": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Position-Adjusted Total Zone Runs: A player's "
                 + "position-adjusted fielding value per 143 games or 1287 "
                 + "innings (a full NPB season).",
             ),
             "Arm": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Arm Runs: Defensive runs through throwing. For "
                 + "outfielders, this includes throwing out and preventing "
                 + "runners from advancing bases. For catchers, this includes "
                 + "preventing stolen bases.",
             ),
             "Framing": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Framing: A catcher's framing value.",
             ),
             "DPR": st.column_config.NumberColumn(
+                format="%.1f",
                 help="Double Play Runs: Defensive runs through fielding "
                 + "ground ball double plays.",
             ),
