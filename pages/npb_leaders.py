@@ -111,10 +111,10 @@ def main():
                 display_df = hp.convert_pct_cols_to_float(display_df)
                 # Rank by given column
                 if key in flip_rank_stats:
-                    display_df["Rank"] = display_df[key].rank(method="max")
+                    display_df["Rank"] = display_df[key].rank(method="min")
                 else:
                     display_df["Rank"] = display_df[key].rank(
-                        method="max", ascending=False
+                        method="min", ascending=False
                     )
                 # Extract needed columns
                 display_df = display_df[
