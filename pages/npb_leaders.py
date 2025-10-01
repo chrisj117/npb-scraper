@@ -58,12 +58,13 @@ def main():
         "CSW%": lead_pitch_df,
         "FB Velo": player_pitch_df,
     }
+    flip_rank_stats = ["ERA", "FIP", "WHIP"]
 
     # User filters
     stat_col1, stat_col2 = st.columns([1.5, 8.5], vertical_alignment="center")
     with stat_col1:
         stat_dicts = []
-        user_bat_pitch = st.segmented_control(
+        user_bat_pitch = st.pills(
             "Statistics",
             ["Batting", "Pitching"],
             selection_mode="multi",
@@ -106,10 +107,15 @@ def main():
 
                 # Filter by league
                 display_df = value[value["League"].isin(user_league)].copy()
+                # Convert to correct notation for Streamlit
+                display_df = hp.convert_pct_cols_to_float(display_df)
                 # Rank by given column
-                display_df["Rank"] = display_df[key].rank(
-                    method="max", ascending=False
-                )
+                if key in flip_rank_stats:
+                    display_df["Rank"] = display_df[key].rank(method="max")
+                else:
+                    display_df["Rank"] = display_df[key].rank(
+                        method="max", ascending=False
+                    )
                 # Extract needed columns
                 display_df = display_df[
                     ["Rank", name_col, key, "Team"]
