@@ -26,26 +26,12 @@ def main():
 
     st.set_page_config(layout="centered")
     # User dropdown box
-    team_list = [
-        "Hanshin Tigers",
-        "Hiroshima Carp",
-        "DeNA BayStars",
-        "Yomiuri Giants",
-        "Yakult Swallows",
-        "Chunichi Dragons",
-        "ORIX Buffaloes",
-        "Lotte Marines",
-        "SoftBank Hawks",
-        "Rakuten Eagles",
-        "Seibu Lions",
-        "Nipponham Fighters",
-    ]
-    team = st.selectbox("Team", team_list)
+    user_team = hp.create_team_filter(mode="npb")
 
     # Streamlit dataframe displays
-    create_lineup(team)
-    create_rotation_bullpen(team)
-    create_team_stats(team)
+    create_lineup(user_team)
+    create_rotation_bullpen(user_team)
+    create_team_stats(user_team)
 
 
 def create_lineup(team):
