@@ -60,11 +60,12 @@ def main():
         arg_bypass = True
         npb_scrape_yn = "Y"
         farm_scrape_yn = "Y"
+        post_scrape_yn = "Y"
         stat_zip_yn = "N"
     elif len(sys.argv) > 2:
         print(
             "ERROR: Too many arguments. Try using the desired stat year"
-            " or use '-a' to scrape for the current year."
+            + " or use '-a' to scrape for the current year."
         )
         sys.exit("Exiting...")
     else:
@@ -73,10 +74,11 @@ def main():
         scrape_year = get_scrape_year()
         npb_scrape_yn = get_user_choice("R")
         farm_scrape_yn = get_user_choice("F")
+        post_scrape_yn = get_user_choice("P")
         stat_zip_yn = get_user_choice("Z")
 
     if check_input_files(rel_dir, scrape_year) is True:
-        input("Press Enter to exit. ")
+        _ = input("Press Enter to exit. ")
         return -1
 
     # Create year directory
@@ -200,13 +202,36 @@ def main():
     farm_team_fielding.output_final()
     print("Farm statistics finished!\n")
 
+    # Post season stat scraping
+    if post_scrape_yn == "Y":
+        get_post_season_stats(year_dir, "BP", scrape_year)
+        get_post_season_stats(year_dir, "PP", scrape_year)
+    # Post season player stats
+    post_bat_player_stats = PlayerData(stats_dir, year_dir, "BP", scrape_year)
+    post_pitch_player_stats = PlayerData(
+        stats_dir, year_dir, "PP", scrape_year
+    )
+    # Post season team stats
+    post_bat_team_stats = TeamData(
+        post_bat_player_stats.df, stats_dir, year_dir, "BP", scrape_year
+    )
+    post_pitch_team_stats = TeamData(
+        post_pitch_player_stats.df, stats_dir, year_dir, "PP", scrape_year
+    )
+    # Post season output
+    post_bat_player_stats.output_final()
+    post_pitch_player_stats.output_final()
+    post_bat_team_stats.output_final()
+    post_pitch_team_stats.output_final()
+    print("Post season statistics finished!\n")
+
     # Make upload zips for manual uploads/debugging
     if stat_zip_yn == "Y":
         print("\nCreating upload zip for given year.")
         make_zip(year_dir, "S", scrape_year)
 
     if arg_bypass is False:
-        input("Press Enter to exit. ")
+        _ = input("Press Enter to exit. ")
         return 1
     return 0
 
@@ -273,9 +298,17 @@ class PlayerData(Stats):
             metrics.
         org_bat():
             Organizes raw batting statistics and calculates additional metrics.
+        org_post_pitch():
+            TODO
+        org_post_bat():
+            TODO
+        fix_raw_pitch_col():
+            TODO
         get_team_games():
             Combines team games played into a single DataFrame for IP/PA
             calculations.
+        append_gsheets_pitcher_data():
+            TODO
         append_positions(field_df, pitch_df):
             Adds the primary position of a player to the player DataFrame."""
 
@@ -285,11 +318,18 @@ class PlayerData(Stats):
         self.df = pd.read_csv(
             self.year_dir + "/raw/" + year + "StatsRaw" + suffix + ".csv"
         )
+        # Fix raw IP cols in pitching
+        if self.suffix in ("PR", "PF", "PP"):
+            self.fix_raw_pitch_col()
         # Modify df for correct stats
         if self.suffix in ("BF", "BR"):
             self.org_bat()
         elif self.suffix in ("PF", "PR"):
             self.org_pitch()
+        elif self.suffix == "BP":
+            self.org_post_bat()
+        elif self.suffix == "PP":
+            self.org_post_pitch()
 
     def output_final(self):
         """Outputs final files for upload using the filtered and organized
@@ -303,6 +343,8 @@ class PlayerData(Stats):
             upload_dir = os.path.join(self.year_dir, "npb")
         elif self.suffix in ("PF", "BF"):
             upload_dir = os.path.join(self.year_dir, "farm")
+        elif self.suffix in ("PP", "BP"):
+            upload_dir = os.path.join(self.year_dir, "post_season")
 
         # For batting, remove all players with PA <= 0
         if self.suffix in ("BF", "BR"):
@@ -316,10 +358,10 @@ class PlayerData(Stats):
         st_filename = self.year + "StatsFinal" + self.suffix + ".csv"
         st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
 
-        # Add blank Rank column for Wordpress table counter
-        self.df["Rank"] = ""
-        move_col = self.df.pop("Rank")
-        self.df.insert(0, "Rank", move_col)
+        # Add blank # column for Wordpress table counter
+        self.df["#"] = ""
+        move_col = self.df.pop("#")
+        self.df.insert(0, "#", move_col)
         # Make deep copy of original df to avoid HTML in df's team/player names
         final_df = self.df.copy()
         # Convert player/team names to HTML that contains appropriate URLs
@@ -335,11 +377,13 @@ class PlayerData(Stats):
         # Make deep copy again for leader's file
         leader_df = self.df.copy()
         # Get df with number of games played by each team for IP/PA drop consts
-        game_df = self.get_team_games()
-        # Add new column (called 'GTeam') for team's games played
-        leader_df = leader_df.merge(
-            game_df, on="Team", suffixes=(None, "Team")
-        )
+        # Post season stats = do not drop any players
+        if self.suffix not in ("BP", "PP"):
+            game_df = self.get_team_games()
+            # Add new column (called 'GTeam') for team's games played
+            leader_df = leader_df.merge(
+                game_df, on="Team", suffixes=(None, "Team")
+            )
 
         # Leader file output
         if self.suffix in ("PR", "PF"):
@@ -435,39 +479,37 @@ class PlayerData(Stats):
                 + final_filename
             )
 
+        elif self.suffix in ("BP", "PP"):
+            # Fix NaNs in League col
+            self.df["League"] = self.df["League"].fillna("")
+            # Print organized dataframe to file
+            new_csv_alt = (
+                alt_dir + "/" + self.year + "TeamAlt" + self.suffix + ".csv"
+            )
+            self.df.to_string(new_csv_alt)
+            # Make output copy to avoid modifying original df
+            final_df = self.df.copy()
+            # Insert HTML code for team names
+            final_df = convert_team_to_html(final_df, self.year, "Full")
+            # Print output file for upload
+            new_csv_final = (
+                upload_dir + "/" + self.year + "Team" + self.suffix + ".csv"
+            )
+            final_df.to_csv(new_csv_final, index=False)
+
+            # Pitching TeamAlt and Team file location outputs
+            if self.suffix in ("PP", "BP"):
+                print(
+                    "The final organized team pitching results will be stored "
+                    "in: " + new_csv_final
+                )
+                print(
+                    "An alternative view of team pitching results will be stored "
+                    "in: " + new_csv_alt
+                )
+
     def org_pitch(self):
         """Organize the raw pitching stat csv and add new stats"""
-        # Some IP entries can be '+', replace with 0 for conversions and
-        # calculations
-        self.df["IP"] = self.df["IP"].astype(str).replace("+", "0")
-        # Some ERA entries can be '----', replace with 0 and convert to float
-        # for calculations
-        self.df["ERA"] = self.df["ERA"].astype(str).replace("----", "inf")
-        self.df["ERA"] = self.df["ERA"].astype(float)
-        # Convert all NaN to 0 (as floats)
-        if self.suffix == "PR":
-            self.df.iloc[:, 11] = self.df.iloc[:, 11].fillna(0)
-            self.df.iloc[:, 11] = self.df.iloc[:, 11].astype(float)
-            # Combine the incorrectly split IP stat columns
-            self.df["IP"] = self.df["IP"].astype(float)
-            self.df["IP"] = self.df["IP"] + self.df.iloc[:, 11]
-            # Drop unnamed column that held IP column decimals
-            self.df.drop(self.df.columns[11], axis=1, inplace=True)
-        # Farm stats are missing HLD column, so bad format column is #10
-        elif self.suffix == "PF":
-            self.df.iloc[:, 10] = self.df.iloc[:, 10].fillna(0)
-            self.df.iloc[:, 10] = self.df.iloc[:, 10].astype(float)
-            self.df["IP"] = self.df["IP"].astype(float)
-            self.df["IP"] = self.df["IP"] + self.df.iloc[:, 10]
-            self.df.drop(self.df.columns[10], axis=1, inplace=True)
-        # Drop last, BK, and PCT columns
-        self.df.drop(
-            self.df.columns[len(self.df.columns) - 1], axis=1, inplace=True
-        )
-        self.df.drop(["BK", "PCT"], axis=1, inplace=True)
-        # IP ".0 .1 .2" fix
-        self.df["IP"] = convert_ip_column_in(self.df, "IP")
-
         # Counting stat column totals
         total_era = 9 * (self.df["ER"].sum() / self.df["IP"].sum())
         total_fip = (
@@ -558,80 +600,111 @@ class PlayerData(Stats):
         self.df["FIP-"] = self.df["FIP-"].astype(str).replace("inf", "")
         self.df["WHIP"] = self.df["WHIP"].astype(str).replace("inf", "")
         self.df["Diff"] = self.df["Diff"].astype(str).replace("nan", "")
+        self.df = select_league(self.df, self.suffix)
         # Reordering columns
-        col_order = [
-            "Pitcher",
-            "G",
-            "W",
-            "L",
-            "SV",
-            "HLD",
-            "CG",
-            "SHO",
-            "BF",
-            "IP",
-            "H",
-            "HR",
-            "SO",
-            "BB",
-            "IBB",
-            "HB",
-            "WP",
-            "R",
-            "ER",
-            "ERA",
-            "FIP",
-            "kwERA",
-            "WHIP",
-            "ERA+",
-            "FIP-",
-            "kwERA-",
-            "Diff",
-            "HR%",
-            "K%",
-            "BB%",
-            "K-BB%",
-            "GB%",
-            "Chase%",
-            "Con%",
-            "SwStr%",
-            "CSW%",
-            "FB Velo",
-            "Team",
-        ]
-        # Farm pitcher does not have Google Sheets stats
-        if self.suffix != "PR":
-            gsheet_stat_cols = [
+        if self.suffix in ("PR", "PF"):
+            col_order = [
+                "Pitcher",
+                "G",
+                "W",
+                "L",
+                "SV",
+                "HLD",
+                "CG",
+                "SHO",
+                "BF",
+                "IP",
+                "H",
+                "HR",
+                "SO",
+                "BB",
+                "IBB",
+                "HB",
+                "WP",
+                "R",
+                "ER",
+                "ERA",
+                "FIP",
+                "kwERA",
+                "WHIP",
+                "ERA+",
+                "FIP-",
+                "kwERA-",
+                "Diff",
+                "HR%",
+                "K%",
+                "BB%",
+                "K-BB%",
                 "GB%",
                 "Chase%",
                 "Con%",
                 "SwStr%",
                 "CSW%",
                 "FB Velo",
+                "Team",
+                "League",
             ]
-            for col in gsheet_stat_cols:
-                if col in col_order:
-                    col_order.remove(col)
-
-        # Reordering for age and throwing arm if correct year
-        if int(self.year) == datetime.now().year:
+            # Farm pitching does not have Google Sheets stats
+            if self.suffix != "PR":
+                gsheet_stat_cols = [
+                    "GB%",
+                    "Chase%",
+                    "Con%",
+                    "SwStr%",
+                    "CSW%",
+                    "FB Velo",
+                ]
+                for col in gsheet_stat_cols:
+                    if col in col_order:
+                        col_order.remove(col)
+            if self.suffix == "PF":
+                col_order.remove("HLD")
+            # Reordering for age and throwing arm if correct year
             self.df = add_roster_data(self.df, self.suffix, self.year)
             col_order.insert(-1, "Age")
             col_order.insert(-1, "T")
-        if self.suffix == "PF":
-            col_order.remove("HLD")
+
+        elif self.suffix == "PP":
+            col_order = [
+                "Pitcher",
+                "G",
+                "W",
+                "L",
+                "SV",
+                "CG",
+                "SHO",
+                "BF",
+                "IP",
+                "H",
+                "HR",
+                "SO",
+                "BB",
+                "IBB",
+                "HB",
+                "WP",
+                "R",
+                "ER",
+                "ERA",
+                "FIP",
+                "kwERA",
+                "WHIP",
+                "ERA+",
+                "FIP-",
+                "kwERA-",
+                "Diff",
+                "HR%",
+                "K%",
+                "BB%",
+                "K-BB%",
+                "Team",
+                "League",
+            ]
         self.df = self.df[col_order]
         # Changing .33 to .1 and .66 to .2 in the IP column
         self.df["IP"] = convert_ip_column_out(self.df, "IP")
-        self.df = select_league(self.df, self.suffix)
 
     def org_bat(self):
         """Organize the raw batting stat csv and add additional stats"""
-        # Drop last column
-        self.df.drop(
-            self.df.columns[len(self.df.columns) - 1], axis=1, inplace=True
-        )
-
         # Counting stat column totals used in other calculations
         total_obp = (
             self.df["H"].sum() + self.df["BB"].sum() + self.df["HP"].sum()
@@ -720,56 +793,229 @@ class PlayerData(Stats):
         for key, value in format_maps.items():
             self.df[key] = self.df[key].apply(value.format)
         # Replace all NaN in BB/K, wOBA and BABIP with ''
-        self.df["BB/K"] = self.df["BB/K"].astype(str)
-        self.df["BB/K"] = self.df["BB/K"].str.replace("nan", "")
-        self.df["BABIP"] = self.df["BABIP"].astype(str)
-        self.df["BABIP"] = self.df["BABIP"].str.replace("nan", "")
+        nan_cols = ["AVG", "OBP", "SLG", "OPS", "OPS+", "ISO", "BB/K", "BABIP"]
+        for col in nan_cols:
+            self.df[col] = self.df[col].astype(str)
+            self.df[col] = self.df[col].str.replace("nan", "")
         # Replace BB/K infs with '1.00' (same format as MLB website)
         self.df["BB/K"] = self.df["BB/K"].str.replace("inf", "1.00")
+        self.df = select_league(self.df, self.suffix)
         # Add age, (temp) position, and throwing/batting arm columns
-        self.df["Pos"] = np.nan
-        col_order = [
-            "Player",
-            "G",
-            "PA",
-            "AB",
-            "R",
-            "H",
-            "2B",
-            "3B",
-            "HR",
-            "TB",
-            "RBI",
-            "SB",
-            "CS",
-            "SH",
-            "SF",
-            "SO",
-            "BB",
-            "IBB",
-            "HP",
-            "GDP",
-            "AVG",
-            "OBP",
-            "SLG",
-            "OPS",
-            "OPS+",
-            "ISO",
-            "BABIP",
-            "TTO%",
-            "K%",
-            "BB%",
-            "BB/K",
-            "wSB",
-            "Pos",
-            "Team",
-        ]
-        if int(self.year) == datetime.now().year:
+        if self.suffix in ("BR", "BF"):
+            self.df["Pos"] = np.nan
             self.df = add_roster_data(self.df, self.suffix, self.year)
-            col_order.insert(-2, "Age")
-            col_order.insert(-1, "B")
+            col_order = [
+                "Player",
+                "G",
+                "PA",
+                "AB",
+                "R",
+                "H",
+                "2B",
+                "3B",
+                "HR",
+                "TB",
+                "RBI",
+                "SB",
+                "CS",
+                "SH",
+                "SF",
+                "SO",
+                "BB",
+                "IBB",
+                "HP",
+                "GDP",
+                "AVG",
+                "OBP",
+                "SLG",
+                "OPS",
+                "OPS+",
+                "ISO",
+                "BABIP",
+                "TTO%",
+                "K%",
+                "BB%",
+                "BB/K",
+                "wSB",
+                "Age",
+                "Pos",
+                "B",
+                "Team",
+                "League",
+            ]
+        # Post season lacks certain stats due to no fielding input
+        elif self.suffix == "BP":
+            col_order = [
+                "Player",
+                "G",
+                "PA",
+                "AB",
+                "R",
+                "H",
+                "2B",
+                "3B",
+                "HR",
+                "TB",
+                "RBI",
+                "SB",
+                "CS",
+                "SH",
+                "SF",
+                "SO",
+                "BB",
+                "IBB",
+                "HP",
+                "GDP",
+                "AVG",
+                "OBP",
+                "SLG",
+                "OPS",
+                "OPS+",
+                "ISO",
+                "BABIP",
+                "TTO%",
+                "K%",
+                "BB%",
+                "BB/K",
+                "wSB",
+                "Team",
+                "League",
+            ]
+            self.df = self.df.fillna("")
+        else:
+            col_order = self.df.columns.tolist()
         self.df = self.df[col_order]
         self.df = select_league(self.df, self.suffix)
+
+    def org_post_pitch(self):
+        """Organize the raw pitching stat csv and add new stats
+        (CONVERSION OF pitchOrg())
+        # TODO: docs
+
+        Parameters: N/A
+
+        Returns: N/A"""
+        # Combine duplicate player entries
+        agg_functions = {
+            "Pitcher": "first",
+            "G": "sum",
+            "W": "sum",
+            "L": "sum",
+            "SV": "sum",
+            "CG": "sum",
+            "SHO": "sum",
+            "BF": "sum",
+            "IP": "sum",
+            "H": "sum",
+            "HR": "sum",
+            "BB": "sum",
+            "IBB": "sum",
+            "HB": "sum",
+            "SO": "sum",
+            "WP": "sum",
+            "R": "sum",
+            "ER": "sum",
+            "ERA": "sum",
+            "Team": "first",
+        }
+        self.df = self.df.groupby(self.df["Pitcher"], as_index=False).agg(
+            agg_functions
+        )
+        # Determine cumulative ERA between all rounds
+        self.df["ERA"] = (9 * self.df["ER"]) / self.df["IP"]
+        self.df = translate_players(self.df, self.suffix, self.year)
+        self.org_pitch()
+
+    def org_post_bat(self):
+        """Organize the raw batting stat csv and add additional stats
+        (CONVERSION OF batOrg())
+        # TODO: docs
+
+        Parameters: N/A
+
+        Returns: N/A"""
+        # Remove all players with 0 PA
+        self.df = self.df.drop(self.df[self.df.PA == 0].index)
+        # Convert numeric columns to proper type
+        num_cols = self.df.columns.tolist()
+        num_cols.remove("Player")
+        num_cols.remove("Team")
+        for col in num_cols:
+            self.df[col] = pd.to_numeric(self.df[col], errors="coerce")
+        self.df = self.df.fillna(0)
+        # Combine duplicate player entries
+        agg_functions = {
+            "Player": "first",
+            "G": "sum",
+            "PA": "sum",
+            "AB": "sum",
+            "R": "sum",
+            "H": "sum",
+            "2B": "sum",
+            "3B": "sum",
+            "HR": "sum",
+            "TB": "sum",
+            "RBI": "sum",
+            "SB": "sum",
+            "CS": "sum",
+            "SH": "sum",
+            "SF": "sum",
+            "BB": "sum",
+            "IBB": "sum",
+            "HP": "sum",
+            "SO": "sum",
+            "GDP": "sum",
+            "AVG": "first",
+            "SLG": "first",
+            "OBP": "first",
+            "Team": "first",
+        }
+        self.df = self.df.groupby(self.df["Player"], as_index=False).agg(
+            agg_functions
+        )
+        self.df = translate_players(self.df, self.suffix, self.year)
+        # Determine cumulative AVG SLG and OBP between all rounds
+        self.df["AVG"] = self.df["H"] / self.df["AB"]
+        self.df["SLG"] = self.df["TB"] / self.df["AB"]
+        self.df["OBP"] = (self.df["H"] + self.df["HP"] + self.df["BB"]) / (
+            self.df["AB"] + self.df["BB"] + self.df["HP"] + self.df["SF"]
+        )
+        self.org_bat()
+
+    def fix_raw_pitch_col(self):
+        # TODO: documentation
+        # Some IP entries can be '+', replace with 0 for conversions and
+        # calculations
+        self.df["IP"] = self.df["IP"].astype(str).replace("+", "0")
+        # Original scraped tables split IP into 2 columns
+        # Convert all NaN to 0 (as floats)
+        if self.suffix in "PR" or (
+            self.suffix == "PP" and int(self.year) <= 2024
+        ):
+            self.df.iloc[:, 11] = self.df.iloc[:, 11].fillna(0)
+            self.df.iloc[:, 11] = self.df.iloc[:, 11].astype(float)
+            # Combine the incorrectly split IP stat columns
+            self.df["IP"] = self.df["IP"].astype(float)
+            self.df["IP"] = self.df["IP"] + self.df.iloc[:, 11]
+            # Drop unnamed column that held IP column decimals
+            self.df.drop(self.df.columns[11], axis=1, inplace=True)
+        # Farm stats are missing HLD column, so bad format column is #10
+        elif self.suffix == "PF":
+            self.df.iloc[:, 10] = self.df.iloc[:, 10].fillna(0)
+            self.df.iloc[:, 10] = self.df.iloc[:, 10].astype(float)
+            self.df["IP"] = self.df["IP"].astype(float)
+            self.df["IP"] = self.df["IP"] + self.df.iloc[:, 10]
+            self.df.drop(self.df.columns[10], axis=1, inplace=True)
+        # For tables past post season 2025 (new table doesnt split IP into 2 cols)
+        elif self.suffix == "PP" and int(self.year) >= 2025:
+            # Convert back to float after finding bad chars
+            self.df["IP"] = self.df["IP"].astype(float)
+        # Some ERA entries can be '----', replace with 0 and convert to float
+        # for calculations
+        self.df["ERA"] = self.df["ERA"].astype(str).replace("----", "inf")
+        self.df["ERA"] = self.df["ERA"].astype(float)
+        # IP ".0 .1 .2" fix
+        self.df["IP"] = convert_ip_column_in(self.df, "IP")
 
     def get_team_games(self):
         """Combines Central and Pacific (NPB) or Eastern and Western (farm)
@@ -807,8 +1053,7 @@ class PlayerData(Stats):
         return ip_pa_df
 
     def append_gsheets_pitcher_data(self):
-        """Adds GB%, Chase%, Contact%, SwStr%, CSW%, FB Velo for NPB pitchers
-        """
+        """Adds GB%, Chase%, Contact%, SwStr%, CSW%, FB Velo for NPB pitchers"""
         # Read in raw Google Sheet file
         gsheet_df = pd.read_csv(
             self.year_dir
@@ -962,9 +1207,9 @@ class TeamData(Stats):
         super().__init__(stats_dir, year_dir, suffix, year)
         self.player_df = player_df.copy()
         # Initialize df for teams stats
-        if self.suffix in ("BF", "BR"):
+        if self.suffix in ("BF", "BR", "BP"):
             self.org_team_bat()
-        elif self.suffix in ("PF", "PR"):
+        elif self.suffix in ("PF", "PR", "PP"):
             self.org_team_pitch()
 
     def output_final(self):
@@ -977,6 +1222,8 @@ class TeamData(Stats):
             upload_dir = os.path.join(self.year_dir, "npb")
         elif self.suffix in ("PF", "BF"):
             upload_dir = os.path.join(self.year_dir, "farm")
+        elif self.suffix in ("PP", "BP"):
+            upload_dir = os.path.join(self.year_dir, "post_season")
 
         # Print organized dataframe to file
         alt_filename = self.year + "TeamAlt" + self.suffix + ".csv"
@@ -1025,29 +1272,10 @@ class TeamData(Stats):
     def org_team_bat(self):
         """Outputs batting team stat files using the organized player stat
         dataframes"""
-        # Initialize new row list with all possible teams
-        row_arr = [
-            "Hanshin Tigers",
-            "Hiroshima Carp",
-            "DeNA BayStars",
-            "Yomiuri Giants",
-            "Yakult Swallows",
-            "Chunichi Dragons",
-            "ORIX Buffaloes",
-            "Lotte Marines",
-            "SoftBank Hawks",
-            "Rakuten Eagles",
-            "Seibu Lions",
-            "Nipponham Fighters",
-        ]
-        # 2024 and beyond farm has 2 new teams
-        if self.suffix == "BF" and int(self.year) >= 2024:
-            row_arr.extend(["Oisix Albirex", "HAYATE Ventures"])
-
         # Initialize list to hold team stats
         team_bat_list = []
         # Form team stat rows
-        for team in row_arr:
+        for team in self.player_df["Team"].unique():
             temp_stat_df = self.player_df[self.player_df.Team == team]
             temp_stat_df = temp_stat_df.apply(pd.to_numeric, errors="coerce")
             new_team_stat = [
@@ -1272,29 +1500,11 @@ class TeamData(Stats):
         dataframes"""
         # IP column ".1 .2 .3" calculation fix
         self.player_df["IP"] = convert_ip_column_in(self.player_df, "IP")
-        # Initialize new row list with all possible teams
-        row_arr = [
-            "Hanshin Tigers",
-            "Hiroshima Carp",
-            "DeNA BayStars",
-            "Yomiuri Giants",
-            "Yakult Swallows",
-            "Chunichi Dragons",
-            "ORIX Buffaloes",
-            "Lotte Marines",
-            "SoftBank Hawks",
-            "Rakuten Eagles",
-            "Seibu Lions",
-            "Nipponham Fighters",
-        ]
-        # 2024 and later farm has 2 new teams
-        if self.suffix == "PF" and int(self.year) >= 2024:
-            row_arr.extend(["Oisix Albirex", "HAYATE Ventures"])
 
         # Initialize list to hold team stats
         team_pitch_list = []
         # Form team stat rows and collect only COUNTING stats
-        for team in row_arr:
+        for team in self.player_df["Team"].unique():
             temp_stat_df = self.player_df[self.player_df.Team == team]
             temp_stat_df = temp_stat_df.apply(pd.to_numeric, errors="coerce")
             new_team_stat = [
@@ -1316,7 +1526,7 @@ class TeamData(Stats):
                 temp_stat_df["R"].sum(),
                 temp_stat_df["ER"].sum(),
             ]
-            if self.suffix != "PF":
+            if self.suffix == "PR":
                 new_team_stat.insert(4, temp_stat_df["HLD"].sum())
             team_pitch_list.append(new_team_stat)
 
@@ -1341,7 +1551,7 @@ class TeamData(Stats):
             "ER",
         ]
         # All other pitching stats have HLD column
-        if self.suffix != "PF":
+        if self.suffix == "PR":
             col_init_arr.insert(4, "HLD")
         self.df = pd.DataFrame(team_pitch_list, columns=col_init_arr)
         # Create park factor col to use for any remaining team stats
@@ -1394,6 +1604,9 @@ class TeamData(Stats):
         league_avg["Team"] = "League Average"
         # Recalculate averages for stats that are based on league averages
         league_avg["ERA"] = total_era
+        league_avg["ERA+"] = 100
+        league_avg["FIP-"] = 100
+        league_avg["kwERA-"] = 100
         league_avg["K%"] = self.df["SO"].sum() / self.df["BF"].sum()
         league_avg["BB%"] = self.df["BB"].sum() / self.df["BF"].sum()
         league_avg["HR%"] = self.df["HR"].sum() / self.df["BF"].sum()
@@ -1434,8 +1647,8 @@ class TeamData(Stats):
             "R": "{:.0f}",
             "ER": "{:.0f}",
         }
-        # Readd HLD formatting if not farm
-        if self.suffix != "PF":
+        # Readd HLD formatting if regular season
+        if self.suffix == "PR":
             format_maps["HLD"] = "{:.0f}"
         for key, value in format_maps.items():
             self.df[key] = self.df[key].apply(value.format)
@@ -1718,10 +1931,10 @@ class FieldingData(Stats):
         st_filename = self.year + "FieldingFinal" + self.suffix + ".csv"
         st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
 
-        # Add blank Rank column for Wordpress table counter
-        self.df["Rank"] = ""
-        move_col = self.df.pop("Rank")
-        self.df.insert(0, "Rank", move_col)
+        # Add blank # column for Wordpress table counter
+        self.df["#"] = ""
+        move_col = self.df.pop("#")
+        self.df.insert(0, "#", move_col)
         # Make deep copy of original df to avoid HTML in df's team/player names
         final_df = self.df.copy()
         # Convert player/team names to HTML that contains appropriate URLs
@@ -1826,7 +2039,7 @@ class FieldingData(Stats):
             .fillna(self.df["Team"])
             .astype(str)
         )
-        self.df = translate_players(self.df, self.year)
+        self.df = translate_players(self.df, self.suffix, self.year)
         # TZR/143 calculation and cleaning
         self.df["TZR"] = self.df["TZR"].astype(str).replace("-", "inf")
         self.df["TZR"] = self.df["TZR"].astype(float)
@@ -2099,7 +2312,7 @@ class TeamSummaryData(Stats):
         st_filename = self.year + "TeamSummaryFinal" + self.suffix + ".csv"
         st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
 
-        # Add blank Rank column for Wordpress table counter
+        # Add blank # column for Wordpress table counter
         self.df["#"] = ""
         move_col = self.df.pop("#")
         self.df.insert(0, "#", move_col)
@@ -2378,7 +2591,7 @@ def get_stats(year_dir, suffix, year):
     # Make output file
     output_file = make_raw_player_file(year_dir, suffix, year)
     # Grab URLs to scrape
-    url_arr = get_stat_urls(suffix, year)
+    url_arr, _ = get_stat_urls(suffix, year)
     # Create header row
     if suffix == "BR":
         output_file.write(
@@ -2433,41 +2646,9 @@ def get_stats(year_dir, suffix, year):
 
             # Get team
             title_div = soup.find(id="stdivtitle")
-            year_title_str = title_div.h1.get_text()
-            # Correct team name formatting
-            year_title_str = year_title_str.replace(year, "")
-            if year_title_str.find("Fukuoka"):
-                year_title_str = year_title_str.replace("Fukuoka", "")
-            if year_title_str.find("Chiba"):
-                year_title_str = year_title_str.replace("Chiba", "")
-            if year_title_str.find("Hokkaido Nippon-Ham Fighters"):
-                year_title_str = year_title_str.replace(
-                    "Hokkaido Nippon-Ham Fighters", "Nipponham Fighters"
-                )
-            if year_title_str.find("Toyo"):
-                year_title_str = year_title_str.replace("Toyo ", "")
-            if year_title_str.find("YOKOHAMA DeNA BAYSTARS"):
-                year_title_str = year_title_str.replace(
-                    "YOKOHAMA DeNA BAYSTARS", "DeNA BayStars"
-                )
-            if year_title_str.find("Saitama"):
-                year_title_str = year_title_str.replace("Saitama", "")
-            if year_title_str.find("Tokyo"):
-                year_title_str = year_title_str.replace("Tokyo", "")
-            if year_title_str.find("Tohoku Rakuten Golden Eagles"):
-                year_title_str = year_title_str.replace(
-                    "Tohoku Rakuten Golden Eagles", "Rakuten Eagles"
-                )
-            if year_title_str.find("Kufu HAYATE Ventures Shizuoka"):
-                year_title_str = year_title_str.replace(
-                    "Kufu HAYATE Ventures Shizuoka", "HAYATE Ventures"
-                )
-            if year_title_str.find("Oisix Niigata Albirex BC"):
-                year_title_str = year_title_str.replace(
-                    "Oisix Niigata Albirex BC", "Oisix Albirex"
-                )
-            year_title_str = year_title_str.lstrip()
-            year_title_str = year_title_str.rstrip()
+            year_title_str = revise_year_title_str(
+                title_div.h1.get_text(), suffix, year
+            )
             # Append as last entry and move to next row
             output_file.write(year_title_str + ",\n")
 
@@ -2477,6 +2658,209 @@ def get_stats(year_dir, suffix, year):
         sleep(randint(1, 3))
     # After all URLs are scraped, close output file
     output_file.close()
+
+
+def get_post_season_stats(year_dir, suffix, year):
+    # TODO: merge with get_stats?
+    """The main post season stat scraping function that makes Raw stat files.
+    Saving Raw stat files allows for scraping and stat organization to be
+    independent of each other. Different scraping schemas are used for URLs
+    before 2025 post season and after 2025 post season.
+
+    Parameters:
+    yearDir (string): The directory that stores the raw, scraped NPB stats
+    suffix (string): Determines header row of csv file and indicates the stats
+    that the URLs point to:
+    "BP" = post season batting stat URLs passed in
+    "PP" = post season pitching stat URLs passed in
+    year (string): The desired npb year to scrape
+
+    Returns: N/A"""
+    # Make output file
+    output_file = make_raw_player_file(year_dir, suffix, year)
+    # Grab URLs to scrape
+    url_arr, version = get_stat_urls(suffix, year)
+    # Create header row
+    if suffix == "BP":
+        output_file.write(
+            "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,"
+            "IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
+        )
+    if suffix == "PP" and version == "v1":
+        output_file.write(
+            "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,"
+            "HB,SO,WP,BK,R,ER,ERA,Team,\n"
+        )
+    if suffix == "PP" and version == "v2":
+        output_file.write(
+            "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,H,HR,BB,IBB,"
+            "HB,SO,WP,BK,R,ER,ERA,Team,\n"
+        )
+
+    # Loop through all team stat pages in url_arr
+    for url in url_arr:
+        # Make GET request
+        r = get_url(url)
+        # Create the soup for parsing the html content
+        soup = BeautifulSoup(r.content, "html.parser")
+        if version == "v1":
+            # Since header row was created, skip to stat rows
+            iter_soup = iter(soup.table)
+            # Left handed pitcher/batter and switch hitter row skip
+            next(iter_soup)
+            # npb.jp header row skip
+            next(iter_soup)
+            # Extract table rows from npb.jp team stats
+            for table_row in iter_soup:
+                # Skip first column for left handed batter/pitcher or switch hitter
+                iter_table = iter(table_row)
+                next(iter_table)
+                # Write output in csv file format
+                for entry in iter_table:
+                    # Remove commas in first and last names
+                    entry_text = entry.get_text()
+                    if entry_text.find(","):
+                        entry_text = entry_text.replace(",", "")
+                    # Write output in csv file format
+                    output_file.write(entry_text + ",")
+
+                # Get team
+                title_div = soup.find(id="stdivtitle")
+                year_title_str = revise_year_title_str(
+                    title_div.h1.get_text(), suffix, year
+                )
+                # Append as last entry and move to next row
+                output_file.write(year_title_str + ",\n")
+        # New 2025 post season and onwards table type
+        elif version == "v2":
+            player_stat_rows = iter(soup.find_all("tr"))
+            # Skip header row
+            next(player_stat_rows)
+            for row in player_stat_rows:
+                for entry in row.find_all("td"):
+                    # TODO: remove if statements? text filtering possibly handled in later code
+                    entry_text = entry.get_text()
+                    if entry_text.find(","):
+                        entry_text = entry_text.replace(",", "")
+                    if entry_text.find("　"):
+                        entry_text = entry_text.replace("　", " ")
+                    if entry_text.find("*"):
+                        entry_text = entry_text.replace("*", "")
+                    # Write output in csv file format
+                    output_file.write(entry_text + ",")
+
+                # Get team
+                title = soup.find("span")
+                year_title_str = revise_year_title_str(
+                    str(title.string), suffix, year
+                )
+                # Append as last entry and move to next row
+                output_file.write(year_title_str + ",\n")
+        # Close request
+        r.close()
+        # Pace requests to npb.jp to avoid excessive requests
+        sleep(randint(3, 5))
+    # After all URLs are scraped, close output file
+    output_file.close()
+
+
+def revise_year_title_str(year_title_str, suffix, year):
+    """Used in get_stats() and get_post_season_stats() to translate and modify
+    
+    Parameters:
+    year_title_str (string): The string from the scraped URL that contains
+    the year and team name from NPB
+    suffix (string): Determines which set of filters to apply to the string.
+    year (string): The desired npb year to scrape
+
+    Returns:
+    year_title_str (string): The string without its year, translated to this
+    scraper's preferred team names."""
+    # Correct team name formatting
+    if suffix in ("BR", "PR", "BF", "PF"):
+        if year_title_str.find("Fukuoka"):
+            year_title_str = year_title_str.replace("Fukuoka", "")
+        if year_title_str.find("Chiba"):
+            year_title_str = year_title_str.replace("Chiba", "")
+        if year_title_str.find("Hokkaido Nippon-Ham Fighters"):
+            year_title_str = year_title_str.replace(
+                "Hokkaido Nippon-Ham Fighters", "Nipponham Fighters"
+            )
+        if year_title_str.find("Toyo"):
+            year_title_str = year_title_str.replace("Toyo ", "")
+        if year_title_str.find("YOKOHAMA DeNA BAYSTARS"):
+            year_title_str = year_title_str.replace(
+                "YOKOHAMA DeNA BAYSTARS", "DeNA BayStars"
+            )
+        if year_title_str.find("Saitama"):
+            year_title_str = year_title_str.replace("Saitama", "")
+        if year_title_str.find("Tokyo"):
+            year_title_str = year_title_str.replace("Tokyo", "")
+        if year_title_str.find("Tohoku Rakuten Golden Eagles"):
+            year_title_str = year_title_str.replace(
+                "Tohoku Rakuten Golden Eagles", "Rakuten Eagles"
+            )
+        if year_title_str.find("Kufu HAYATE Ventures Shizuoka"):
+            year_title_str = year_title_str.replace(
+                "Kufu HAYATE Ventures Shizuoka", "HAYATE Ventures"
+            )
+        if year_title_str.find("Oisix Niigata Albirex BC"):
+            year_title_str = year_title_str.replace(
+                "Oisix Niigata Albirex BC", "Oisix Albirex"
+            )
+    if suffix in ("BP", "PP"):
+        if year_title_str.find("年度 阪神タイガース"):
+            year_title_str = year_title_str.replace(
+                "年度 阪神タイガース", "Hanshin Tigers"
+            )
+        if year_title_str.find("年度 千葉ロッテマリーンズ"):
+            year_title_str = year_title_str.replace(
+                "年度 千葉ロッテマリーンズ", "Lotte Marines"
+            )
+        if year_title_str.find("年度 福岡ソフトバンクホークス"):
+            year_title_str = year_title_str.replace(
+                "年度 福岡ソフトバンクホークス", "SoftBank Hawks"
+            )
+        if year_title_str.find("年度 北海道日本ハムファイターズ"):
+            year_title_str = year_title_str.replace(
+                "年度 北海道日本ハムファイターズ", "Nipponham Fighters"
+            )
+        if year_title_str.find("年度 読売ジャイアンツ"):
+            year_title_str = year_title_str.replace(
+                "年度 読売ジャイアンツ", "Yomiuri Giants"
+            )
+        if year_title_str.find("年度 横浜DeNAベイスターズ"):
+            year_title_str = year_title_str.replace(
+                "年度 横浜DeNAベイスターズ", "DeNA BayStars"
+            )
+        if year_title_str.find("年度 オリックス・バファローズ"):
+            year_title_str = year_title_str.replace(
+                "年度 オリックス・バファローズ", "ORIX Buffaloes"
+            )
+        if year_title_str.find("年度 広島東洋カープ"):
+            year_title_str = year_title_str.replace(
+                "年度 広島東洋カープ", "Hiroshima Carp"
+            )
+        if year_title_str.find("年度 中日ドラゴンズ"):
+            year_title_str = year_title_str.replace(
+                "年度 中日ドラゴンズ", "Chunichi Dragons"
+            )
+        if year_title_str.find("年度 埼玉西武ライオンズ"):
+            year_title_str = year_title_str.replace(
+                "年度 埼玉西武ライオンズ", "Seibu Lions"
+            )
+        if year_title_str.find("年度 東北楽天ゴールデンイーグルス"):
+            year_title_str = year_title_str.replace(
+                "年度 東北楽天ゴールデンイーグルス", "Rakuten Eagles"
+            )
+        if year_title_str.find("年度 東京ヤクルトスワローズ"):
+            year_title_str = year_title_str.replace(
+                "年度 東京ヤクルトスワローズ", "Yakult Swallows"
+            )
+    year_title_str = year_title_str.replace(year, "")
+    year_title_str = year_title_str.lstrip()
+    year_title_str = year_title_str.rstrip()
+    return year_title_str
 
 
 def get_gsheets_pitcher_data(year_dir, suffix, year):
@@ -2624,12 +3008,16 @@ def get_stat_urls(suffix, year):
     """Creates arrays of the correct URLs for the individual stat scraping
 
     Parameters:
-    suffix (string): The desired mode to run in (either farm or regular season)
-    year (string): The desired npb year to scrape
+    suffix (string): The desired mode to run in (determines league and season)
+    year (string): The desired NPB year to scrape
 
     Returns:
-    url_arrB (array - string): Contains URLs to the team batting/pitching
+    url_arr (list - string): Contains URLs to the team batting/pitching
     stat pages"""
+    rel_dir = os.path.dirname(__file__)
+    # TODO: integrate all urls in csv, make dynamic (version = url_df["Version"].unique())
+    version = "v1"
+    url_arr = []
     if suffix == "BR":
         # Team regular season individual batting stats
         url_arr = [
@@ -2754,11 +3142,28 @@ def get_stat_urls(suffix, year):
             url_arr.append("https://npb.jp/bis/eng/2024/stats/idp2_a.html")
             # Kufu HAYATE Ventures Shizuoka
             url_arr.append("https://npb.jp/bis/eng/2024/stats/idp2_v.html")
+    elif suffix in ("BP", "PP"):
+        # TODO: optimize, move regular URLs to csv file
+        post_season_url_file = (
+            rel_dir + "/input/" + year + "/post_season_urls.csv"
+        )
+        url_df = pd.read_csv(post_season_url_file)
+        # Drop all rows that are not the df's year
+        url_df = url_df.drop(url_df[url_df.Year.astype(str) != year].index)
+        # Drop all rows that do not match the requested stats
+        url_df = url_df.drop(url_df[url_df.Suffix != suffix].index)
+        # Create URL arr for that year and stat type
+        url_arr = url_df["Link"]
+        # Version determines the type of table to scrape
+        # NPB changed table styling for 2025 post season and onwards
+        version = url_df["Version"].unique()
 
     # Loop through each entry and change the year in the URL before returning
-    for i, url in enumerate(url_arr):
-        url_arr[i] = url.replace("2024", year)
-    return url_arr
+    # TODO: remove when moving to reading in all links from csv
+    if suffix not in ("BP", "PP"):
+        for i, url in enumerate(url_arr):
+            url_arr[i] = url.replace("2024", year)
+    return url_arr, version
 
 
 def make_raw_player_file(write_dir, suffix, year):
@@ -2796,6 +3201,16 @@ def make_raw_player_file(write_dir, suffix, year):
         print("Raw farm batting results will be stored in: " + new_csv_name)
     if suffix == "PF":
         print("Raw farm pitching results will be stored in: " + new_csv_name)
+    if suffix == "BP":
+        print(
+            "Raw post season batting results will be stored in: "
+            + new_csv_name
+        )
+    if suffix == "PP":
+        print(
+            "Raw post season pitching results will be stored in: "
+            + new_csv_name
+        )
     new_file = open(new_csv_name, "w", encoding="utf-8")
     return new_file
 
@@ -2984,6 +3399,13 @@ def get_user_choice(suffix):
                 "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING."
             )
             user_in = input("Scrape regular season stats stats? (Y/N): ")
+        elif suffix == "P":
+            print(
+                "Choose whether to pull new post season stats from "
+                "npb.jp or only reorganize existing stat files.\nWARNING: "
+                "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING."
+            )
+            user_in = input("Scrape post season stats? (Y/N): ")
         elif suffix == "Z":
             user_in = input("Output stats in a zip file? (Y/N): ")
         else:
@@ -3227,7 +3649,7 @@ def select_park_factor(df, suffix, year):
     # Drop all rows that are not the df's year
     pf_df = pf_df.drop(pf_df[pf_df.Year.astype(str) != year].index)
     # Drop all rows that do not match the df's league
-    if suffix in ("BR", "PR"):
+    if suffix in ("BR", "PR", "BP", "PP"):
         pf_suffix = "NPB"
     else:
         pf_suffix = "Farm"
@@ -3258,7 +3680,7 @@ def select_fip_const(suffix, year):
     # Drop all rows that are not the df's year
     fip_df = fip_df.drop(fip_df[fip_df.Year.astype(str) != year].index)
     # Drop all rows that do not match the df's league
-    if suffix in ("BR", "PR"):
+    if suffix in ("BR", "PR", "BP", "PP"):
         fip_suffix = "NPB"
     else:
         fip_suffix = "Farm"
@@ -3278,7 +3700,7 @@ def select_league(df, suffix):
     df (pandas dataframe): The dataframe with the correct "League" column added
     """
     league_dict = {}
-    if suffix in ("BR", "PR", "R"):
+    if suffix in ("BR", "PR", "R", "PP", "BP"):
         # Contains all 2020-2024 reg baseball team names and leagues
         league_dict = {
             "Hanshin Tigers": "CL",
@@ -3398,7 +3820,7 @@ def convert_player_to_html(df, suffix, year):
         )
     )
     # Make keys from input df
-    if suffix in ("PR", "PF"):
+    if suffix in ("PR", "PF", "PP"):
         convert_col = "Pitcher"
     else:
         convert_col = "Player"
@@ -3412,11 +3834,14 @@ def convert_player_to_html(df, suffix, year):
     return df
 
 
-def translate_players(df, year):
-    """Translates player names from Japanese to English using a csv file
+def translate_players(df, suffix, year):
+    """Translates player names from Japanese to English using a csv file.
+    Utilizes both player name and team name to better translate to EN names.
 
     Parameters:
     df (pandas dataframe): A NPB stat dataframe containing player names
+    suffix (string): Indicates the league the players are in
+    year (string): Indicates the stat year for df
 
     Returns:
     df (pandas dataframe): The final stat dataframe with translated names"""
@@ -3431,16 +3856,25 @@ def translate_players(df, year):
             translation_df["en_name"],
         )
     )
-    df["keys"] = list(zip(df["Player"], df["Team"]))
-    df["Player"] = (
+    if suffix == "PP":
+        target_col = "Pitcher"
+    else:
+        target_col = "Player"
+
+    # Filter out JP unicode space "　" and replace with US space " "
+    df[target_col] = df[target_col].str.replace("　", " ")
+    df[target_col] = df[target_col].str.replace("*", "")
+
+    df["keys"] = list(zip(df[target_col], df["Team"]))
+    df[target_col] = (
         df["keys"]
         .map(player_dict)
         .infer_objects()
-        .fillna(df["Player"])
+        .fillna(df[target_col])
         .astype(str)
     )
-    df["Player"] = df["Player"].str.replace('"', "")
-    df["Player"] = df["Player"].str.replace(",", "")
+    df[target_col] = df[target_col].str.replace('"', "")
+    df[target_col] = df[target_col].str.replace(",", "")
     return df
 
 
@@ -3493,7 +3927,7 @@ def make_zip(year_dir, suffix, year):
     print("Zip created at: " + output_filename + ".zip")
 
 
-def check_input_files(rel_dir, scrape_year=datetime.now().year):
+def check_input_files(rel_dir, scrape_year=str(datetime.now().year)):
     """Checks that all input files are in the /input/ folder
 
     Parameters:
@@ -3503,6 +3937,16 @@ def check_input_files(rel_dir, scrape_year=datetime.now().year):
     missing_files (bool): If needed files are missing, this is True, else
     False"""
     missing_files = False
+    # Optional files
+    post_season_url_file = (
+        rel_dir + "/input/" + scrape_year + "/post_season_urls.csv"
+    )
+    if not os.path.exists(post_season_url_file):
+        print(
+            "\nERROR: No post season URL file found, no links to scrape...\n"
+            "Provide a valid post_season_urls.csv file in the /input/ "
+            "directory to fix this.\n"
+        )
     # Required files
     translation_file = (
         rel_dir + "/input/" + scrape_year + "/name_translations.csv"
