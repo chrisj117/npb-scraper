@@ -241,7 +241,7 @@ class Stats:
     stats_dir (string): The dir that holds all year stats and player URL file
     suffix (string): Indicates league or farm/NPB reg season stats
     year (string): The year that the stats will cover
-    year_dir (string):The directory to store relevant year statistics
+    year_dir (string): The directory to store relevant year statistics
 
     OOP hierarchy:
     stats (stats_dir, year_dir, suffix, year)
@@ -299,16 +299,17 @@ class PlayerData(Stats):
         org_bat():
             Organizes raw batting statistics and calculates additional metrics.
         org_post_pitch():
-            TODO
+            Preprocesses post season batting stats for org_bat().
         org_post_bat():
-            TODO
+            Preprocesses post season pitching stats for org_bat().
         fix_raw_pitch_col():
-            TODO
+            Homogenizes IP and ERA columns in pitching stats for calculations.
         get_team_games():
             Combines team games played into a single DataFrame for IP/PA
             calculations.
         append_gsheets_pitcher_data():
-            TODO
+            Adds additional pitching statistics from a Google sheet produced by
+            Ramos & Ramos.
         append_positions(field_df, pitch_df):
             Adds the primary position of a player to the player DataFrame."""
 
@@ -558,7 +559,8 @@ class PlayerData(Stats):
         self.df["Diff"] = self.df["ERA"] - self.df["FIP"]
 
         # Import additional NPB data from Google Sheets
-        if self.suffix == "PR":
+        # TODO: update when compatibility for 2026 is ready
+        if self.suffix == "PR" and int(self.year) == 2025:
             self.append_gsheets_pitcher_data()
 
         # Data cleaning/reformatting
@@ -644,8 +646,8 @@ class PlayerData(Stats):
                 "Team",
                 "League",
             ]
-            # Farm pitching does not have Google Sheets stats
-            if self.suffix != "PR":
+            # Pre 2025 and farm pitching lacks Google Sheets stats
+            if self.suffix == "PF" or int(self.year) != 2025:
                 gsheet_stat_cols = [
                     "GB%",
                     "Chase%",
@@ -657,6 +659,7 @@ class PlayerData(Stats):
                 for col in gsheet_stat_cols:
                     if col in col_order:
                         col_order.remove(col)
+            # Farm always lacks HLD
             if self.suffix == "PF":
                 col_order.remove("HLD")
             # Reordering for age and throwing arm if correct year
@@ -888,13 +891,7 @@ class PlayerData(Stats):
         self.df = select_league(self.df, self.suffix)
 
     def org_post_pitch(self):
-        """Organize the raw pitching stat csv and add new stats
-        (CONVERSION OF pitchOrg())
-        # TODO: docs
-
-        Parameters: N/A
-
-        Returns: N/A"""
+        """Preprocesses the raw post season's pitching stat csv for org_pitch()"""
         # Combine duplicate player entries
         agg_functions = {
             "Pitcher": "first",
@@ -927,13 +924,7 @@ class PlayerData(Stats):
         self.org_pitch()
 
     def org_post_bat(self):
-        """Organize the raw batting stat csv and add additional stats
-        (CONVERSION OF batOrg())
-        # TODO: docs
-
-        Parameters: N/A
-
-        Returns: N/A"""
+        """Preprocesses the raw post season's batting stat csv for org_pitch()"""
         # Remove all players with 0 PA
         self.df = self.df.drop(self.df[self.df.PA == 0].index)
         # Convert numeric columns to proper type
@@ -983,7 +974,7 @@ class PlayerData(Stats):
         self.org_bat()
 
     def fix_raw_pitch_col(self):
-        # TODO: documentation
+        """Converts IP and ERA cols to appropriate float types"""
         # Some IP entries can be '+', replace with 0 for conversions and
         # calculations
         self.df["IP"] = self.df["IP"].astype(str).replace("+", "0")
@@ -2766,7 +2757,7 @@ def get_post_season_stats(year_dir, suffix, year):
 
 def revise_year_title_str(year_title_str, suffix, year):
     """Used in get_stats() and get_post_season_stats() to translate and modify
-    
+
     Parameters:
     year_title_str (string): The string from the scraped URL that contains
     the year and team name from NPB
@@ -2971,7 +2962,7 @@ def get_fielding(year_dir, suffix, year):
     "F" = farm fielding stats
     year (string): The desired fielding stat year"""
     rel_dir = os.path.dirname(__file__)
-    url_file = rel_dir + "/input/" + year + "/fielding_urls.csv"
+    url_file = rel_dir + "/input/fielding_urls.csv"
     # Grab singular fielding URL from file
     df = pd.read_csv(url_file)
     df = df.drop(df[df.Year.astype(str) != year].index)
@@ -3015,154 +3006,18 @@ def get_stat_urls(suffix, year):
     url_arr (list - string): Contains URLs to the team batting/pitching
     stat pages"""
     rel_dir = os.path.dirname(__file__)
-    # TODO: integrate all urls in csv, make dynamic (version = url_df["Version"].unique())
-    version = "v1"
-    url_arr = []
-    if suffix == "BR":
-        # Team regular season individual batting stats
-        url_arr = [
-            # Hanshin Tigers
-            "https://npb.jp/bis/eng/2024/stats/idb1_t.html",
-            # Hiroshima Toyo Carp
-            "https://npb.jp/bis/eng/2024/stats/idb1_c.html",
-            # YOKOHAMA DeNA BAYSTARS
-            "https://npb.jp/bis/eng/2024/stats/idb1_db.html",
-            # Yomiuri Giants
-            "https://npb.jp/bis/eng/2024/stats/idb1_g.html",
-            # Tokyo Yakult Swallows
-            "https://npb.jp/bis/eng/2024/stats/idb1_s.html",
-            # Chunichi Dragons
-            "https://npb.jp/bis/eng/2024/stats/idb1_d.html",
-            # ORIX Buffaloes
-            "https://npb.jp/bis/eng/2024/stats/idb1_b.html",
-            # Chiba Lotte Marines
-            "https://npb.jp/bis/eng/2024/stats/idb1_m.html",
-            # Fukuoka SoftBank Hawks
-            "https://npb.jp/bis/eng/2024/stats/idb1_h.html",
-            # Tohoku Rakuten Golden Eagles
-            "https://npb.jp/bis/eng/2024/stats/idb1_e.html",
-            # Saitama Seibu Lions
-            "https://npb.jp/bis/eng/2024/stats/idb1_l.html",
-            # Hokkaido Nippon-Ham Fighters
-            "https://npb.jp/bis/eng/2024/stats/idb1_f.html",
-        ]
-    elif suffix == "PR":
-        # Team regular season individual pitching stats
-        url_arr = [
-            # Hanshin Tigers
-            "https://npb.jp/bis/eng/2024/stats/idp1_t.html",
-            # Hiroshima Toyo Carp
-            "https://npb.jp/bis/eng/2024/stats/idp1_c.html",
-            # YOKOHAMA DeNA BAYSTARS
-            "https://npb.jp/bis/eng/2024/stats/idp1_db.html",
-            # Yomiuri Giants
-            "https://npb.jp/bis/eng/2024/stats/idp1_g.html",
-            # Tokyo Yakult Swallows
-            "https://npb.jp/bis/eng/2024/stats/idp1_s.html",
-            # Chunichi Dragons
-            "https://npb.jp/bis/eng/2024/stats/idp1_d.html",
-            # ORIX Buffaloes
-            "https://npb.jp/bis/eng/2024/stats/idp1_b.html",
-            # Chiba Lotte Marines
-            "https://npb.jp/bis/eng/2024/stats/idp1_m.html",
-            # Fukuoka SoftBank Hawks
-            "https://npb.jp/bis/eng/2024/stats/idp1_h.html",
-            # Tohoku Rakuten Golden Eagles
-            "https://npb.jp/bis/eng/2024/stats/idp1_e.html",
-            # Saitama Seibu Lions
-            "https://npb.jp/bis/eng/2024/stats/idp1_l.html",
-            # Hokkaido Nippon-Ham Fighters
-            "https://npb.jp/bis/eng/2024/stats/idp1_f.html",
-        ]
-    elif suffix == "BF":
-        # Team farm individual batting stats
-        url_arr = [
-            # Hanshin Tigers
-            "https://npb.jp/bis/eng/2024/stats/idb2_t.html",
-            # Hiroshima Toyo Carp
-            "https://npb.jp/bis/eng/2024/stats/idb2_c.html",
-            # YOKOHAMA DeNA BAYSTARS
-            "https://npb.jp/bis/eng/2024/stats/idb2_db.html",
-            # Yomiuri Giants
-            "https://npb.jp/bis/eng/2024/stats/idb2_g.html",
-            # Tokyo Yakult Swallows
-            "https://npb.jp/bis/eng/2024/stats/idb2_s.html",
-            # Chunichi Dragons
-            "https://npb.jp/bis/eng/2024/stats/idb2_d.html",
-            # ORIX Buffaloes
-            "https://npb.jp/bis/eng/2024/stats/idb2_b.html",
-            # Chiba Lotte Marines
-            "https://npb.jp/bis/eng/2024/stats/idb2_m.html",
-            # Fukuoka SoftBank Hawks
-            "https://npb.jp/bis/eng/2024/stats/idb2_h.html",
-            # Tohoku Rakuten Golden Eagles
-            "https://npb.jp/bis/eng/2024/stats/idb2_e.html",
-            # Saitama Seibu Lions
-            "https://npb.jp/bis/eng/2024/stats/idb2_l.html",
-            # Hokkaido Nippon-Ham Fighters
-            "https://npb.jp/bis/eng/2024/stats/idb2_f.html",
-        ]
-        # Append new farm teams for 2024 and beyond
-        if int(year) >= 2024:
-            # Oisix Niigata Albirex BC
-            url_arr.append("https://npb.jp/bis/eng/2024/stats/idb2_a.html")
-            # Kufu HAYATE Ventures Shizuoka
-            url_arr.append("https://npb.jp/bis/eng/2024/stats/idb2_v.html")
-    elif suffix == "PF":
-        # Team farm individual pitching stats
-        url_arr = [
-            # Hanshin Tigers
-            "https://npb.jp/bis/eng/2024/stats/idp2_t.html",
-            # Hiroshima Toyo Carp
-            "https://npb.jp/bis/eng/2024/stats/idp2_c.html",
-            # YOKOHAMA DeNA BAYSTARS
-            "https://npb.jp/bis/eng/2024/stats/idp2_db.html",
-            # Yomiuri Giants
-            "https://npb.jp/bis/eng/2024/stats/idp2_g.html",
-            # Tokyo Yakult Swallows
-            "https://npb.jp/bis/eng/2024/stats/idp2_s.html",
-            # Chunichi Dragons
-            "https://npb.jp/bis/eng/2024/stats/idp2_d.html",
-            # ORIX Buffaloes
-            "https://npb.jp/bis/eng/2024/stats/idp2_b.html",
-            # Chiba Lotte Marines
-            "https://npb.jp/bis/eng/2024/stats/idp2_m.html",
-            # Fukuoka SoftBank Hawks
-            "https://npb.jp/bis/eng/2024/stats/idp2_h.html",
-            # Tohoku Rakuten Golden Eagles
-            "https://npb.jp/bis/eng/2024/stats/idp2_e.html",
-            # Saitama Seibu Lions
-            "https://npb.jp/bis/eng/2024/stats/idp2_l.html",
-            # Hokkaido Nippon-Ham Fighters
-            "https://npb.jp/bis/eng/2024/stats/idp2_f.html",
-        ]
-        # Append new farm teams for 2024 and beyond
-        if int(year) >= 2024:
-            # Oisix Niigata Albirex BC
-            url_arr.append("https://npb.jp/bis/eng/2024/stats/idp2_a.html")
-            # Kufu HAYATE Ventures Shizuoka
-            url_arr.append("https://npb.jp/bis/eng/2024/stats/idp2_v.html")
-    elif suffix in ("BP", "PP"):
-        # TODO: optimize, move regular URLs to csv file
-        post_season_url_file = (
-            rel_dir + "/input/" + year + "/post_season_urls.csv"
-        )
-        url_df = pd.read_csv(post_season_url_file)
-        # Drop all rows that are not the df's year
-        url_df = url_df.drop(url_df[url_df.Year.astype(str) != year].index)
-        # Drop all rows that do not match the requested stats
-        url_df = url_df.drop(url_df[url_df.Suffix != suffix].index)
-        # Create URL arr for that year and stat type
-        url_arr = url_df["Link"]
-        # Version determines the type of table to scrape
-        # NPB changed table styling for 2025 post season and onwards
-        version = url_df["Version"].unique()
+    url_file = rel_dir + "/input/npb_urls.csv"
+    url_df = pd.read_csv(url_file)
 
-    # Loop through each entry and change the year in the URL before returning
-    # TODO: remove when moving to reading in all links from csv
-    if suffix not in ("BP", "PP"):
-        for i, url in enumerate(url_arr):
-            url_arr[i] = url.replace("2024", year)
+    # Drop all rows that are not the df's suffix or year
+    url_df = url_df.drop(url_df[url_df.Year.astype(str) != year].index)
+    url_df = url_df.drop(url_df[url_df.Suffix != suffix].index)
+    # Create URL arr for that year and stat type
+    url_arr = url_df["Link"]
+    # Version determines the type of table to scrape
+    # NPB changed table styling for 2025 post season and onwards
+    version = url_df["Version"].unique()
+
     return url_arr, version
 
 
@@ -3938,13 +3793,11 @@ def check_input_files(rel_dir, scrape_year=str(datetime.now().year)):
     False"""
     missing_files = False
     # Optional files
-    post_season_url_file = (
-        rel_dir + "/input/" + scrape_year + "/post_season_urls.csv"
-    )
+    post_season_url_file = rel_dir + "/input/" + scrape_year + "/npb_urls.csv"
     if not os.path.exists(post_season_url_file):
         print(
             "\nERROR: No post season URL file found, no links to scrape...\n"
-            "Provide a valid post_season_urls.csv file in the /input/ "
+            "Provide a valid npb_urls.csv file in the /input/ "
             "directory to fix this.\n"
         )
     # Required files
@@ -3990,7 +3843,7 @@ def check_input_files(rel_dir, scrape_year=str(datetime.now().year)):
             "to fix this to fix this.\n"
         )
         missing_files = True
-    field_url_file = rel_dir + "/input/" + scrape_year + "/fielding_urls.csv"
+    field_url_file = rel_dir + "/input/fielding_urls.csv"
     if not os.path.exists(field_url_file):
         print(
             "\nERROR: No fielding URL file found, raw fielding files will not "
