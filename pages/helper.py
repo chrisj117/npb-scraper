@@ -90,6 +90,10 @@ def display_player_percentile(df, name, year, suffix):
         name_col = "Player"
         plot_cols = [
             "Def Value",
+            "SwStr%",
+            "Z-Con%",
+            "Chase%", 
+            "AIR%",
             "wSB",
             "BB/K",
             "BB%",
@@ -115,7 +119,7 @@ def display_player_percentile(df, name, year, suffix):
         elif df[df[name_col] == name]["Pos"].values[0] in ("LF", "CF", "RF"):
             plot_cols.insert(0, "Range")
             plot_cols.insert(0, "Arm")
-        invert_cols = ["K%"]
+        invert_cols = ["K%", "SwStr%", "Chase%"]
 
     # Get player's team, age
     team = df[df[name_col] == name]["Team"]
@@ -188,6 +192,9 @@ def display_player_percentile(df, name, year, suffix):
     else:
         subtitle_str = subtitle_str + " · Age " + age
 
+    # Extract from dataframe
+    subtitle_str = subtitle_str.values[0]
+
     # Chart settings
     title_params = alt.TitleParams(
         text=title,
@@ -252,7 +259,6 @@ def display_player_percentile(df, name, year, suffix):
         # Get PA from player df
         lg_avg.at[0, "PA"] = round(df.loc[:, "PA"].mean(), 0)
         raw_data = pd.concat([raw_data, lg_avg])
-        raw_data = raw_data.astype(str).replace("nan", "0.0")
         # Drop extra concatenated columns
         plot_cols.append("PA")
         raw_data = raw_data[raw_data.columns.intersection(plot_cols)]
@@ -1000,6 +1006,32 @@ def get_column_config(suffix=None):
         }
     elif suffix in ("B", "BR", "BF"):
         column_config = {
+            "AIR%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Air Rate: The percentage of balls in play that are not " +
+                "hit on the ground.",
+            ),
+            "Chase%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Chase Rate: The percentage of pitches outside the "
+                + "strike zone that batters swing at.",
+            ),
+            "Z-Con%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="In-Zone Contact Rate: The percentage of swings on pitches in the strike zone "
+                + "that result in contact, including both fair and "
+                + "foul balls.",
+            ),
+            "SwStr%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Swinging Strike Rate: The percentage of a player's "
+                + "total pitches that result in swinging strikes.",
+            ),
+            "Swing%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Swing Rate: The percentage of total pitches a player "
+                + "swings at.",
+            ),
             "AB": st.column_config.NumberColumn(
                 help="At-bats: The number of times a player bats, excluding "
                 + "walks, hit-by-pitches, sacrifices, errors, fielder's "

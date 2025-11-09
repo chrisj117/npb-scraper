@@ -29,7 +29,7 @@ def main():
         with r1c1:
             leader_view = st.toggle("Qualifiers")
             if leader_view is True:
-                display_df = lead_pitch_df.drop("Rank", axis=1)
+                display_df = lead_pitch_df.drop("#", axis=1)
             else:
                 display_df = player_pitch_df
             user_ip = hp.create_ip_filter(display_df, mode="player")

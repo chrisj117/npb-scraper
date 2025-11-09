@@ -29,7 +29,7 @@ def main():
         with r1c1:
             leader_view = st.toggle("Qualifiers")
             if leader_view is True:
-                display_df = lead_bat_df.drop("Rank", axis=1)
+                display_df = lead_bat_df.drop("#", axis=1)
             else:
                 display_df = player_bat_df
             display_df = display_df.fillna(value={"Pos": "N/A"})
