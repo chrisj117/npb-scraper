@@ -26,7 +26,7 @@ def main():
 
     st.set_page_config(layout="centered")
     # User dropdown box
-    user_team = hp.create_team_filter(mode="npb")
+    user_team = hp.create_team_filter(mode="overview")
 
     # Streamlit dataframe displays
     create_lineup(user_team)

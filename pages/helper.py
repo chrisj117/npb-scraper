@@ -508,7 +508,7 @@ def create_team_filter(mode=None):
         - Returns a list of selected full team names.
 
     Returns:
-        list: List of selected full team names.
+        list/str: List/string of selected full team name(s).
     """
     team_dict = {
         "Hanshin": "Hanshin Tigers",
@@ -532,12 +532,18 @@ def create_team_filter(mode=None):
             }
         )
 
-    team = st.multiselect(
-        "Team",
-        team_dict.keys(),
-        default=team_dict.keys(),
-    )
-    team = [team_dict[k] for k in team]
+    if mode == "overview":
+        team = st.selectbox(
+            "Team",
+            team_dict.values(),
+        )
+    else:
+        team = st.multiselect(
+            "Team",
+            team_dict.keys(),
+            default=team_dict.keys(),
+        )
+        team = [team_dict[k] for k in team]
     return team
 
 
