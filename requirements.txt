@@ -1,7 +1,6 @@
 altair==5.5.0
 beautifulsoup4==4.13.4
-numpy==2.3.4
-pandas==2.3.3
+numpy==2.3.1
+pandas==2.3.1
 Requests==2.32.4
 streamlit==1.46.1
-altair<5.3
