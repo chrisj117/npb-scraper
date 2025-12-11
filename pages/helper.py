@@ -236,7 +236,7 @@ def display_player_percentile(df, name, year, suffix):
     # Display data on Streamlit
     st.altair_chart(
         chart,
-        use_container_width=True,
+        width='stretch',
         theme="streamlit",
         key=None,
         on_select="ignore",
@@ -281,7 +281,7 @@ def display_player_percentile(df, name, year, suffix):
     # Display the actual stats the player has + league averages
     st.dataframe(
         raw_data,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
         column_config=get_column_config(suffix),

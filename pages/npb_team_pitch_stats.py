@@ -46,7 +46,7 @@ def main():
     # Display df
     st.dataframe(
         display_df[user_cols],
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
         column_order=user_cols,

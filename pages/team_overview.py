@@ -129,7 +129,7 @@ def create_lineup(team):
     st.write("Lineup")
     st.dataframe(
         lineup_df,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("BR"),
@@ -228,7 +228,7 @@ def create_rotation_bullpen(team):
     st.write("Rotation")
     st.dataframe(
         sp_df,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("PR"),
@@ -236,7 +236,7 @@ def create_rotation_bullpen(team):
     st.write("Bullpen")
     st.dataframe(
         bp_df,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("PR"),
@@ -291,14 +291,14 @@ def create_team_stats(team):
     st.write("Team Statistics")
     st.dataframe(
         bat_final_df,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("BR"),
     )
     st.dataframe(
         pitch_final_df,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("PR"),

@@ -20,7 +20,7 @@ def main():
     central_df = hp.load_csv(st.secrets["2025StandingsFinalC_link"])
     st.dataframe(
         central_df,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("standings"),
@@ -30,7 +30,7 @@ def main():
     pacific_df = hp.load_csv(st.secrets["2025StandingsFinalP_link"])
     st.dataframe(
         pacific_df,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("standings"),
@@ -48,7 +48,7 @@ def main():
     )
     st.dataframe(
         daily_df["Results"],
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
     )

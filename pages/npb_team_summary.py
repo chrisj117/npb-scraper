@@ -19,7 +19,7 @@ def main():
     display_df = hp.convert_pct_cols_to_float(display_df)
     st.dataframe(
         display_df,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("team_summary"),

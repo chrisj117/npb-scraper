@@ -41,7 +41,7 @@ def main():
     # Display dataframe
     st.dataframe(
         display_df[user_cols],
-        use_container_width=True,
+        width='stretch',
         row_height=25,
         hide_index=True,
         column_config=hp.get_column_config("fielding"),

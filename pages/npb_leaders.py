@@ -123,7 +123,7 @@ def main():
 
                 chosen_col.dataframe(
                     display_df,
-                    use_container_width=True,
+                    width='stretch',
                     hide_index=True,
                     row_height=25,
                     height=160,

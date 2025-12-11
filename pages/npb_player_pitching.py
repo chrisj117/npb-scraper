@@ -55,7 +55,7 @@ def main():
     # Display dataframe
     st.dataframe(
         display_df[user_cols],
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("PR"),
