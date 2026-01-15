@@ -92,7 +92,7 @@ def display_player_percentile(df, name, year, suffix):
             "Def Value",
             "SwStr%",
             "Z-Con%",
-            "Chase%", 
+            "Chase%",
             "AIR%",
             "wSB",
             "BB/K",
@@ -236,7 +236,7 @@ def display_player_percentile(df, name, year, suffix):
     # Display data on Streamlit
     st.altair_chart(
         chart,
-        width='stretch',
+        width="stretch",
         theme="streamlit",
         key=None,
         on_select="ignore",
@@ -278,6 +278,7 @@ def display_player_percentile(df, name, year, suffix):
     raw_data = convert_pct_cols_to_float(raw_data)
     raw_data = raw_data.dropna()
     raw_data = raw_data.convert_dtypes()
+    raw_data = raw_data.drop("Player", axis=1)
     # Display the actual stats the player has + league averages
     st.dataframe(
         raw_data,
@@ -286,6 +287,144 @@ def display_player_percentile(df, name, year, suffix):
         row_height=25,
         column_config=get_column_config(suffix),
     )
+
+
+def create_sort_filter(cols, mode):
+    """
+    Creates Streamlit widgets for sorting and filtering data columns.
+
+    Parameters:
+        cols (list): List of column names available for sorting.
+        mode (str): Mode determining which default sort order to use.
+                    Options: "bat" (batting stats), "pitch" (pitching stats),
+                    "field" (fielding stats), or other (generic).
+
+    Functionality:
+        - Provides mode-specific default sort orders for batting, pitching,
+          and fielding statistics.
+        - Displays a select box for users to choose the column to sort by.
+        - Displays a toggle for users to choose ascending or descending sort
+          order, with default based on the column's typical interpretation
+          (e.g., ERA defaults to ascending, HR defaults to descending).
+        - Returns the selected column and sort direction.
+
+    Returns:
+        tuple: (user_sort_col, user_sort_asc) where:
+            - user_sort_col (str): The column name selected for sorting
+            - user_sort_asc (bool): True for ascending, False for descending
+    """
+    if mode == "bat":
+        default_sort = {
+            "Player": None,
+            "Age": "asc",
+            "PA": "desc",
+            "AB": "desc",
+            "R": "desc",
+            "H": "desc",
+            "2B": "desc",
+            "3B": "desc",
+            "HR": "desc",
+            "TB": "desc",
+            "RBI": "desc",
+            "SB": "desc",
+            "CS": "desc",
+            "SH": "desc",
+            "SF": "desc",
+            "SO": "desc",
+            "BB": "desc",
+            "IBB": "desc",
+            "HP": "desc",
+            "GDP": "desc",
+            "AVG": "desc",
+            "OBP": "desc",
+            "SLG": "desc",
+            "OPS": "desc",
+            "OPS+": "desc",
+            "ISO": "desc",
+            "BABIP": "desc",
+            "K%": "asc",
+            "BB%": "desc",
+            "BB/K": "desc",
+            "wSB": "desc",
+            "AIR%": "desc",
+            "Chase%": "asc",
+            "Z-Con%": "desc",
+            "Swing%": "desc",
+            "TTO%": "desc",
+            "B": None,
+            "Team": None,
+            "League": None,
+        }
+    elif mode == "pitch":
+        default_sort = {
+            "Pitcher": None,
+            "Age": "asc",
+            "G": "desc",
+            "W": "desc",
+            "L": "desc",
+            "SV": "desc",
+            "HLD": "desc",
+            "CG": "desc",
+            "SHO": "desc",
+            "WP": "desc",
+            "R": "desc",
+            "ER": "desc",
+            "ERA": "asc",
+            "FIP": "asc",
+            "kwERA": "asc",
+            "WHIP": "asc",
+            "FIP-": "asc",
+            "ERA+": "desc",
+            "Diff": "desc",
+            "IP": "desc",
+            "H": "desc",
+            "HR": "desc",
+            "SO": "desc",
+            "BB": "desc",
+            "IBB": "desc",
+            "HB": "desc",
+            "BF": "desc",
+            "K%": "desc",
+            "BB%": "asc",
+            "K-BB%": "desc",
+            "GB%": "desc",
+            "LD%": "desc",
+            "FB Velo": "desc",
+            "Team": None,
+            "League": None,
+        }
+    elif mode == "field":
+        default_sort = {
+            # Fielding
+            "Player": None,
+            "Age": "asc",
+            "Pos": None,
+            "Inn": "desc",
+            "TZR": "desc",
+            "TZR/143": "desc",
+            "RngR": "desc",
+            "ARM": "desc",
+            "DPR": "desc",
+            "ErrR": "desc",
+            "Pos Adj": "desc",
+            "Framing": "desc",
+            "Blocking": "desc",
+            "Team": None,
+            "League": None,
+        }
+    else:
+        default_sort = {
+            "Team": None,
+            "League": None,
+        }
+
+    user_sort_col = st.selectbox("Sort by", cols, index=0)
+    if default_sort[user_sort_col] == "desc":
+        user_sort_asc = st.toggle("Ascending", value=False)
+    else:
+        user_sort_asc = st.toggle("Ascending", value=True)
+
+    return user_sort_col, user_sort_asc
 
 
 def create_pos_filter(df, mode=None):
@@ -1014,8 +1153,8 @@ def get_column_config(suffix=None):
         column_config = {
             "AIR%": st.column_config.NumberColumn(
                 format="%.1f%%",
-                help="Air Rate: The percentage of balls in play that are not " +
-                "hit on the ground.",
+                help="Air Rate: The percentage of balls in play that are not "
+                + "hit on the ground.",
             ),
             "Chase%": st.column_config.NumberColumn(
                 format="%.1f%%",

@@ -30,6 +30,11 @@ def main():
             user_team = hp.create_team_filter(mode="npb")
         user_cols = hp.create_stat_cols_filter(display_df, "team_field")
 
+        # Sorting options
+        user_sort_col, user_sort_asc = hp.create_sort_filter(
+            user_cols, mode="field"
+        )
+
     # Apply filters
     display_df = display_df[display_df["League"].isin(user_league)]
     display_df = display_df[display_df["Team"].isin(user_team)]
@@ -38,12 +43,20 @@ def main():
     display_df = hp.convert_pct_cols_to_float(display_df)
     display_df = display_df.convert_dtypes()
 
+    # Apply sorting and reset index (must be after convert_pct_cols_to_float())
+    display_df = display_df.sort_values(
+        user_sort_col, ascending=user_sort_asc
+    ).reset_index(drop=True)
+    display_df.index += 1
+
     # Display dataframe
     st.dataframe(
-        display_df[user_cols],
+        display_df[user_cols].style.highlight_between(
+            color="#F8F9FB", subset=user_sort_col, axis="columns"
+        ),
         width='stretch',
         row_height=25,
-        hide_index=True,
+        hide_index=False,
         column_config=hp.get_column_config("fielding"),
     )
 

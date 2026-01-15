@@ -47,6 +47,11 @@ def main():
         user_team = hp.create_team_filter(mode="npb")
         user_cols = hp.create_stat_cols_filter(display_df, mode="player_bat")
 
+        # Sorting options
+        user_sort_col, user_sort_asc = hp.create_sort_filter(
+            user_cols, mode="bat"
+        )
+
     # Apply filters
     display_df = display_df[display_df["Pos"].isin(user_pos)]
     display_df = display_df[display_df["B"].isin(user_batting_hand)]
@@ -57,11 +62,19 @@ def main():
     display_df = hp.convert_pct_cols_to_float(display_df)
     display_df = display_df.convert_dtypes()
 
+    # Apply sorting and reset index (must be after convert_pct_cols_to_float())
+    display_df = display_df.sort_values(
+        user_sort_col, ascending=user_sort_asc
+    ).reset_index(drop=True)
+    display_df.index += 1
+
     # Display dataframe
     st.dataframe(
-        display_df[user_cols],
-        width='stretch',
-        hide_index=True,
+        display_df[user_cols].style.highlight_between(
+            color="#F8F9FB", subset=user_sort_col, axis="columns"
+        ),
+        width="stretch",
+        hide_index=False,
         row_height=25,
         column_order=user_cols,
         column_config=hp.get_column_config("BR"),
