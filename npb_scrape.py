@@ -805,7 +805,7 @@ class PlayerData(Stats):
             "ISO": "{:.3f}",
             "BABIP": "{:.3f}",
             "BB/K": "{:.2f}",
-            "AIR%": "{:.1%}",
+            "PullAIR%": "{:.1%}",
             "Chase%": "{:.1%}",
             "Z-Con%": "{:.1%}",
             "Swing%": "{:.1%}",
@@ -826,7 +826,7 @@ class PlayerData(Stats):
             "ISO",
             "BB/K",
             "BABIP",
-            "AIR%",
+            "PullAIR%",
             "Chase%",
             "Z-Con%",
             "Swing%",
@@ -877,7 +877,7 @@ class PlayerData(Stats):
                     "BB%",
                     "BB/K",
                     "wSB",
-                    "AIR%",
+                    "PullAIR%",
                     "Chase%",
                     "Z-Con%",
                     "Swing%",
@@ -1199,7 +1199,7 @@ class PlayerData(Stats):
             self.df[x] = self.df[x] / 100
 
     def append_gsheets_batter_data(self):
-        """Adds AIR%, Chase%, Z-Con%, Swing%, and SwStr% for NPB batters"""
+        """Adds PullAIR%, Chase%, Z-Con%, Swing%, and SwStr% for NPB batters"""
         # Read in raw Google Sheet file
         gsheet_df = pd.read_csv(
             self.year_dir
@@ -1235,8 +1235,8 @@ class PlayerData(Stats):
             .astype(str)
         )
         gsheet_df["Player"] = gsheet_df["Batter"]
-        # Shorten Contact% column name
-        gsheet_df["Z-Con%"] = gsheet_df["Z-Contact%"]
+        # Shorten PullAIR% column name
+        gsheet_df["PullAIR%"] = gsheet_df["Pull AIR%"]
 
         # Merge only needed columns from gsheet_df
         self.df = pd.merge(
@@ -1244,7 +1244,7 @@ class PlayerData(Stats):
                 [
                     "Player",
                     "Team",
-                    "AIR%",
+                    "PullAIR%",
                     "Chase%",
                     "Z-Con%",
                     "Swing%",
@@ -1258,7 +1258,7 @@ class PlayerData(Stats):
 
         # Rescale whole numbers
         new_pct_stats = [
-            "AIR%",
+            "PullAIR%",
             "Chase%",
             "Z-Con%",
             "Swing%",
@@ -2988,7 +2988,7 @@ def get_gsheets_data(year_dir, suffix, year):
     if suffix == "PR":
         gsheet_url = "https://docs.google.com/spreadsheets/d/1CXYZQwjhfKw-g85V128DBit1TLpquoYKZ6WqgD5GVP4/export?format=csv"
     elif suffix == "BR":
-        gsheet_url = "https://docs.google.com/spreadsheets/d/1CXYZQwjhfKw-g85V128DBit1TLpquoYKZ6WqgD5GVP4/export?gid=231933630&format=csv"
+        gsheet_url = "https://docs.google.com/spreadsheets/d/1CXYZQwjhfKw-g85V128DBit1TLpquoYKZ6WqgD5GVP4/export?gid=1370716052&format=csv"
     else:
         gsheet_url = ""
     print("Connecting to: " + gsheet_url)
@@ -3276,7 +3276,7 @@ def make_raw_roster_data_file(year_dir, year):
         "Player URLs scraped in this session will be stored in: "
         + raw_csv_name
     )
-    raw_roster_data_file = open(raw_csv_name, "w")
+    raw_roster_data_file = open(raw_csv_name, mode="w", encoding="utf-8")
     raw_roster_data_file.write(
         "PlayerNum,Player,Link,BirthDate,Height,Weight,T,B,Note,Team\n"
     )
@@ -3665,7 +3665,7 @@ def add_roster_data(df, suffix, year):
     roster_df["BirthDate"] = pd.to_datetime(
         roster_df["BirthDate"], format="mixed"
     )
-    roster_df["Age"] = roster_df["BirthDate"].apply(calculate_age)
+    roster_df["Age"] = roster_df["BirthDate"].apply(calculate_age, args=(int(year),))
     # Create dict of Player Name,Team:Age tag
     player_age_dict = dict(
         zip((zip(roster_df["Player"], roster_df["Team"])), roster_df["Age"])
@@ -3680,7 +3680,7 @@ def add_roster_data(df, suffix, year):
     return df
 
 
-def calculate_age(birthdate):
+def calculate_age(birthdate, year):
     """Calculates the age of a player based on their birthdate according to
     when the NPB season ends (June 30th)
 
@@ -3689,7 +3689,7 @@ def calculate_age(birthdate):
 
     Returns:
     npb_age (int): The age of the player at the start of the NPB season"""
-    cutoff = datetime(datetime.today().year, 6, 30)
+    cutoff = datetime(year, 6, 30)
     npb_age = (
         cutoff.year
         - birthdate.year
@@ -4054,76 +4054,72 @@ def check_input_files(rel_dir, scrape_year=str(datetime.now().year)):
     """Checks that all input files are in the /input/ folder
 
     Parameters:
-    rel_dir (string): The relative directory holding the project
+    rel_dir (str): The relative directory holding the project
+    scrape_year (str): The year to check for year-specific files
 
     Returns:
-    missing_files (bool): If needed files are missing, this is True, else
-    False"""
+    bool: True if any required files are missing, False otherwise
+    """
+    # Validate inputs
+    if not rel_dir or not isinstance(rel_dir, str):
+        raise ValueError("rel_dir must be a non-empty string")
+    if not scrape_year or not isinstance(scrape_year, str):
+        raise ValueError("scrape_year must be a non-empty string")
+    
+    # Check if year directory exists
+    year_dir = os.path.join(rel_dir, "input", scrape_year)
+    if not os.path.exists(year_dir):
+        print(f"\nERROR: Year directory {year_dir} does not exist. Please ensure the input directory structure is correct.\n")
+        return True
+    
+    # Define files to check: (relative_path, message, is_error)
+    files_to_check = [
+        ("input/npb_urls.csv", 
+         "\nERROR: No NPB URL file found, no links to scrape...\nProvide a valid npb_urls.csv file in the /input/ directory to fix this.\n", 
+         True),
+        (f"input/{scrape_year}/name_translations.csv", 
+         "\nERROR: No player name translation file found, player names can't be translated...\nProvide a name_translations.csv file in the /input/ directory to fix this.\n", 
+         True),
+        (f"input/{scrape_year}/roster_data.csv", 
+         "\nERROR: No player link file found, table entries will not have links...\nProvide a roster_data.csv file in the /input/ directory to fix this.\n", 
+         True),
+        (f"input/{scrape_year}/fip_const.csv", 
+         "\nERROR: No FIP constant file found, calculations using FIP will be inaccurate...\nProvide a valid fip_const.csv file in the /input/ directory to fix this.\n", 
+         True),
+        (f"input/{scrape_year}/park_factors.csv", 
+         "\nERROR: No park factor file found, calculations using park factors will be inaccurate...\nProvide a valid park_factors.csv file in the /input/ directory to fix this.\n", 
+         True),
+        (f"input/{scrape_year}/team_urls.csv", 
+         "\nWARNING: No team link file found, table entries will not have links...\nProvide a team_urls.csv file in the /input/ directory to fix this.\n", 
+         False),
+        ("input/fielding_urls.csv", 
+         "\nERROR: No fielding URL file found, raw fielding files will not be produced...\nProvide a valid fielding_urls.csv file in the /input/ directory to fix this.\n", 
+         True),
+    ]
+    
     missing_files = False
-    # Required files
-    post_season_url_file = rel_dir + "/input/npb_urls.csv"
-    if not os.path.exists(post_season_url_file):
-        print(
-            "\nERROR: No NPB URL file found, no links to scrape...\n"
-            "Provide a valid npb_urls.csv file in the /input/ "
-            "directory to fix this.\n"
-        )
-        missing_files = True
-    translation_file = (
-        rel_dir + "/input/" + scrape_year + "/name_translations.csv"
-    )
-    if not os.path.exists(translation_file):
-        print(
-            "\nERROR: No player name translation file found, player names "
-            "can't be translated...\nProvide a name_translations.csv file in"
-            " the /input/ directory to fix this.\n"
-        )
-        missing_files = True
-    player_link_file = rel_dir + "/input/" + scrape_year + "/roster_data.csv"
-    if not os.path.exists(player_link_file):
-        print(
-            "\nERROR: No player link file found, table entries will not "
-            "have links...\nProvide a roster_data.csv file in the /input/ "
-            "directory to fix this.\n"
-        )
-        missing_files = True
-    fip_file = rel_dir + "/input/" + scrape_year + "/fip_const.csv"
-    if not os.path.exists(fip_file):
-        print(
-            "\nERROR: No FIP constant file found, calculations using FIP will "
-            "be inaccurate...\nProvide a valid fip_const.csv file in the "
-            "/input/ directory to fix this.\n"
-        )
-        missing_files = True
-    pf_file = rel_dir + "/input/" + scrape_year + "/park_factors.csv"
-    if not os.path.exists(pf_file):
-        print(
-            "\nERROR: No park factor file found, calculations using park "
-            "factors will be inaccurate...\nProvide a valid park_factors.csv "
-            "file in the /input/ directory to fix this.\n"
-        )
-        missing_files = True
-    team_link_file = rel_dir + "/input/" + scrape_year + "/team_urls.csv"
-    if not os.path.exists(team_link_file):
-        print(
-            "\nWARNING: No team link file found, table entries will not have "
-            "links...\nProvide a team_urls.csv file in the /input/ directory "
-            "to fix this to fix this.\n"
-        )
-        missing_files = True
-    field_url_file = rel_dir + "/input/fielding_urls.csv"
-    if not os.path.exists(field_url_file):
-        print(
-            "\nERROR: No fielding URL file found, raw fielding files will not "
-            "be produced...\nProvide a valid fielding_urls.csv file in the "
-            "/input/ directory to fix this.\n"
-        )
-        missing_files = True
-
-    if missing_files is False:
+    missing_list = []
+    
+    for rel_path, message, is_error in files_to_check:
+        full_path = os.path.join(rel_dir, rel_path)
+        try:
+            if not os.path.exists(full_path):
+                print(message)
+                missing_list.append(rel_path)
+                if is_error:
+                    missing_files = True
+        except (OSError, ValueError) as e:
+            print(f"\nERROR: Unable to check file {rel_path}: {e}\n")
+            missing_list.append(rel_path)
+            missing_files = True
+    
+    if not missing_files:
         print("All needed input files present, continuing...")
     else:
         print("Missing needed input file(s), exiting...")
+        if missing_list:
+            print("Missing files:", ", ".join(missing_list))
+    
     return missing_files
 
 
