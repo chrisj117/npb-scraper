@@ -200,6 +200,7 @@ def display_player_percentile(df, name, year, suffix):
         text=title,
         subtitle=[subtitle_str, "Presented by Yakyu Cosmopolitan"],
         subtitleColor="grey",
+        subtitleFontSize=13.5
     )
     chart = (
         alt.Chart(chart_data)
