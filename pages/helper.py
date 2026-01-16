@@ -93,7 +93,7 @@ def display_player_percentile(df, name, year, suffix):
             "SwStr%",
             "Z-Con%",
             "Chase%",
-            "AIR%",
+            "PullAIR%",
             "wSB",
             "BB/K",
             "BB%",
@@ -346,7 +346,7 @@ def create_sort_filter(cols, mode):
             "BB%": "desc",
             "BB/K": "desc",
             "wSB": "desc",
-            "AIR%": "desc",
+            "PullAIR%": "desc",
             "Chase%": "asc",
             "Z-Con%": "desc",
             "Swing%": "desc",
@@ -1151,9 +1151,9 @@ def get_column_config(suffix=None):
         }
     elif suffix in ("B", "BR", "BF"):
         column_config = {
-            "AIR%": st.column_config.NumberColumn(
+            "PullAIR%": st.column_config.NumberColumn(
                 format="%.1f%%",
-                help="Air Rate: The percentage of balls in play that are not "
+                help="Pull Air Rate: The percentage of balls in play that are pulled and not "
                 + "hit on the ground.",
             ),
             "Chase%": st.column_config.NumberColumn(
