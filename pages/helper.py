@@ -184,11 +184,11 @@ def display_player_percentile(df, name, year, suffix):
         tb_hand = df[df[name_col] == name]["B"]
         pos = df[df[name_col] == name]["Pos"]
         subtitle_str = (
-            subtitle_str + " · " + pos + " · Age " + age + " · Bats " + tb_hand
+            subtitle_str + " · " + df[df[name_col] == name]["PA"].astype(str) + " PA" + " · " + pos + " · Age " + age + " · Bats " + tb_hand
         )
     elif suffix in ("PF", "PR"):
         tb_hand = df[df[name_col] == name]["T"]
-        subtitle_str = subtitle_str + " · Age " + age + " · Throws " + tb_hand
+        subtitle_str = subtitle_str + " · " + df[df[name_col] == name]["IP"].astype(str) + " IP" + " · Age " + age + " · Throws " + tb_hand
     else:
         subtitle_str = subtitle_str + " · Age " + age
 
@@ -198,7 +198,7 @@ def display_player_percentile(df, name, year, suffix):
     # Chart settings
     title_params = alt.TitleParams(
         text=title,
-        subtitle=subtitle_str,
+        subtitle=[subtitle_str, "Presented by Yakyu Cosmopolitan"],
         subtitleColor="grey",
     )
     chart = (
@@ -279,6 +279,10 @@ def display_player_percentile(df, name, year, suffix):
     raw_data = raw_data.dropna()
     raw_data = raw_data.convert_dtypes()
     raw_data = raw_data.drop("Player", axis=1)
+    if suffix in ("BR", "BF"):
+        raw_data = raw_data.drop("PA", axis=1)
+    elif suffix in ("PR", "PF"):
+        raw_data = raw_data.drop("IP", axis=1)
     # Display the actual stats the player has + league averages
     st.dataframe(
         raw_data,
