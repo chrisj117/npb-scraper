@@ -244,47 +244,22 @@ def display_player_percentile(df, name, year, suffix):
         selection_mode=None,
     )
 
-    # Update player's raw data with a League Average row
-    # Transpose vertical df, reset index, and drop
+    # Transpose vertical df, grab stat names from first col + drop, reset index
     raw_data = raw_data.T
     raw_data.columns = raw_data.iloc[0]
     raw_data = raw_data.drop(index=raw_data.index[0], axis=0)
     raw_data.index = [0]
 
-    # Append League Average stats
-    if suffix in ("BR"):
-        # Extract only league average row from Team stats
-        team_df = load_csv(st.secrets[year + "TeamBR_link"])
-        lg_avg = team_df[team_df["Team"] == "League Average"]
-        lg_avg.index = [0]
-        # Get PA from player df
-        lg_avg.at[0, "PA"] = round(df.loc[:, "PA"].mean(), 0)
-        raw_data = pd.concat([raw_data, lg_avg])
-        # Drop extra concatenated columns
-        plot_cols.append("PA")
-        raw_data = raw_data[raw_data.columns.intersection(plot_cols)]
-    elif suffix in ("PR"):
-        # Extract only league average row from Team stats
-        team_df = load_csv(st.secrets[year + "TeamPR_link"])
-        lg_avg = team_df[team_df["Team"] == "League Average"]
-        lg_avg.index = [0]
-        # Get IP from player df
-        lg_avg.at[0, "IP"] = round(df.loc[:, "IP"].mean(), 0)
-        raw_data = pd.concat([raw_data, lg_avg])
-        # Drop extra concatenated columns
-        plot_cols.append("IP")
-        raw_data = raw_data[raw_data.columns.intersection(plot_cols)]
-
-    raw_data.insert(0, "Player", [name, "League Average"])
+    # Prep cols and remove redundant cols for display on Streamlit
     raw_data = convert_pct_cols_to_float(raw_data)
     raw_data = raw_data.dropna()
     raw_data = raw_data.convert_dtypes()
-    raw_data = raw_data.drop("Player", axis=1)
     if suffix in ("BR", "BF"):
         raw_data = raw_data.drop("PA", axis=1)
     elif suffix in ("PR", "PF"):
         raw_data = raw_data.drop("IP", axis=1)
-    # Display the actual stats the player has + league averages
+    
+    # Display the actual stats the player has
     st.dataframe(
         raw_data,
         width='stretch',
