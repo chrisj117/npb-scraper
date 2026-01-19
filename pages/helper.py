@@ -301,6 +301,7 @@ def display_player_percentile(df, name, year, suffix):
             y=y_enc,
             # Show original value (already formatted)
             text="Value",
+            tooltip=alt.value(None),
         )
     )
 
