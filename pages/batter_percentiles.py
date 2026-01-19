@@ -43,9 +43,7 @@ def main():
     # Each TZR in fielding must have Pos Adj applied to it
     field_df["TZR"] = field_df["TZR"].apply(pd.to_numeric, errors="coerce")
     field_df["TZR"] = field_df["TZR"].fillna(0)
-    field_df["Pos Adj"] = field_df["Pos Adj"].apply(
-        pd.to_numeric, errors="coerce"
-    )
+    field_df["Pos Adj"] = field_df["Pos Adj"].apply(pd.to_numeric, errors="coerce")
     field_df["TZR"] = field_df["TZR"] + field_df["Pos Adj"]
     # Combine all TZRs and Inn per player
     temp_df = pd.merge(
@@ -61,25 +59,19 @@ def main():
     # Drop players with no recorded stat (NaNs), then sum + merge
     temp_df = pd.merge(
         temp_df,
-        field_df.dropna(subset="RngR")
-        .groupby("Player", as_index=False)["RngR"]
-        .sum(),
+        field_df.dropna(subset="RngR").groupby("Player", as_index=False)["RngR"].sum(),
         on="Player",
         how="left",
     )
     temp_df = pd.merge(
         temp_df,
-        field_df.dropna(subset="ARM")
-        .groupby("Player", as_index=False)["ARM"]
-        .sum(),
+        field_df.dropna(subset="ARM").groupby("Player", as_index=False)["ARM"].sum(),
         on="Player",
         how="left",
     )
     temp_df = pd.merge(
         temp_df,
-        field_df.dropna(subset="DPR")
-        .groupby("Player", as_index=False)["DPR"]
-        .sum(),
+        field_df.dropna(subset="DPR").groupby("Player", as_index=False)["DPR"].sum(),
         on="Player",
         how="left",
     )
@@ -95,20 +87,14 @@ def main():
     temp_df["Def Value"] = (temp_df["TZR"] / temp_df["Inn"]) * 1287
     cumulative_df = pd.merge(
         bat_df,
-        temp_df[
-            ["Player", "Def Value", "RngR", "ARM", "DPR", "Framing", "Inn"]
-        ],
+        temp_df[["Player", "Def Value", "RngR", "ARM", "DPR", "Framing", "Inn"]],
         on="Player",
         how="inner",
     )
-    cumulative_df["Range"] = (
-        cumulative_df["RngR"] / cumulative_df["Inn"]
-    ) * 1287
+    cumulative_df["Range"] = (cumulative_df["RngR"] / cumulative_df["Inn"]) * 1287
     cumulative_df["Arm"] = (cumulative_df["ARM"] / cumulative_df["Inn"]) * 1287
     cumulative_df["DPR"] = (cumulative_df["DPR"] / cumulative_df["Inn"]) * 1287
-    cumulative_df["Framing"] = (
-        cumulative_df["Framing"] / cumulative_df["Inn"]
-    ) * 1287
+    cumulative_df["Framing"] = (cumulative_df["Framing"] / cumulative_df["Inn"]) * 1287
 
     # Number formatting
     format_maps = {

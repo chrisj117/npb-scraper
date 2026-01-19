@@ -35,9 +35,7 @@ def main():
             display_df = display_df.fillna(value={"Pos": "N/A"})
             user_pa = hp.create_pa_filter(display_df, "player")
             # Drop players below PA threshold
-            display_df = display_df.drop(
-                display_df[display_df.PA < user_pa].index
-            )
+            display_df = display_df.drop(display_df[display_df.PA < user_pa].index)
         with r1c2:
             user_league = hp.create_league_filter(mode="npb")
             user_batting_hand = hp.create_hand_filter("player_bat")
@@ -48,9 +46,7 @@ def main():
         user_cols = hp.create_stat_cols_filter(display_df, mode="player_bat")
 
         # Sorting options
-        user_sort_col, user_sort_asc = hp.create_sort_filter(
-            user_cols, mode="bat"
-        )
+        user_sort_col, user_sort_asc = hp.create_sort_filter(user_cols, mode="bat")
 
     # Apply filters
     display_df = display_df[display_df["Pos"].isin(user_pos)]

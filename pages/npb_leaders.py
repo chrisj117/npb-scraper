@@ -96,9 +96,7 @@ def main():
                 if value.equals(player_bat_df) or value.equals(lead_bat_df):
                     config = "BR"
                     name_col = "Player"
-                elif value.equals(player_pitch_df) or value.equals(
-                    lead_pitch_df
-                ):
+                elif value.equals(player_pitch_df) or value.equals(lead_pitch_df):
                     config = "PR"
                     name_col = "Pitcher"
                 else:
@@ -117,13 +115,13 @@ def main():
                         method="min", ascending=False
                     )
                 # Extract needed columns
-                display_df = display_df[
-                    ["Rank", name_col, key, "Team"]
-                ].sort_values("Rank")
+                display_df = display_df[["Rank", name_col, key, "Team"]].sort_values(
+                    "Rank"
+                )
 
                 chosen_col.dataframe(
                     display_df,
-                    width='stretch',
+                    width="stretch",
                     hide_index=True,
                     row_height=25,
                     height=160,

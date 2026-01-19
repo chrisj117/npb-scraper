@@ -1,7 +1,7 @@
 """Displays NPB team batting data with Streamlit"""
 
-import pages.helper as hp
 import streamlit as st
+import pages.helper as hp
 
 
 def main():
@@ -31,9 +31,7 @@ def main():
         user_cols = hp.create_stat_cols_filter(display_df, "team_bat")
 
         # Sorting options
-        user_sort_col, user_sort_asc = hp.create_sort_filter(
-            user_cols, mode="bat"
-        )
+        user_sort_col, user_sort_asc = hp.create_sort_filter(user_cols, mode="bat")
 
     # Exclude "League Average" from filters
     display_df = display_df.fillna(value={"League": "N/A"})
@@ -59,7 +57,7 @@ def main():
         display_df[user_cols].style.highlight_between(
             color="#F8F9FB", subset=user_sort_col, axis="columns"
         ),
-        width='stretch',
+        width="stretch",
         hide_index=False,
         row_height=25,
         column_order=user_cols,

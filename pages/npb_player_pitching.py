@@ -34,9 +34,7 @@ def main():
                 display_df = player_pitch_df
             user_ip = hp.create_ip_filter(display_df, mode="player")
             # Drop players below IP threshold
-            display_df = display_df.drop(
-                display_df[display_df.IP < user_ip].index
-            )
+            display_df = display_df.drop(display_df[display_df.IP < user_ip].index)
         with r1c2:
             user_league = hp.create_league_filter(mode="npb")
             user_pitching_hand = hp.create_hand_filter(mode="player_pitch")
@@ -44,9 +42,7 @@ def main():
         user_cols = hp.create_stat_cols_filter(display_df, mode="player_pitch")
 
         # Sorting options
-        user_sort_col, user_sort_asc = hp.create_sort_filter(
-            user_cols, mode="pitch"
-        )
+        user_sort_col, user_sort_asc = hp.create_sort_filter(user_cols, mode="pitch")
 
     # Apply filters
     display_df = display_df[display_df["T"].isin(user_pitching_hand)]

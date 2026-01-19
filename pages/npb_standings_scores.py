@@ -1,7 +1,7 @@
 """Displays NPB standings and daily score data with Streamlit"""
 
-import pages.helper as hp
 import streamlit as st
+import pages.helper as hp
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
     central_df = hp.load_csv(st.secrets["2025StandingsFinalC_link"])
     st.dataframe(
         central_df,
-        width='stretch',
+        width="stretch",
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("standings"),
@@ -30,7 +30,7 @@ def main():
     pacific_df = hp.load_csv(st.secrets["2025StandingsFinalP_link"])
     st.dataframe(
         pacific_df,
-        width='stretch',
+        width="stretch",
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("standings"),
@@ -40,15 +40,13 @@ def main():
     daily_df = hp.load_csv(st.secrets["2025DailyScoresFinalR_link"])
     # Compress columns into one
     daily_df = daily_df.astype(str)
-    daily_df["Scores"] = daily_df[["RunsHome", "RunsAway"]].agg(
-        " - ".join, axis=1
-    )
+    daily_df["Scores"] = daily_df[["RunsHome", "RunsAway"]].agg(" - ".join, axis=1)
     daily_df["Results"] = daily_df[["HomeTeam", "Scores", "AwayTeam"]].agg(
         " ".join, axis=1
     )
     st.dataframe(
         daily_df["Results"],
-        width='stretch',
+        width="stretch",
         hide_index=True,
         row_height=25,
     )

@@ -67,9 +67,7 @@ def create_lineup(team):
         cumulative_df = pd.DataFrame()
 
     # Drop everyone not in team
-    cumulative_df = cumulative_df.drop(
-        cumulative_df[cumulative_df.Team != team].index
-    )
+    cumulative_df = cumulative_df.drop(cumulative_df[cumulative_df.Team != team].index)
 
     lineup_df = pd.DataFrame()
     # Find top players in each position (minus UTL and 1)
@@ -79,9 +77,7 @@ def create_lineup(team):
     else:
         filter_pos_rows = ["UTL", "DH", "9", "8", "7", "6", "5", "4", "3", "2"]
     for pos in filter_pos_rows:
-        pos_df = cumulative_df.drop(
-            cumulative_df[cumulative_df.Pos != pos].index
-        )
+        pos_df = cumulative_df.drop(cumulative_df[cumulative_df.Pos != pos].index)
         starter = pos_df[pos_df["Inn"] == pos_df["Inn"].max()]
         lineup_df = pd.concat([starter, lineup_df])
 
@@ -129,7 +125,7 @@ def create_lineup(team):
     st.write("Lineup")
     st.dataframe(
         lineup_df,
-        width='stretch',
+        width="stretch",
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("BR"),
@@ -228,7 +224,7 @@ def create_rotation_bullpen(team):
     st.write("Rotation")
     st.dataframe(
         sp_df,
-        width='stretch',
+        width="stretch",
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("PR"),
@@ -236,7 +232,7 @@ def create_rotation_bullpen(team):
     st.write("Bullpen")
     st.dataframe(
         bp_df,
-        width='stretch',
+        width="stretch",
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("PR"),
@@ -260,17 +256,13 @@ def create_team_stats(team):
     npb_team_pitch_df = hp.load_csv(st.secrets["2025TeamPR_link"])
 
     # Get only filtered team + League Average
-    team_bat = npb_team_bat_df.drop(
-        npb_team_bat_df[npb_team_bat_df.Team != team].index
-    )
+    team_bat = npb_team_bat_df.drop(npb_team_bat_df[npb_team_bat_df.Team != team].index)
     lg_avg = npb_team_bat_df.drop(
         npb_team_bat_df[npb_team_bat_df.Team != "League Average"].index
     )
     bat_final_df = pd.concat([team_bat, lg_avg]).reset_index(drop=True)
     # Filter batting stats
-    bat_final_df = bat_final_df[
-        ["Team", "HR", "SB", "K%", "BB%", "AVG", "OPS+"]
-    ]
+    bat_final_df = bat_final_df[["Team", "HR", "SB", "K%", "BB%", "AVG", "OPS+"]]
     bat_final_df = hp.convert_pct_cols_to_float(bat_final_df)
     bat_final_df = bat_final_df.astype(str)
 
@@ -282,23 +274,21 @@ def create_team_stats(team):
     )
     pitch_final_df = pd.concat([team_pitch, lg_avg]).reset_index(drop=True)
     # Filter pitch stats
-    pitch_final_df = pitch_final_df[
-        ["Team", "W", "CG", "K%", "BB%", "ERA", "FIP-"]
-    ]
+    pitch_final_df = pitch_final_df[["Team", "W", "CG", "K%", "BB%", "ERA", "FIP-"]]
     pitch_final_df = hp.convert_pct_cols_to_float(pitch_final_df)
     pitch_final_df = pitch_final_df.astype(str)
 
     st.write("Team Statistics")
     st.dataframe(
         bat_final_df,
-        width='stretch',
+        width="stretch",
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("BR"),
     )
     st.dataframe(
         pitch_final_df,
-        width='stretch',
+        width="stretch",
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("PR"),

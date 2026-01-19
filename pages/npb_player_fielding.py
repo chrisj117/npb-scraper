@@ -27,9 +27,7 @@ def main():
         with r1c1:
             user_inn = hp.create_inn_filter(display_df, mode="player")
             # Drop players below Inn threshold
-            display_df = display_df.drop(
-                display_df[display_df.Inn < user_inn].index
-            )
+            display_df = display_df.drop(display_df[display_df.Inn < user_inn].index)
         with r1c2:
             user_league = hp.create_league_filter(mode="npb")
         with r1c3:
@@ -38,9 +36,7 @@ def main():
         user_cols = hp.create_stat_cols_filter(display_df, "player_field")
 
         # Sorting options
-        user_sort_col, user_sort_asc = hp.create_sort_filter(
-            user_cols, mode="field"
-        )
+        user_sort_col, user_sort_asc = hp.create_sort_filter(user_cols, mode="field")
 
     # Apply filters
     display_df = display_df[display_df["Pos"].isin(user_pos)]

@@ -1,7 +1,7 @@
 """Displays NPB team fielding data with Streamlit"""
 
-import pages.helper as hp
 import streamlit as st
+import pages.helper as hp
 
 
 def main():
@@ -31,9 +31,7 @@ def main():
         user_cols = hp.create_stat_cols_filter(display_df, "team_field")
 
         # Sorting options
-        user_sort_col, user_sort_asc = hp.create_sort_filter(
-            user_cols, mode="field"
-        )
+        user_sort_col, user_sort_asc = hp.create_sort_filter(user_cols, mode="field")
 
     # Apply filters
     display_df = display_df[display_df["League"].isin(user_league)]
@@ -54,7 +52,7 @@ def main():
         display_df[user_cols].style.highlight_between(
             color="#F8F9FB", subset=user_sort_col, axis="columns"
         ),
-        width='stretch',
+        width="stretch",
         row_height=25,
         hide_index=False,
         column_config=hp.get_column_config("fielding"),
