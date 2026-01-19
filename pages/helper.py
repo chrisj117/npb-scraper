@@ -129,6 +129,10 @@ def display_player_percentile(df, name, year, suffix):
     raw_data = raw_data.reset_index()
     raw_data.columns = ["Stat", "Value"]
     raw_data = raw_data.iloc[::-1]
+
+    # Store original values before converting to percentiles
+    original_values = raw_data["Value"].copy().astype(str)
+
     if suffix in ("BR", "BF"):
         plot_cols.remove("PA")
     elif suffix in ("PR", "PF"):
@@ -156,7 +160,20 @@ def display_player_percentile(df, name, year, suffix):
     chart_data = df[df[name_col] == name][plot_cols].T
     chart_data = chart_data.reset_index()
     chart_data.columns = ["Stats", "Percentile Rank"]
+
+    # Keep in original plot_cols order (transpose reverses, so we reverse back)
     chart_data = chart_data.iloc[::-1]
+    # Add original values to chart_data
+    chart_data["Value"] = original_values
+    # Add an explicit order column to lock y ordering across layers
+    chart_data["order"] = range(len(chart_data))
+    # Reuse a single Y encoding with explicit sort to maintain stat order between layers
+    y_enc = alt.Y(
+        "Stats:N",
+        title="",
+        sort=alt.SortField(field="order", order="ascending"),
+        axis=alt.Axis(labelFontSize=14),
+    )
 
     # Determine title/subtitle contents
     emoji_dict = {
@@ -184,37 +201,57 @@ def display_player_percentile(df, name, year, suffix):
         tb_hand = df[df[name_col] == name]["B"]
         pos = df[df[name_col] == name]["Pos"]
         subtitle_str = (
-            subtitle_str + " · " + df[df[name_col] == name]["PA"].astype(str) + " PA" + " · " + pos + " · Age " + age + " · Bats " + tb_hand
+            subtitle_str
+            + " · "
+            + df[df[name_col] == name]["PA"].astype(str)
+            + " PA"
+            + " · "
+            + pos
+            + " · Age "
+            + age
+            + " · Bats "
+            + tb_hand
         )
     elif suffix in ("PF", "PR"):
         tb_hand = df[df[name_col] == name]["T"]
-        subtitle_str = subtitle_str + " · " + df[df[name_col] == name]["IP"].astype(str) + " IP" + " · Age " + age + " · Throws " + tb_hand
+        subtitle_str = (
+            subtitle_str
+            + " · "
+            + df[df[name_col] == name]["IP"].astype(str)
+            + " IP"
+            + " · Age "
+            + age
+            + " · Throws "
+            + tb_hand
+        )
     else:
         subtitle_str = subtitle_str + " · Age " + age
-
     # Extract from dataframe
     subtitle_str = subtitle_str.values[0]
+
+    # TODO: potentially add tool tip on stat hover via adding as col in dataframe?
 
     # Chart settings
     title_params = alt.TitleParams(
         text=title,
-        subtitle=[subtitle_str, "Presented by Yakyu Cosmopolitan"],
+        subtitle=[subtitle_str, "Yakyu Cosmopolitan · @YakyuCosmo"],
         subtitleColor="grey",
-        subtitleFontSize=13.5
+        subtitleFontSize=13.5,
     )
+    # Create base bar graph that charts the data
     chart = (
         alt.Chart(chart_data)
         .mark_bar()
         .encode(
             x=alt.X(
                 "Percentile Rank",
-                scale=alt.Scale(type="linear", domain=[0, 100]),
+                scale=alt.Scale(
+                    type="linear", domain=[0, 105]
+                ),  # Extended to 105 to add padding for stats on right
                 title="",
-                axis=alt.Axis(
-                    values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-                ),
+                axis=alt.Axis(values=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]),
             ),
-            y=alt.Y("Stats", title="", sort=None),
+            y=y_enc,
             text="Percentile Rank",
             tooltip=alt.value(None),
             color=alt.Color("Percentile Rank")
@@ -222,15 +259,55 @@ def display_player_percentile(df, name, year, suffix):
             .legend(None),
         )
         .properties(
-            width="container",
             height=alt.Step(25),
             title=title_params,
         )
     )
 
-    # Display percentile number after bar
-    chart = chart.mark_bar() + chart.mark_text(align="left", dx=2, fontSize=14)
-    # Adjust font sizes
+    # Create circle layer for background behind percentile numbers
+    circle_layer = (
+        alt.Chart(chart_data)
+        .mark_circle(size=400, opacity=1, stroke="white", strokeWidth=2)
+        .encode(
+            x="Percentile Rank",
+            y=y_enc,
+            # Match circle color with bar color based on percentile rank
+            color=alt.Color("Percentile Rank")
+            .scale(domain=[0, 100], range=["#3366cc", "#b3b3b3", "#e60000"])
+            .legend(None),
+        )
+    )
+
+    # Create a text layer with percentile values aligned with end of bar
+    percentile_layer = (
+        alt.Chart(chart_data)
+        .mark_text(align="center", dx=0, fontSize=12, color="white")
+        .encode(x="Percentile Rank", y=y_enc, text="Percentile Rank")
+    )
+
+    # Create a text layer with original values along right edge of chart
+    raw_stat_layer = (
+        alt.Chart(chart_data)
+        .mark_text(
+            align="left",
+            baseline="middle",
+            dx=5,  # Position to the right of the bar
+            fontSize=14,
+            color="grey",
+        )
+        .encode(
+            # Fixed position outside the chart
+            x=alt.datum(105),
+            y=y_enc,
+            # Show original value (already formatted)
+            text="Value",
+        )
+    )
+
+    # Combine all layers
+    chart = alt.layer(chart, circle_layer, percentile_layer, raw_stat_layer)
+
+    # Configure the chart
     chart = chart.configure_title(fontSize=20, subtitleFontSize=14)
     chart = chart.configure_axis(labelFontSize=14)
 
@@ -242,30 +319,6 @@ def display_player_percentile(df, name, year, suffix):
         key=None,
         on_select="ignore",
         selection_mode=None,
-    )
-
-    # Transpose vertical df, grab stat names from first col + drop, reset index
-    raw_data = raw_data.T
-    raw_data.columns = raw_data.iloc[0]
-    raw_data = raw_data.drop(index=raw_data.index[0], axis=0)
-    raw_data.index = [0]
-
-    # Prep cols and remove redundant cols for display on Streamlit
-    raw_data = convert_pct_cols_to_float(raw_data)
-    raw_data = raw_data.dropna()
-    raw_data = raw_data.convert_dtypes()
-    if suffix in ("BR", "BF"):
-        raw_data = raw_data.drop("PA", axis=1)
-    elif suffix in ("PR", "PF"):
-        raw_data = raw_data.drop("IP", axis=1)
-    
-    # Display the actual stats the player has
-    st.dataframe(
-        raw_data,
-        width='stretch',
-        hide_index=True,
-        row_height=25,
-        column_config=get_column_config(suffix),
     )
 
 
@@ -330,8 +383,10 @@ def create_sort_filter(cols, mode):
             "Chase%": "asc",
             "Z-Con%": "desc",
             "Swing%": "desc",
+            "SwStr%": "asc",
             "TTO%": "desc",
             "B": None,
+            "Pos": None,
             "Team": None,
             "League": None,
         }
@@ -367,6 +422,11 @@ def create_sort_filter(cols, mode):
             "K%": "desc",
             "BB%": "asc",
             "K-BB%": "desc",
+            "CSW%": "desc",
+            "HR%": "asc",
+            "Con%": "desc",
+            "SwStr%": "desc",
+            "Chase%": "desc",
             "GB%": "desc",
             "LD%": "desc",
             "FB Velo": "desc",
@@ -984,8 +1044,7 @@ def get_column_config(suffix=None):
                 "NPB league average in 2025 is about 91.5 mph.",
             ),
             "G": st.column_config.NumberColumn(
-                help="Games Played: The number of games in which a pitcher "
-                + "appears.",
+                help="Games Played: The number of games in which a pitcher appears.",
             ),
             "W": st.column_config.NumberColumn(
                 help="Wins: The number of games a pitcher is credited with "
@@ -1001,8 +1060,7 @@ def get_column_config(suffix=None):
                 + "pitcher completes, recorded in one-third increments.",
             ),
             "BF": st.column_config.NumberColumn(
-                help="Batters Faced: The total number of hitters a pitcher "
-                + "faces.",
+                help="Batters Faced: The total number of hitters a pitcher faces.",
             ),
             "R": st.column_config.NumberColumn(
                 help="Runs: The total number of runs a pitcher allows.",
@@ -1028,20 +1086,17 @@ def get_column_config(suffix=None):
             ),
             "BB%": st.column_config.NumberColumn(
                 format="%.1f%%",
-                help="Walk Rate: The percentage of batters faced by a "
-                + "pitcher that result in walks.",
+                help="Walk Rate: The percentage of batters faced by a pitcher that "
+                + "result in walks.",
             ),
             "IBB": st.column_config.NumberColumn(
-                help="Intentional Walks: The number of walks a pitcher "
-                + "intentionally issues.",
+                help="Intentional Walks: The number of walks a pitcher intentionally issues.",
             ),
             "HB": st.column_config.NumberColumn(
-                help="Hit By Pitches: The number of batters a pitcher hits "
-                + "with a pitch.",
+                help="Hit By Pitches: The number of batters a pitcher hits with a pitch.",
             ),
             "SO": st.column_config.NumberColumn(
-                help="Strikeouts: The number of batters a pitcher retires "
-                + "on strikes.",
+                help="Strikeouts: The number of batters a pitcher retires on strikes.",
             ),
             "K%": st.column_config.NumberColumn(
                 format="%.1f%%",
@@ -1078,8 +1133,7 @@ def get_column_config(suffix=None):
                 format="%.2f",
                 help="ERA-FIP Differential: The differential of a pitcher's "
                 + "ERA and FIP. Higher values indicate underperformance and "
-                + "lower values indicate overperformance relative to "
-                + "expectations.",
+                + "lower values indicate overperformance relative to expectations.",
             ),
             "kwERA": st.column_config.NumberColumn(
                 format="%.2f",
@@ -1133,8 +1187,8 @@ def get_column_config(suffix=None):
         column_config = {
             "PullAIR%": st.column_config.NumberColumn(
                 format="%.1f%%",
-                help="Pull Air Rate: The percentage of balls in play that are pulled and not "
-                + "hit on the ground.",
+                help="Pull Air Rate: The percentage of balls in play that are pulled "
+                + "and not hit on the ground.",
             ),
             "Chase%": st.column_config.NumberColumn(
                 format="%.1f%%",
@@ -1143,8 +1197,8 @@ def get_column_config(suffix=None):
             ),
             "Z-Con%": st.column_config.NumberColumn(
                 format="%.1f%%",
-                help="In-Zone Contact Rate: The percentage of swings on pitches in the strike zone "
-                + "that result in contact, including both fair and "
+                help="In-Zone Contact Rate: The percentage of swings on pitches in "
+                + "the strike zone that result in contact, including both fair and "
                 + "foul balls.",
             ),
             "SwStr%": st.column_config.NumberColumn(
@@ -1220,16 +1274,14 @@ def get_column_config(suffix=None):
                 + "bases, with 0.0 being league-average.",
             ),
             "G": st.column_config.NumberColumn(
-                help="Games Played: The number of games in which a player "
-                + "appears.",
+                help="Games Played: The number of games in which a player appears.",
             ),
             "PA": st.column_config.NumberColumn(
-                help="Plate Appearances: The total number of times a "
-                + "player comes to bat.",
+                help="Plate Appearances: The total number of times a player comes to "
+                + "bat.",
             ),
             "R": st.column_config.NumberColumn(
-                help="Runs: The number of times a player crosses home plate "
-                + "to score.",
+                help="Runs: The number of times a player crosses home plate to score.",
             ),
             "RBI": st.column_config.NumberColumn(
                 help="Runs Batted In: The number of runs a player drives "
@@ -1317,8 +1369,7 @@ def get_column_config(suffix=None):
             ),
             "Range": st.column_config.NumberColumn(
                 format="%.1f",
-                help="Range Runs: Defensive runs through fielding batted "
-                + "balls.",
+                help="Range Runs: Defensive runs through fielding batted balls.",
             ),
             "Def Value": st.column_config.NumberColumn(
                 format="%.1f",
@@ -1386,15 +1437,13 @@ def get_column_config(suffix=None):
             ),
             "RngR": st.column_config.NumberColumn(
                 format="%.1f",
-                help="Range Runs: Defensive runs through fielding batted "
-                + "balls.",
+                help="Range Runs: Defensive runs through fielding batted balls.",
             ),
             "TZR": st.column_config.NumberColumn(
                 format="%.1f",
                 help="Total Zone Runs: Combined fielding value of defensive "
                 + "metrics. Infield/Outfield = RngR + DPR + ARM + ErrR; "
-                + "Catchers = ARM + ErrR. Does not include framing or "
-                + "blocking.",
+                + "Catchers = ARM + ErrR. Does not include framing or blocking.",
             ),
             "TZR/143": st.column_config.NumberColumn(
                 format="%.1f",
