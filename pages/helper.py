@@ -192,49 +192,45 @@ def display_player_percentile(df, name, year, suffix):
     }
     title = name + " " + emoji_dict[team.values[0]]
     if suffix in ("BR", "PR"):
-        subtitle_str = team + " · " + year + " NPB"
+        subtitle_str1 = team + " · " + year + " NPB"
     elif suffix in ("BF", "PF"):
-        subtitle_str = team + " · " + year + " Farm"
+        subtitle_str1 = team + " · " + year + " Farm"
     else:
-        subtitle_str = team + " · " + year
+        subtitle_str1 = team + " · " + year
     if suffix in ("BF", "BR"):
-        tb_hand = df[df[name_col] == name]["B"]
-        pos = df[df[name_col] == name]["Pos"]
-        subtitle_str = (
-            subtitle_str
-            + " · "
-            + df[df[name_col] == name]["PA"].astype(str)
+        subtitle_str2 = (
+            df[df[name_col] == name]["PA"].astype(str)
             + " PA"
             + " · "
-            + pos
+            + df[df[name_col] == name]["Pos"].astype(str)
             + " · Age "
             + age
             + " · Bats "
-            + tb_hand
+            + df[df[name_col] == name]["B"].astype(str)
         )
     elif suffix in ("PF", "PR"):
-        tb_hand = df[df[name_col] == name]["T"]
-        subtitle_str = (
-            subtitle_str
-            + " · "
-            + df[df[name_col] == name]["IP"].astype(str)
+        subtitle_str2 = (
+            df[df[name_col] == name]["IP"].astype(str)
             + " IP"
-            + " · Age "
+            + " · "
+            + "Age "
             + age
             + " · Throws "
-            + tb_hand
+            + df[df[name_col] == name]["T"].astype(str)
         )
     else:
-        subtitle_str = subtitle_str + " · Age " + age
-    # Extract from dataframe
-    subtitle_str = subtitle_str.values[0]
+        subtitle_str2 = "Age " + age
 
     # TODO: potentially add tool tip on stat hover via adding as col in dataframe?
 
     # Chart settings
     title_params = alt.TitleParams(
         text=title,
-        subtitle=[subtitle_str, "Yakyu Cosmopolitan · @YakyuCosmo"],
+        subtitle=[
+            subtitle_str1.values[0],
+            subtitle_str2.values[0],
+            "@YakyuCosmo",
+        ],
         subtitleColor="grey",
         subtitleFontSize=13.5,
     )
