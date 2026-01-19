@@ -100,9 +100,7 @@ def main():
     if scrape_year == str(datetime.now().year):
         if npb_scrape_yn == "Y":
             get_daily_scores(year_dir, "R", scrape_year)
-        npb_daily_scores = DailyScoresData(
-            stats_dir, year_dir, "R", scrape_year
-        )
+        npb_daily_scores = DailyScoresData(stats_dir, year_dir, "R", scrape_year)
         npb_daily_scores.output_final()
     # NPB Individual Fielding
     # NOTE: fielding must be organized before any player stats to obtain player
@@ -121,9 +119,7 @@ def main():
     npb_bat_player_stats = PlayerData(stats_dir, year_dir, "BR", scrape_year)
     npb_pitch_player_stats = PlayerData(stats_dir, year_dir, "PR", scrape_year)
     # Adding positions to batting stats
-    npb_bat_player_stats.append_positions(
-        npb_fielding.df, npb_pitch_player_stats.df
-    )
+    npb_bat_player_stats.append_positions(npb_fielding.df, npb_pitch_player_stats.df)
     # NPB Team stats
     npb_bat_team_stats = TeamData(
         npb_bat_player_stats.df, stats_dir, year_dir, "BR", scrape_year
@@ -148,12 +144,8 @@ def main():
     npb_pitch_player_stats.output_final()
     npb_bat_team_stats.output_final()
     npb_pitch_team_stats.output_final()
-    central_standings.output_final(
-        npb_bat_team_stats.df, npb_pitch_team_stats.df
-    )
-    pacific_standings.output_final(
-        npb_bat_team_stats.df, npb_pitch_team_stats.df
-    )
+    central_standings.output_final(npb_bat_team_stats.df, npb_pitch_team_stats.df)
+    pacific_standings.output_final(npb_bat_team_stats.df, npb_pitch_team_stats.df)
     npb_fielding.output_final()
     npb_team_fielding.output_final()
     npb_team_summary.output_final()
@@ -176,13 +168,9 @@ def main():
     western_standings = StandingsData(stats_dir, year_dir, "W", scrape_year)
     # Farm Player stats
     farm_bat_player_stats = PlayerData(stats_dir, year_dir, "BF", scrape_year)
-    farm_pitch_player_stats = PlayerData(
-        stats_dir, year_dir, "PF", scrape_year
-    )
+    farm_pitch_player_stats = PlayerData(stats_dir, year_dir, "PF", scrape_year)
     # Adding positions to batting stats
-    farm_bat_player_stats.append_positions(
-        farm_fielding.df, farm_pitch_player_stats.df
-    )
+    farm_bat_player_stats.append_positions(farm_fielding.df, farm_pitch_player_stats.df)
     # Farm Team stats
     farm_bat_team_stats = TeamData(
         farm_bat_player_stats.df, stats_dir, year_dir, "BF", scrape_year
@@ -195,12 +183,8 @@ def main():
     farm_pitch_player_stats.output_final()
     farm_bat_team_stats.output_final()
     farm_pitch_team_stats.output_final()
-    eastern_standings.output_final(
-        farm_bat_team_stats.df, farm_pitch_team_stats.df
-    )
-    western_standings.output_final(
-        farm_bat_team_stats.df, farm_pitch_team_stats.df
-    )
+    eastern_standings.output_final(farm_bat_team_stats.df, farm_pitch_team_stats.df)
+    western_standings.output_final(farm_bat_team_stats.df, farm_pitch_team_stats.df)
     farm_fielding.output_final()
     farm_team_fielding.output_final()
     print("Farm statistics finished!\n")
@@ -211,9 +195,7 @@ def main():
         get_post_season_stats(year_dir, "PP", scrape_year)
     # Post season player stats
     post_bat_player_stats = PlayerData(stats_dir, year_dir, "BP", scrape_year)
-    post_pitch_player_stats = PlayerData(
-        stats_dir, year_dir, "PP", scrape_year
-    )
+    post_pitch_player_stats = PlayerData(stats_dir, year_dir, "PP", scrape_year)
     # Post season team stats
     post_bat_team_stats = TeamData(
         post_bat_player_stats.df, stats_dir, year_dir, "BP", scrape_year
@@ -382,9 +364,7 @@ class PlayerData(Stats):
         final_df = convert_team_to_html(final_df, self.year, "Abb")
         # Print final file with all players
         final_filename = self.year + "StatsFinal" + self.suffix + ".csv"
-        final_filename = store_dataframe(
-            final_df, upload_dir, final_filename, "csv"
-        )
+        final_filename = store_dataframe(final_df, upload_dir, final_filename, "csv")
 
         # Make deep copy again for leader's file
         leader_df = self.df.copy()
@@ -393,9 +373,7 @@ class PlayerData(Stats):
         if self.suffix not in ("BP", "PP"):
             game_df = self.get_team_games()
             # Add new column (called 'GTeam') for team's games played
-            leader_df = leader_df.merge(
-                game_df, on="Team", suffixes=(None, "Team")
-            )
+            leader_df = leader_df.merge(game_df, on="Team", suffixes=(None, "Team"))
 
         # Leader file output
         if self.suffix in ("PR", "PF"):
@@ -413,15 +391,11 @@ class PlayerData(Stats):
 
             # Store df without HTML for Streamlit
             st_filename = self.year + "Leaders" + self.suffix + ".csv"
-            st_filename = store_dataframe(
-                leader_df, st_dir, st_filename, "csv"
-            )
+            st_filename = store_dataframe(leader_df, st_dir, st_filename, "csv")
 
             # Convert player/team names to HTML that contains appropriate URLs
             if int(self.year) == datetime.now().year:
-                leader_df = convert_player_to_html(
-                    leader_df, self.suffix, self.year
-                )
+                leader_df = convert_player_to_html(leader_df, self.suffix, self.year)
             leader_df = convert_team_to_html(leader_df, self.year, "Abb")
             # Output leader file as a csv
             leader_filename = self.year + "Leaders" + self.suffix + ".csv"
@@ -429,10 +403,7 @@ class PlayerData(Stats):
                 leader_df, upload_dir, leader_filename, "csv"
             )
 
-            print(
-                "The pitching leaders file will be stored in: "
-                + leader_filename
-            )
+            print("The pitching leaders file will be stored in: " + leader_filename)
             print(
                 "An alternative view of the pitching results will be stored "
                 "in: " + alt_filename
@@ -447,30 +418,22 @@ class PlayerData(Stats):
             # Drop all players below the IP/PA threshold (PA gets rounded down)
             if self.suffix == "BF":
                 leader_df = leader_df.drop(
-                    leader_df[
-                        leader_df.PA < np.floor((leader_df["GTeam"] * 2.7))
-                    ].index
+                    leader_df[leader_df.PA < np.floor((leader_df["GTeam"] * 2.7))].index
                 )
             else:
                 leader_df = leader_df.drop(
-                    leader_df[
-                        leader_df.PA < np.floor((leader_df["GTeam"] * 3.1))
-                    ].index
+                    leader_df[leader_df.PA < np.floor((leader_df["GTeam"] * 3.1))].index
                 )
             # Drop temp GTeamIP column
             leader_df.drop(["GTeam"], axis=1, inplace=True)
 
             # Store df without HTML for Streamlit
             st_filename = self.year + "Leaders" + self.suffix + ".csv"
-            st_filename = store_dataframe(
-                leader_df, st_dir, st_filename, "csv"
-            )
+            st_filename = store_dataframe(leader_df, st_dir, st_filename, "csv")
 
             # Convert player/team names to HTML that contains appropriate URLs
             if int(self.year) == datetime.now().year:
-                leader_df = convert_player_to_html(
-                    leader_df, self.suffix, self.year
-                )
+                leader_df = convert_player_to_html(leader_df, self.suffix, self.year)
             leader_df = convert_team_to_html(leader_df, self.year, "Abb")
             # Output leader file as a csv
             leader_filename = self.year + "Leaders" + self.suffix + ".csv"
@@ -478,10 +441,7 @@ class PlayerData(Stats):
                 leader_df, upload_dir, leader_filename, "csv"
             )
 
-            print(
-                "The batting leaders file will be stored in: "
-                + leader_filename
-            )
+            print("The batting leaders file will be stored in: " + leader_filename)
             print(
                 "An alternative view of the batting results will be stored "
                 "in: " + alt_filename
@@ -495,18 +455,14 @@ class PlayerData(Stats):
             # Fix NaNs in League col
             self.df["League"] = self.df["League"].fillna("")
             # Print organized dataframe to file
-            new_csv_alt = (
-                alt_dir + "/" + self.year + "TeamAlt" + self.suffix + ".csv"
-            )
+            new_csv_alt = alt_dir + "/" + self.year + "TeamAlt" + self.suffix + ".csv"
             self.df.to_string(new_csv_alt)
             # Make output copy to avoid modifying original df
             final_df = self.df.copy()
             # Insert HTML code for team names
             final_df = convert_team_to_html(final_df, self.year, "Full")
             # Print output file for upload
-            new_csv_final = (
-                upload_dir + "/" + self.year + "Team" + self.suffix + ".csv"
-            )
+            new_csv_final = upload_dir + "/" + self.year + "Team" + self.suffix + ".csv"
             final_df.to_csv(new_csv_final, index=False)
 
             # Pitching TeamAlt and Team file location outputs
@@ -533,11 +489,7 @@ class PlayerData(Stats):
             / self.df["IP"].sum()
         ) + select_fip_const(self.suffix, self.year)
         total_kwera = 4.80 - (
-            10
-            * (
-                (self.df["SO"].sum() - self.df["BB"].sum())
-                / self.df["BF"].sum()
-            )
+            10 * ((self.df["SO"].sum() - self.df["BB"].sum()) / self.df["BF"].sum())
         )
 
         # Individual statistic calculations
@@ -545,9 +497,7 @@ class PlayerData(Stats):
             10 * ((self.df["SO"] - self.df["BB"]) / self.df["BF"])
         )
         self.df = select_park_factor(self.df, self.suffix, self.year)
-        self.df["ERA+"] = 100 * (
-            (total_era * self.df["ParkF"]) / self.df["ERA"]
-        )
+        self.df["ERA+"] = 100 * ((total_era * self.df["ParkF"]) / self.df["ERA"])
         self.df["ERA+"] = self.df["ERA+"].astype(str).replace("inf", "999")
         self.df["ERA+"] = self.df["ERA+"].astype(float)
         self.df["K%"] = self.df["SO"] / self.df["BF"]
@@ -561,9 +511,7 @@ class PlayerData(Stats):
             )
             / self.df["IP"]
         ) + select_fip_const(self.suffix, self.year)
-        self.df["FIP-"] = 100 * (
-            self.df["FIP"] / (total_fip * self.df["ParkF"])
-        )
+        self.df["FIP-"] = 100 * (self.df["FIP"] / (total_fip * self.df["ParkF"]))
         self.df["WHIP"] = (self.df["BB"] + self.df["H"]) / self.df["IP"]
         self.df["HR%"] = self.df["HR"] / self.df["BF"]
         self.df["kwERA-"] = 100 * (self.df["kwERA"] / (total_kwera))
@@ -720,9 +668,7 @@ class PlayerData(Stats):
     def org_bat(self):
         """Organize the raw batting stat csv and add additional stats"""
         # Counting stat column totals used in other calculations
-        total_obp = (
-            self.df["H"].sum() + self.df["BB"].sum() + self.df["HP"].sum()
-        ) / (
+        total_obp = (self.df["H"].sum() + self.df["BB"].sum() + self.df["HP"].sum()) / (
             self.df["AB"].sum()
             + self.df["BB"].sum()
             + self.df["HP"].sum()
@@ -751,9 +697,9 @@ class PlayerData(Stats):
         self.df["K%"] = self.df["SO"] / self.df["PA"]
         self.df["BB%"] = self.df["BB"] / self.df["PA"]
         self.df["BB/K"] = self.df["BB"] / self.df["SO"]
-        self.df["TTO%"] = (
-            self.df["BB"] + self.df["SO"] + self.df["HR"]
-        ) / self.df["PA"]
+        self.df["TTO%"] = (self.df["BB"] + self.df["SO"] + self.df["HR"]) / self.df[
+            "PA"
+        ]
         self.df["BABIP"] = (self.df["H"] - self.df["HR"]) / (
             self.df["AB"] - self.df["SO"] - self.df["HR"] + self.df["SF"]
         )
@@ -764,15 +710,10 @@ class PlayerData(Stats):
             - self.df["3B"].sum()
             - self.df["HR"].sum()
         )
-        pl_single = (
-            self.df["H"] - self.df["2B"] - self.df["3B"] - self.df["HR"]
-        )
+        pl_single = self.df["H"] - self.df["2B"] - self.df["3B"] - self.df["HR"]
         wsb_a = 0.17 * self.df["SB"] - 0.33 * self.df["CS"]
         wsb_b = (self.df["SB"].sum() * 0.17 + self.df["CS"].sum() * -0.33) / (
-            lg_single
-            + self.df["BB"].sum()
-            + self.df["HP"].sum()
-            - self.df["IBB"].sum()
+            lg_single + self.df["BB"].sum() + self.df["HP"].sum() - self.df["IBB"].sum()
         )
         wsb_c = pl_single + self.df["BB"] + self.df["HP"] - self.df["IBB"]
         self.df["wSB"] = wsb_a - wsb_b * wsb_c
@@ -1001,9 +942,7 @@ class PlayerData(Stats):
             "ERA": "sum",
             "Team": "first",
         }
-        self.df = self.df.groupby(self.df["Pitcher"], as_index=False).agg(
-            agg_functions
-        )
+        self.df = self.df.groupby(self.df["Pitcher"], as_index=False).agg(agg_functions)
         # Determine cumulative ERA between all rounds
         self.df["ERA"] = (9 * self.df["ER"]) / self.df["IP"]
         self.df = translate_players(self.df, self.suffix, self.year)
@@ -1047,9 +986,7 @@ class PlayerData(Stats):
             "OBP": "first",
             "Team": "first",
         }
-        self.df = self.df.groupby(self.df["Player"], as_index=False).agg(
-            agg_functions
-        )
+        self.df = self.df.groupby(self.df["Player"], as_index=False).agg(agg_functions)
         self.df = translate_players(self.df, self.suffix, self.year)
         # Determine cumulative AVG SLG and OBP between all rounds
         self.df["AVG"] = self.df["H"] / self.df["AB"]
@@ -1066,9 +1003,7 @@ class PlayerData(Stats):
         self.df["IP"] = self.df["IP"].astype(str).replace("+", "0")
         # Original scraped tables split IP into 2 columns
         # Convert all NaN to 0 (as floats)
-        if self.suffix in "PR" or (
-            self.suffix == "PP" and int(self.year) <= 2024
-        ):
+        if self.suffix in "PR" or (self.suffix == "PP" and int(self.year) <= 2024):
             self.df.iloc[:, 11] = self.df.iloc[:, 11].fillna(0)
             self.df.iloc[:, 11] = self.df.iloc[:, 11].astype(float)
             # Combine the incorrectly split IP stat columns
@@ -1133,12 +1068,7 @@ class PlayerData(Stats):
         """Adds GB%, Chase%, Contact%, SwStr%, CSW%, FB Velo for NPB pitchers"""
         # Read in raw Google Sheet file
         gsheet_df = pd.read_csv(
-            self.year_dir
-            + "/raw/"
-            + self.year
-            + "GSheetsRaw"
-            + self.suffix
-            + ".csv"
+            self.year_dir + "/raw/" + self.year + "GSheetsRaw" + self.suffix + ".csv"
         )
 
         # Convert abbreviated names to full team names
@@ -1202,12 +1132,7 @@ class PlayerData(Stats):
         """Adds PullAIR%, Chase%, Z-Con%, Swing%, and SwStr% for NPB batters"""
         # Read in raw Google Sheet file
         gsheet_df = pd.read_csv(
-            self.year_dir
-            + "/raw/"
-            + self.year
-            + "GSheetsRaw"
-            + self.suffix
-            + ".csv"
+            self.year_dir + "/raw/" + self.year + "GSheetsRaw" + self.suffix + ".csv"
         )
 
         # Convert abbreviated names to full team names
@@ -1305,9 +1230,7 @@ class PlayerData(Stats):
         # Extract only the player name, team, and primary_position:
         temp_primary_df = pivot_df[["Player", "Pos", "Team"]]
         # Then merge if needed:
-        self.df = pd.merge(
-            self.df, temp_primary_df, on=["Player", "Team"], how="left"
-        )
+        self.df = pd.merge(self.df, temp_primary_df, on=["Player", "Team"], how="left")
         # Swap temp Pos with updated Pos, drop placeholder Pos, rename
         self.df["Pos_x"], self.df["Pos_y"] = self.df["Pos_y"], self.df["Pos_x"]
         self.df = self.df.drop("Pos_y", axis=1)
@@ -1390,9 +1313,7 @@ class TeamData(Stats):
         final_df = convert_team_to_html(final_df, self.year, "Full")
         # Print output file for upload
         final_filename = self.year + "Team" + self.suffix + ".csv"
-        final_filename = store_dataframe(
-            final_df, upload_dir, final_filename, "csv"
-        )
+        final_filename = store_dataframe(final_df, upload_dir, final_filename, "csv")
 
         # Pitching TeamAlt and Team file location outputs
         if self.suffix in ("PR", "PF"):
@@ -1530,20 +1451,15 @@ class TeamData(Stats):
             + (4 * self.df["HR"].sum())
         ) / self.df["AB"].sum()
         self.df["OPS+"] = (
-            100
-            * (
-                (self.df["OBP"] / league_obp)
-                + (self.df["SLG"] / league_slg)
-                - 1
-            )
+            100 * ((self.df["OBP"] / league_obp) + (self.df["SLG"] / league_slg) - 1)
         ) / self.df["ParkF"]
         self.df["ISO"] = self.df["SLG"] - self.df["AVG"]
         self.df["K%"] = self.df["SO"] / self.df["PA"]
         self.df["BB%"] = self.df["BB"] / self.df["PA"]
         self.df["BB/K"] = self.df["BB"] / self.df["SO"]
-        self.df["TTO%"] = (
-            self.df["BB"] + self.df["SO"] + self.df["HR"]
-        ) / self.df["PA"]
+        self.df["TTO%"] = (self.df["BB"] + self.df["SO"] + self.df["HR"]) / self.df[
+            "PA"
+        ]
         self.df["BABIP"] = (self.df["H"] - self.df["HR"]) / (
             self.df["AB"] - self.df["SO"] - self.df["HR"] + self.df["SF"]
         )
@@ -1553,15 +1469,10 @@ class TeamData(Stats):
             - self.df["3B"].sum()
             - self.df["HR"].sum()
         )
-        team_single = (
-            self.df["H"] - self.df["2B"] - self.df["3B"] - self.df["HR"]
-        )
+        team_single = self.df["H"] - self.df["2B"] - self.df["3B"] - self.df["HR"]
         wsb_a = 0.17 * self.df["SB"] - 0.33 * self.df["CS"]
         wsb_b = (self.df["SB"].sum() * 0.17 + self.df["CS"].sum() * -0.33) / (
-            lg_single
-            + self.df["BB"].sum()
-            + self.df["HP"].sum()
-            - self.df["IBB"].sum()
+            lg_single + self.df["BB"].sum() + self.df["HP"].sum() - self.df["IBB"].sum()
         )
         wsb_c = team_single + self.df["BB"] + self.df["HP"] - self.df["IBB"]
         self.df["wSB"] = wsb_a - wsb_b * wsb_c
@@ -1714,8 +1625,7 @@ class TeamData(Stats):
         total_era = 9 * (total_er / total_ip)
         total_kwera = 4.80 - (10 * ((total_so - total_bb) / total_bf))
         total_fip = (
-            ((13 * total_hr) + (3 * (total_bb + total_hb)) - (2 * total_so))
-            / total_ip
+            ((13 * total_hr) + (3 * (total_bb + total_hb)) - (2 * total_so)) / total_ip
         ) + select_fip_const(self.suffix, self.year)
 
         # Calculations for RATE stats
@@ -1737,9 +1647,7 @@ class TeamData(Stats):
         ) + select_fip_const(self.suffix, self.year)
         # NO PARK FACTOR TEST
         # self.df['FIP-'] = (100 * (self.df['FIP'] / (total_fip)))
-        self.df["FIP-"] = 100 * (
-            self.df["FIP"] / (total_fip * self.df["ParkF"])
-        )
+        self.df["FIP-"] = 100 * (self.df["FIP"] / (total_fip * self.df["ParkF"]))
         self.df["WHIP"] = (self.df["BB"] + self.df["H"]) / self.df["IP"]
         self.df["Diff"] = self.df["ERA"] - self.df["FIP"]
         self.df["HR%"] = self.df["HR"] / self.df["BF"]
@@ -1856,9 +1764,7 @@ class StandingsData(Stats):
         # Do bare minimum to prepare IP/PA const file for PlayerData objects
         # Further organization of stats comes later in output_final()
         # Drop last unnamed column
-        self.df.drop(
-            self.df.columns[len(self.df.columns) - 1], axis=1, inplace=True
-        )
+        self.df.drop(self.df.columns[len(self.df.columns) - 1], axis=1, inplace=True)
         # Replace all team entries with correct names from dictionary
         team_dict = {
             "HanshinTigers": "Hanshin Tigers",
@@ -1905,9 +1811,7 @@ class StandingsData(Stats):
         const_dir = os.path.join(self.year_dir, "drop_const")
         if not os.path.exists(const_dir):
             os.mkdir(const_dir)
-        new_csv_const = (
-            const_dir + "/" + self.year + "const_raw" + self.suffix + ".csv"
-        )
+        new_csv_const = const_dir + "/" + self.year + "const_raw" + self.suffix + ".csv"
         self.const_df.to_csv(new_csv_const, index=False)
 
     def output_final(self, tb_df, tp_df):
@@ -1948,9 +1852,7 @@ class StandingsData(Stats):
         final_df = convert_team_to_html(final_df, self.year, "Full")
         # Create Standings file name
         final_filename = self.year + "StandingsFinal" + self.suffix + ".csv"
-        final_filename = store_dataframe(
-            final_df, upload_dir, final_filename, "csv"
-        )
+        final_filename = store_dataframe(final_df, upload_dir, final_filename, "csv")
 
         # Convert the standings to a string and output to user
         std_dict = {
@@ -1980,15 +1882,11 @@ class StandingsData(Stats):
         tp_df (pandas dataframe): An organized NPB team pitching stat dataframe
         """
         # Merge team batting column to create 'RS'
-        self.df = pd.merge(
-            self.df, tb_df[["Team", "R"]], on="Team", how="left"
-        )
+        self.df = pd.merge(self.df, tb_df[["Team", "R"]], on="Team", how="left")
         self.df.rename(columns={"R": "RS"}, inplace=True)
         self.df["RS"] = self.df["RS"].astype(float)
         # Merge team pitching column to create 'RA'
-        self.df = pd.merge(
-            self.df, tp_df[["Team", "R"]], on="Team", how="left"
-        )
+        self.df = pd.merge(self.df, tp_df[["Team", "R"]], on="Team", how="left")
         self.df.rename(columns={"R": "RA"}, inplace=True)
         self.df["RA"] = self.df["RA"].astype(float)
         # Diff and XPCT calculations
@@ -2089,9 +1987,7 @@ class FieldingData(Stats):
         final_df = convert_team_to_html(final_df, self.year, "Abb")
         # Print final file with all players
         final_filename = self.year + "FieldingFinal" + self.suffix + ".csv"
-        final_filename = store_dataframe(
-            final_df, upload_dir, final_filename, "csv"
-        )
+        final_filename = store_dataframe(final_df, upload_dir, final_filename, "csv")
 
         if self.suffix == "R":
             print(
@@ -2283,9 +2179,7 @@ class TeamFieldingData(Stats):
         final_df = convert_team_to_html(final_df, self.year, "Full")
         # Print final file with all players
         final_filename = self.year + "TeamFieldingFinal" + self.suffix + ".csv"
-        final_filename = store_dataframe(
-            final_df, upload_dir, final_filename, "csv"
-        )
+        final_filename = store_dataframe(final_df, upload_dir, final_filename, "csv")
 
         if self.suffix == "R":
             print(
@@ -2468,9 +2362,7 @@ class TeamSummaryData(Stats):
         final_df = convert_team_to_html(final_df, self.year, "Full")
         # Print final file with all players
         final_filename = self.year + "TeamSummaryFinal" + self.suffix + ".csv"
-        final_filename = store_dataframe(
-            final_df, upload_dir, final_filename, "csv"
-        )
+        final_filename = store_dataframe(final_df, upload_dir, final_filename, "csv")
 
         if self.suffix == "R":
             print(
@@ -2497,9 +2389,7 @@ class TeamSummaryData(Stats):
         self.df["Team"] = self.team_fielding_df["Team"].tolist()
         self.df = pd.merge(
             self.df,
-            self.team_pitch_df[
-                ["Team", "W", "L", "ERA+", "FIP-", "K-BB%", "R"]
-            ],
+            self.team_pitch_df[["Team", "W", "L", "ERA+", "FIP-", "K-BB%", "R"]],
             on="Team",
             how="left",
         )
@@ -2611,17 +2501,14 @@ class DailyScoresData(Stats):
         )
         # Print final file with most recent game scores
         final_filename = self.year + "DailyScoresFinal" + self.suffix + ".csv"
-        final_filename = store_dataframe(
-            final_df, upload_dir, final_filename, "csv"
-        )
+        final_filename = store_dataframe(final_df, upload_dir, final_filename, "csv")
 
         print(
             "An alternative view of the daily game scores will be stored "
             "in: " + alt_filename
         )
         print(
-            "The final organized daily game scores will be stored in: "
-            + final_filename
+            "The final organized daily game scores will be stored in: " + final_filename
         )
 
     def org_daily_scores(self):
@@ -2706,14 +2593,7 @@ def get_daily_scores(year_dir, suffix, year):
             team2_runs = runs[i + 1].get_text()
             i += 2
             output_file.write(
-                team1
-                + ","
-                + team1_runs
-                + ","
-                + team2_runs
-                + ","
-                + team2
-                + "\n"
+                team1 + "," + team1_runs + "," + team2_runs + "," + team2 + "\n"
             )
     # After all URLs are scraped, close output file
     r.close()
@@ -2897,9 +2777,7 @@ def get_post_season_stats(year_dir, suffix, year):
 
                 # Get team
                 title = soup.find("span")
-                year_title_str = revise_year_title_str(
-                    str(title.string), suffix, year
-                )
+                year_title_str = revise_year_title_str(str(title.string), suffix, year)
                 # Append as last entry and move to next row
                 output_file.write(year_title_str + ",\n")
         # Close request
@@ -3171,9 +3049,7 @@ def get_roster_data(year_dir, year):
         soup = BeautifulSoup(r.content, "html.parser")
 
         # Grab all player name table entries
-        player_tr = soup.find_all(
-            "tr", {"class": ["rosterPlayer", "rosterRetire"]}
-        )
+        player_tr = soup.find_all("tr", {"class": ["rosterPlayer", "rosterRetire"]})
         # Loop through and grab player names + links
         for tr in player_tr:
             for td in tr:
@@ -3200,7 +3076,7 @@ def get_roster_data(year_dir, year):
         sleep(randint(3, 5))
 
 
-def org_player_link(finalPlayerUrlFile, rawPlayerUrlFile):
+def org_player_link(final_player_url_file, raw_player_url_file):
     """Updates some entries and combines the cumulative player link csv with
     the new, scraped csv
 
@@ -3209,8 +3085,8 @@ def org_player_link(finalPlayerUrlFile, rawPlayerUrlFile):
 
     Returns: N/A"""
     # Get cumulative and raw (newly scraped) playerUrl files
-    final_df = pd.read_csv(finalPlayerUrlFile.name)
-    raw_df = pd.read_csv(rawPlayerUrlFile.name)
+    final_df = pd.read_csv(final_player_url_file.name)
+    raw_df = pd.read_csv(raw_player_url_file.name)
 
     # Extra raw data dropped
     raw_df = raw_df.drop(["PlayerNum", "Height", "Weight", "Note"], axis=1)
@@ -3231,7 +3107,7 @@ def org_player_link(finalPlayerUrlFile, rawPlayerUrlFile):
     final_df = final_df.dropna(subset=["Team"])
 
     # Output combined dataframe
-    final_df.to_csv(finalPlayerUrlFile.name, index=False)
+    final_df.to_csv(final_player_url_file.name, index=False)
 
 
 def get_stat_urls(suffix, year):
@@ -3272,10 +3148,7 @@ def make_raw_roster_data_file(year_dir, year):
     rawFile (file stream object): A new csv file named rawPlayerUrls.csv"""
     raw_dir = os.path.join(year_dir, "raw")
     raw_csv_name = raw_dir + "/" + year + "raw_roster_data.csv"
-    print(
-        "Player URLs scraped in this session will be stored in: "
-        + raw_csv_name
-    )
+    print("Player URLs scraped in this session will be stored in: " + raw_csv_name)
     raw_roster_data_file = open(raw_csv_name, mode="w", encoding="utf-8")
     raw_roster_data_file.write(
         "PlayerNum,Player,Link,BirthDate,Height,Weight,T,B,Note,Team\n"
@@ -3305,29 +3178,17 @@ def make_raw_player_file(write_dir, suffix, year):
         os.mkdir(raw_dir)
     new_csv_name = raw_dir + "/" + year + "StatsRaw" + suffix + ".csv"
     if suffix == "BR":
-        print(
-            "Raw regular season batting results will be stored in: "
-            + new_csv_name
-        )
+        print("Raw regular season batting results will be stored in: " + new_csv_name)
     if suffix == "PR":
-        print(
-            "Raw regular season pitching results will be stored in: "
-            + new_csv_name
-        )
+        print("Raw regular season pitching results will be stored in: " + new_csv_name)
     if suffix == "BF":
         print("Raw farm batting results will be stored in: " + new_csv_name)
     if suffix == "PF":
         print("Raw farm pitching results will be stored in: " + new_csv_name)
     if suffix == "BP":
-        print(
-            "Raw post season batting results will be stored in: "
-            + new_csv_name
-        )
+        print("Raw post season batting results will be stored in: " + new_csv_name)
     if suffix == "PP":
-        print(
-            "Raw post season pitching results will be stored in: "
-            + new_csv_name
-        )
+        print("Raw post season pitching results will be stored in: " + new_csv_name)
     new_file = open(new_csv_name, "w", encoding="utf-8")
     return new_file
 
@@ -3385,15 +3246,9 @@ def make_raw_standings_file(write_dir, suffix, year):
             + new_csv_name
         )
     elif suffix == "E":
-        print(
-            "Raw Eastern League farm standings will be stored in: "
-            + new_csv_name
-        )
+        print("Raw Eastern League farm standings will be stored in: " + new_csv_name)
     elif suffix == "W":
-        print(
-            "Raw Western League farm standings will be stored in: "
-            + new_csv_name
-        )
+        print("Raw Western League farm standings will be stored in: " + new_csv_name)
     new_file = open(new_csv_name, "w", encoding="utf-8")
     return new_file
 
@@ -3419,10 +3274,7 @@ def make_raw_fielding_file(write_dir, suffix, year):
         os.mkdir(raw_dir)
     new_csv_name = raw_dir + "/" + year + "FieldingRaw" + suffix + ".csv"
     if suffix == "R":
-        print(
-            "Raw regular season fielding results will be stored in: "
-            + new_csv_name
-        )
+        print("Raw regular season fielding results will be stored in: " + new_csv_name)
     if suffix == "F":
         print("Raw farm fielding results will be stored in: " + new_csv_name)
     new_file = open(new_csv_name, "w", encoding="utf-8")
@@ -3461,11 +3313,7 @@ def get_scrape_year(args_in=None):
             if 2020 <= args_in <= datetime.now().year:
                 print(str(args_in) + " entered. Continuing...")
                 break
-            print(
-                "Please enter a valid year (2020-"
-                + str(datetime.now().year)
-                + ")."
-            )
+            print("Please enter a valid year (2020-" + str(datetime.now().year) + ").")
     # Argument check
     else:
         try:
@@ -3478,11 +3326,7 @@ def get_scrape_year(args_in=None):
         if 2020 <= args_in <= datetime.now().year:
             pass
         else:
-            print(
-                "Please enter a valid year (2020-"
-                + str(datetime.now().year)
-                + ")."
-            )
+            print("Please enter a valid year (2020-" + str(datetime.now().year) + ").")
             sys.exit("Exiting...")
 
     # Return user input as a string
@@ -3588,13 +3432,7 @@ def convert_team_to_html(df, year, mode=None):
             # Rename Logos column to blank ""
             df = df.rename(columns={"Logos": ""})
             # Convert normal team names to <a> tags
-            df[col] = (
-                df[col]
-                .map(team_dict)
-                .infer_objects()
-                .fillna(df[col])
-                .astype(str)
-            )
+            df[col] = df[col].map(team_dict).infer_objects().fillna(df[col]).astype(str)
         return df
     if mode == "Full":
         # Update Link col to have <a> tags
@@ -3615,11 +3453,7 @@ def convert_team_to_html(df, year, mode=None):
     )
     # Convert and return dataframe
     df["Team"] = (
-        df["Team"]
-        .map(team_dict)
-        .infer_objects()
-        .fillna(df["Team"])
-        .astype(str)
+        df["Team"].map(team_dict).infer_objects().fillna(df["Team"]).astype(str)
     )
     # Rename Logos column to blank ""
     df = df.rename(columns={"Logos": ""})
@@ -3654,26 +3488,18 @@ def add_roster_data(df, suffix, year):
             tb_col = "B"
         player_arm_dict = dict(zip(roster_df["Player"], roster_df[tb_col]))
         df[tb_col] = (
-            df[convert_col]
-            .map(player_arm_dict)
-            .infer_objects()
-            .fillna("")
-            .astype(str)
+            df[convert_col].map(player_arm_dict).infer_objects().fillna("").astype(str)
         )
 
     # Player age
-    roster_df["BirthDate"] = pd.to_datetime(
-        roster_df["BirthDate"], format="mixed"
-    )
+    roster_df["BirthDate"] = pd.to_datetime(roster_df["BirthDate"], format="mixed")
     roster_df["Age"] = roster_df["BirthDate"].apply(calculate_age, args=(int(year),))
     # Create dict of Player Name,Team:Age tag
     player_age_dict = dict(
         zip((zip(roster_df["Player"], roster_df["Team"])), roster_df["Age"])
     )
     df["keys"] = list(zip(df[convert_col], df["Team"]))
-    df["Age"] = (
-        df["keys"].map(player_age_dict).infer_objects().fillna("").astype(str)
-    )
+    df["Age"] = df["keys"].map(player_age_dict).infer_objects().fillna("").astype(str)
     # Remove trailing zeroes from age
     df["Age"] = df["Age"].astype(str)
     df["Age"] = df["Age"].str.replace(".0", "")
@@ -3990,11 +3816,7 @@ def translate_players(df, suffix, year):
 
     df["keys"] = list(zip(df[target_col], df["Team"]))
     df[target_col] = (
-        df["keys"]
-        .map(player_dict)
-        .infer_objects()
-        .fillna(df[target_col])
-        .astype(str)
+        df["keys"].map(player_dict).infer_objects().fillna(df[target_col]).astype(str)
     )
     df[target_col] = df[target_col].str.replace('"', "")
     df[target_col] = df[target_col].str.replace(",", "")
@@ -4040,9 +3862,7 @@ def make_zip(year_dir, suffix, year):
         shutil.copytree(
             year_dir + "/farm", temp_dir + "/stats/farm", dirs_exist_ok=True
         )
-        shutil.copytree(
-            year_dir + "/npb", temp_dir + "/stats/npb", dirs_exist_ok=True
-        )
+        shutil.copytree(year_dir + "/npb", temp_dir + "/stats/npb", dirs_exist_ok=True)
         output_filename = zip_dir + "/" + year + "upload"
 
     shutil.make_archive(output_filename, "zip", temp_dir)
@@ -4065,41 +3885,57 @@ def check_input_files(rel_dir, scrape_year=str(datetime.now().year)):
         raise ValueError("rel_dir must be a non-empty string")
     if not scrape_year or not isinstance(scrape_year, str):
         raise ValueError("scrape_year must be a non-empty string")
-    
+
     # Check if year directory exists
     year_dir = os.path.join(rel_dir, "input", scrape_year)
     if not os.path.exists(year_dir):
-        print(f"\nERROR: Year directory {year_dir} does not exist. Please ensure the input directory structure is correct.\n")
+        print(
+            f"\nERROR: Year directory {year_dir} does not exist. Please ensure the input directory structure is correct.\n"
+        )
         return True
-    
+
     # Define files to check: (relative_path, message, is_error)
     files_to_check = [
-        ("input/npb_urls.csv", 
-         "\nERROR: No NPB URL file found, no links to scrape...\nProvide a valid npb_urls.csv file in the /input/ directory to fix this.\n", 
-         True),
-        (f"input/{scrape_year}/name_translations.csv", 
-         "\nERROR: No player name translation file found, player names can't be translated...\nProvide a name_translations.csv file in the /input/ directory to fix this.\n", 
-         True),
-        (f"input/{scrape_year}/roster_data.csv", 
-         "\nERROR: No player link file found, table entries will not have links...\nProvide a roster_data.csv file in the /input/ directory to fix this.\n", 
-         True),
-        (f"input/{scrape_year}/fip_const.csv", 
-         "\nERROR: No FIP constant file found, calculations using FIP will be inaccurate...\nProvide a valid fip_const.csv file in the /input/ directory to fix this.\n", 
-         True),
-        (f"input/{scrape_year}/park_factors.csv", 
-         "\nERROR: No park factor file found, calculations using park factors will be inaccurate...\nProvide a valid park_factors.csv file in the /input/ directory to fix this.\n", 
-         True),
-        (f"input/{scrape_year}/team_urls.csv", 
-         "\nWARNING: No team link file found, table entries will not have links...\nProvide a team_urls.csv file in the /input/ directory to fix this.\n", 
-         False),
-        ("input/fielding_urls.csv", 
-         "\nERROR: No fielding URL file found, raw fielding files will not be produced...\nProvide a valid fielding_urls.csv file in the /input/ directory to fix this.\n", 
-         True),
+        (
+            "input/npb_urls.csv",
+            "\nERROR: No NPB URL file found, no links to scrape...\nProvide a valid npb_urls.csv file in the /input/ directory to fix this.\n",
+            True,
+        ),
+        (
+            f"input/{scrape_year}/name_translations.csv",
+            "\nERROR: No player name translation file found, player names can't be translated...\nProvide a name_translations.csv file in the /input/ directory to fix this.\n",
+            True,
+        ),
+        (
+            f"input/{scrape_year}/roster_data.csv",
+            "\nERROR: No player link file found, table entries will not have links...\nProvide a roster_data.csv file in the /input/ directory to fix this.\n",
+            True,
+        ),
+        (
+            f"input/{scrape_year}/fip_const.csv",
+            "\nERROR: No FIP constant file found, calculations using FIP will be inaccurate...\nProvide a valid fip_const.csv file in the /input/ directory to fix this.\n",
+            True,
+        ),
+        (
+            f"input/{scrape_year}/park_factors.csv",
+            "\nERROR: No park factor file found, calculations using park factors will be inaccurate...\nProvide a valid park_factors.csv file in the /input/ directory to fix this.\n",
+            True,
+        ),
+        (
+            f"input/{scrape_year}/team_urls.csv",
+            "\nWARNING: No team link file found, table entries will not have links...\nProvide a team_urls.csv file in the /input/ directory to fix this.\n",
+            False,
+        ),
+        (
+            "input/fielding_urls.csv",
+            "\nERROR: No fielding URL file found, raw fielding files will not be produced...\nProvide a valid fielding_urls.csv file in the /input/ directory to fix this.\n",
+            True,
+        ),
     ]
-    
+
     missing_files = False
     missing_list = []
-    
+
     for rel_path, message, is_error in files_to_check:
         full_path = os.path.join(rel_dir, rel_path)
         try:
@@ -4112,14 +3948,14 @@ def check_input_files(rel_dir, scrape_year=str(datetime.now().year)):
             print(f"\nERROR: Unable to check file {rel_path}: {e}\n")
             missing_list.append(rel_path)
             missing_files = True
-    
+
     if not missing_files:
         print("All needed input files present, continuing...")
     else:
         print("Missing needed input file(s), exiting...")
         if missing_list:
             print("Missing files:", ", ".join(missing_list))
-    
+
     return missing_files
 
 
