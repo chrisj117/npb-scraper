@@ -221,8 +221,6 @@ def display_player_percentile(df, name, year, suffix):
     else:
         subtitle_str2 = "Age " + age
 
-    # TODO: potentially add tool tip on stat hover via adding as col in dataframe?
-
     # Chart settings
     title_params = alt.TitleParams(
         text=title,
@@ -271,6 +269,7 @@ def display_player_percentile(df, name, year, suffix):
             color=alt.Color("Percentile Rank")
             .scale(domain=[0, 100], range=["#3366cc", "#b3b3b3", "#e60000"])
             .legend(None),
+            tooltip=alt.value(None),
         )
     )
 
@@ -278,7 +277,12 @@ def display_player_percentile(df, name, year, suffix):
     percentile_layer = (
         alt.Chart(chart_data)
         .mark_text(align="center", dx=0, fontSize=12, color="white")
-        .encode(x="Percentile Rank", y=y_enc, text="Percentile Rank")
+        .encode(
+            x="Percentile Rank",
+            y=y_enc,
+            text="Percentile Rank",
+            tooltip=alt.value(None),
+        )
     )
 
     # Create a text layer with original values along right edge of chart
