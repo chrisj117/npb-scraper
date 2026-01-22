@@ -62,8 +62,7 @@ def main():
         farm_scrape_yn = "Y"
         post_scrape_yn = "Y"
         stat_zip_yn = "N"
-        # TODO: determine whether this should scrape everyday? make some automatic weekly condition? etc
-        # roster_data_yn = "PD"
+        roster_data_yn = "Y"
     elif len(sys.argv) > 2:
         print(
             "ERROR: Too many arguments. Try using the desired stat year"
@@ -78,7 +77,7 @@ def main():
         farm_scrape_yn = get_user_choice("F")
         post_scrape_yn = get_user_choice("P")
         stat_zip_yn = get_user_choice("Z")
-    #    roster_data_yn = get_user_choice("PD")
+        roster_data_yn = get_user_choice("RD")
 
     if check_input_files(rel_dir, scrape_year) is True:
         _ = input("Press Enter to exit. ")
@@ -211,8 +210,9 @@ def main():
     print("Post season statistics finished!\n")
 
     # Roster data update
-    # if roster_data_yn == "Y":
-    #    get_roster_data(year_dir, scrape_year)
+    if roster_data_yn == "Y":
+        get_roster_data(year_dir, "en", scrape_year)
+        get_roster_data(year_dir, "jp", scrape_year)
 
     # Make upload zips for manual uploads/debugging
     if stat_zip_yn == "Y":
@@ -3002,47 +3002,94 @@ def get_fielding(year_dir, suffix, year):
     output_file.close()
 
 
-def get_roster_data(year_dir, year):
-    """Scrapes NPB rosters for NPB player names and links to their player pages
-    # TODO: update docs
-    Parameters:
-    rosterUrls (array - string): An array of the NPB rosters to scrape
-    outputFile (file stream object): An opened temp file to store scraped data
+def get_roster_data(year_dir, suffix, year):
+    """Scrapes NPB team rosters to collect player information and links.
 
-    Returns: N/A"""
-    roster_url_dict = {
-        # Hanshin Tigers
-        "https://npb.jp/bis/eng/teams/rst_t.html": "Hanshin Tigers",
-        # Hiroshima Toyo Carp
-        "https://npb.jp/bis/eng/teams/rst_c.html": "Hiroshima Carp",
-        # YOKOHAMA DeNA BAYSTARS
-        "https://npb.jp/bis/eng/teams/rst_db.html": "DeNA BayStars",
-        # Yomiuri Giants
-        "https://npb.jp/bis/eng/teams/rst_g.html": "Yomiuri Giants",
-        # Tokyo Yakult Swallows
-        "https://npb.jp/bis/eng/teams/rst_s.html": "Yakult Swallows",
-        # Chunichi Dragons
-        "https://npb.jp/bis/eng/teams/rst_d.html": "Chunichi Dragons",
-        # ORIX Buffaloes
-        "https://npb.jp/bis/eng/teams/rst_b.html": "ORIX Buffaloes",
-        # China Lotte Marines
-        "https://npb.jp/bis/eng/teams/rst_m.html": "Lotte Marines",
-        # Fukuoka SoftBank Hawks
-        "https://npb.jp/bis/eng/teams/rst_h.html": "SoftBank Hawks",
-        # Tohoku Rakuten Golden Eagles
-        "https://npb.jp/bis/eng/teams/rst_e.html": "Rakuten Eagles",
-        # Saitama Seibu Lions
-        "https://npb.jp/bis/eng/teams/rst_l.html": "Seibu Lions",
-        # Hokkaido Nippon-Ham Fighters
-        "https://npb.jp/bis/eng/teams/rst_f.html": "Nipponham Fighters",
-        # N/A Links (new farm teams):
-        # Oisix Niigata Albirex BC
-        # Kufu HAYATE Ventures Shizuoka
-    }
-    output_file = make_raw_roster_data_file(year_dir, year)
+    This function scrapes player roster pages from the NPB website for all teams,
+    extracting player names, their personal page links, and team affiliations.
+    The data is written to a CSV file for later use in creating player profile links
+    and gathering additional player statistics.
+
+    Parameters:
+        year_dir (str): The directory path where year-specific statistics are stored.
+        suffix (str): Language suffix indicating the roster source:
+            - "en" for English language rosters
+            - "jp" for Japanese language rosters
+        year (str): The NPB season year for which roster data is being scraped.
+
+    Returns:
+        None: This function writes data directly to a file but does not return a value.
+
+    Example:
+        >>> get_roster_data("/path/to/stats/2025", "en", "2025")
+        >>> # Creates file at: /path/to/stats/2025/raw/2025raw_roster_data_en.csv
+    """
+    if suffix == "en":
+        roster_url_dict = {
+            # Hanshin Tigers
+            "https://npb.jp/bis/eng/teams/rst_t.html": "Hanshin Tigers",
+            # Hiroshima Toyo Carp
+            "https://npb.jp/bis/eng/teams/rst_c.html": "Hiroshima Carp",
+            # YOKOHAMA DeNA BAYSTARS
+            "https://npb.jp/bis/eng/teams/rst_db.html": "DeNA BayStars",
+            # Yomiuri Giants
+            "https://npb.jp/bis/eng/teams/rst_g.html": "Yomiuri Giants",
+            # Tokyo Yakult Swallows
+            "https://npb.jp/bis/eng/teams/rst_s.html": "Yakult Swallows",
+            # Chunichi Dragons
+            "https://npb.jp/bis/eng/teams/rst_d.html": "Chunichi Dragons",
+            # ORIX Buffaloes
+            "https://npb.jp/bis/eng/teams/rst_b.html": "ORIX Buffaloes",
+            # China Lotte Marines
+            "https://npb.jp/bis/eng/teams/rst_m.html": "Lotte Marines",
+            # Fukuoka SoftBank Hawks
+            "https://npb.jp/bis/eng/teams/rst_h.html": "SoftBank Hawks",
+            # Tohoku Rakuten Golden Eagles
+            "https://npb.jp/bis/eng/teams/rst_e.html": "Rakuten Eagles",
+            # Saitama Seibu Lions
+            "https://npb.jp/bis/eng/teams/rst_l.html": "Seibu Lions",
+            # Hokkaido Nippon-Ham Fighters
+            "https://npb.jp/bis/eng/teams/rst_f.html": "Nipponham Fighters",
+            # N/A Links (new farm teams):
+            # Oisix Niigata Albirex BC
+            # (Formerly Kufu) HAYATE Ventures Shizuoka
+        }
+    elif suffix == "jp":
+        roster_url_dict = {
+            # Hanshin Tigers
+            "https://npb.jp/bis/teams/rst_t.html": "Hanshin Tigers",
+            # Hiroshima Toyo Carp
+            "https://npb.jp/bis/teams/rst_c.html": "Hiroshima Carp",
+            # YOKOHAMA DeNA BAYSTARS
+            "https://npb.jp/bis/teams/rst_db.html": "DeNA BayStars",
+            # Yomiuri Giants
+            "https://npb.jp/bis/teams/rst_g.html": "Yomiuri Giants",
+            # Tokyo Yakult Swallows
+            "https://npb.jp/bis/teams/rst_s.html": "Yakult Swallows",
+            # Chunichi Dragons
+            "https://npb.jp/bis/teams/rst_d.html": "Chunichi Dragons",
+            # ORIX Buffaloes
+            "https://npb.jp/bis/teams/rst_b.html": "ORIX Buffaloes",
+            # China Lotte Marines
+            "https://npb.jp/bis/teams/rst_m.html": "Lotte Marines",
+            # Fukuoka SoftBank Hawks
+            "https://npb.jp/bis/teams/rst_h.html": "SoftBank Hawks",
+            # Tohoku Rakuten Golden Eagles
+            "https://npb.jp/bis/teams/rst_e.html": "Rakuten Eagles",
+            # Saitama Seibu Lions
+            "https://npb.jp/bis/teams/rst_l.html": "Seibu Lions",
+            # Hokkaido Nippon-Ham Fighters
+            "https://npb.jp/bis/teams/rst_f.html": "Nipponham Fighters",
+            # N/A Links (new farm teams):
+            # Oisix Niigata Albirex BC
+            # (Formerly Kufu) HAYATE Ventures Shizuoka
+        }
+    else:
+        roster_url_dict = {}
+    output_file = make_raw_roster_data_file(year_dir, suffix, year)
 
     # Loop through all roster URLs passed in
-    for url in roster_url_dict.items():
+    for url, team in roster_url_dict.items():
         # Make GET request
         r = get_url(url)
         # Create the soup for parsing the html content
@@ -3067,15 +3114,15 @@ def get_roster_data(year_dir, year):
                 else:
                     output_file.write(entry_text + ",")
                     continue
-            # Add team name (determined by url) then move to next row
-            output_file.write(roster_url_dict[url])
+            # Add team name then move to next row
+            output_file.write(team)
             output_file.write("\n")
 
         r.close()
         # Pace requests to npb.jp to avoid excessive requests
         sleep(randint(3, 5))
 
-
+# TODO: make org_roster_data() (maybe useful code below in org_player_link())
 def org_player_link(final_player_url_file, raw_player_url_file):
     """Updates some entries and combines the cumulative player link csv with
     the new, scraped csv
@@ -3111,15 +3158,34 @@ def org_player_link(final_player_url_file, raw_player_url_file):
 
 
 def get_stat_urls(suffix, year):
-    """Creates arrays of the correct URLs for the individual stat scraping
+    """Retrieves URLs for scraping NPB player statistics based on season type and year.
+
+    This function reads the npb_urls.csv file to extract URLs for scraping
+    player statistics from the NPB website. It filters URLs based on the specified
+    suffix (which determines the league and season type) and year, then returns
+    an array of URLs and the table version for scraping.
 
     Parameters:
-    suffix (string): The desired mode to run in (determines league and season)
-    year (string): The desired NPB year to scrape
+        suffix (str): Indicates the type of statistics to scrape:
+            - "BR" for regular season batting stats
+            - "PR" for regular season pitching stats
+            - "BF" for farm batting stats
+            - "PF" for farm pitching stats
+            - "BP" for post-season batting stats
+            - "PP" for post-season pitching stats
+        year (str): The NPB season year for which URLs are needed.
 
     Returns:
-    url_arr (list - string): Contains URLs to the team batting/pitching
-    stat pages"""
+        tuple: A tuple containing:
+            - url_arr (pandas.Series): A series of URLs to scrape for the specified stats
+            - version (numpy.ndarray): The table version indicator ("v1" or "v2")
+              which determines the scraping schema to use
+
+    Example:
+        >>> url_arr, version = get_stat_urls("BR", "2025")
+        >>> # Returns URLs for 2025 regular season batting stats
+        >>> # and the table version to use for scraping
+    """
     rel_dir = os.path.dirname(__file__)
     url_file = rel_dir + "/input/npb_urls.csv"
     url_df = pd.read_csv(url_file)
@@ -3136,42 +3202,65 @@ def get_stat_urls(suffix, year):
     return url_arr, version
 
 
-def make_raw_roster_data_file(year_dir, year):
-    """Opens a cumulative player URL csv (if it doesn't exist) and a raw player
-    URL csv to hold newly scraped player links - also sets csv columns
+def make_raw_roster_data_file(year_dir, suffix, year):
+    """Creates and opens a file to store raw roster data for NPB players.
+
+    This function creates a CSV file in the /year/raw/ directory to store
+    newly scraped player roster information including player numbers, names,
+    links to player pages, birth dates, physical measurements, throwing/batting
+    arms, notes, and team affiliations. The file is opened in write mode with
+    UTF-8 encoding and the header row is written.
 
     Parameters:
-    write_dir (string): The directory that stores the scraped NPB player/link
-    file
+        year_dir (str): The directory path where year-specific statistics are stored.
+        suffix (str): Language suffix indicating the roster source:
+            - "en" for English language rosters
+            - "jp" for Japanese language rosters
+        year (str): The NPB season year for which roster data is being scraped.
 
     Returns:
-    rawFile (file stream object): A new csv file named rawPlayerUrls.csv"""
+        file stream object: An opened file object in write mode for the raw roster data.
+
+    Example:
+        >>> file = make_raw_roster_data_file("/path/to/stats/2025", "en", "2025")
+        >>> # File created at: /path/to/stats/2025/raw/2025raw_roster_data_en.csv
+    """
     raw_dir = os.path.join(year_dir, "raw")
-    raw_csv_name = raw_dir + "/" + year + "raw_roster_data.csv"
+    raw_csv_name = raw_dir + "/" + year + "raw_roster_data_" + suffix + ".csv"
     print("Player URLs scraped in this session will be stored in: " + raw_csv_name)
     raw_roster_data_file = open(raw_csv_name, mode="w", encoding="utf-8")
     raw_roster_data_file.write(
-        "PlayerNum,Player,Link,BirthDate,Height,Weight,T,B,Note,Team\n"
+        "PlayerNum," + suffix + "Player,Link,BirthDate,Height,Weight,T,B,Note,Team\n"
     )
     return raw_roster_data_file
 
 
 def make_raw_player_file(write_dir, suffix, year):
-    """Opens a file to hold all player stats inside a relative /year/raw/
-    directory that is created before calling this function
+    """Creates and opens a file to store raw player statistics.
+
+    This function creates a CSV file in the /year/raw/ directory to store
+    newly scraped player statistics. The file is opened in write mode with
+    UTF-8 encoding. The function also prints a message indicating where the
+    raw statistics will be stored.
 
     Parameters:
-    write_dir (string): The directory that stores the scraped NPB stats
-    suffix (string): Indicates the raw stat file to create:
-    "BR" = reg season batting stats
-    "PR" = reg season pitching stats
-    "BF" = farm batting stats
-    "PF" = farm pitching stats
-    year (string): The desired npb year to scrape
+        write_dir (str): The directory path where year-specific statistics are stored.
+        suffix (str): Indicates the type of statistics to store:
+            - "BR" for regular season batting stats
+            - "PR" for regular season pitching stats
+            - "BF" for farm batting stats
+            - "PF" for farm pitching stats
+            - "BP" for post season batting stats
+            - "PP" for post season pitching stats
+        year (str): The NPB season year for which statistics are being scraped.
 
     Returns:
-    new_file (file stream object): An opened file in /year/raw/ named
-    "[Year][Stats][Suffix].csv"""
+        file stream object: An opened file object in write mode for the raw statistics.
+
+    Example:
+        >>> file = make_raw_player_file("/path/to/stats/2025", "BR", "2025")
+        >>> # File created at: /path/to/stats/2025/raw/2025StatsRawBR.csv
+    """
     # Open and return the file object in write mode
     raw_dir = os.path.join(write_dir, "raw")
     if not os.path.exists(raw_dir):
@@ -3370,11 +3459,7 @@ def get_user_choice(suffix):
         elif suffix == "Z":
             user_in = input("Output stats in a zip file? (Y/N): ")
         elif suffix == "RD":
-            user_in = input(
-                "Scrape team rosters for NPB player URLs?"
-                + "WARNING: can take multiple minutes due to number of links "
-                + "accessed (Y/N): "
-            )
+            user_in = input("Scrape team rosters for NPB player URLs?: ")
         else:
             user_in = "Q"
 
