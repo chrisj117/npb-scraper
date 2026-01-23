@@ -7,7 +7,7 @@ def main():
     """Main navigational driver for the Streamlit app"""
 
     st.set_page_config(page_title="YC Dashboard", page_icon="⚾")
-    st.logo(st.secrets["logo_link"])
+    st.logo(st.secrets["logo_link"], size="large")
 
     main_pages = [
         st.Page("pages/home.py", title="Home"),
