@@ -79,6 +79,7 @@ def main():
         stat_zip_yn = get_user_choice("Z")
         roster_data_yn = get_user_choice("RD")
 
+    # TODO: place after year_dir creation?
     if check_input_files(rel_dir, scrape_year) is True:
         _ = input("Press Enter to exit. ")
         return -1
@@ -87,6 +88,18 @@ def main():
     year_dir = os.path.join(stats_dir, scrape_year)
     if not os.path.exists(year_dir):
         os.mkdir(year_dir)
+
+    # Roster data update
+    if roster_data_yn == "Y":
+        if scrape_year != str(datetime.now().year):
+            print("WARNING: scrape year does not match current year, skipping roster update.")
+        else:
+            print("Updating roster_data.csv...")
+            get_roster_data(year_dir, "en", scrape_year)
+            get_roster_data(year_dir, "jp", scrape_year)
+            org_roster_data(year_dir, rel_dir, scrape_year)
+    else:
+        print("Skipping roster update...")
 
     if npb_scrape_yn == "Y":
         # Scrape regular season batting and pitching URLs
@@ -208,11 +221,6 @@ def main():
     post_bat_team_stats.output_final()
     post_pitch_team_stats.output_final()
     print("Post season statistics finished!\n")
-
-    # Roster data update
-    if roster_data_yn == "Y":
-        get_roster_data(year_dir, "en", scrape_year)
-        get_roster_data(year_dir, "jp", scrape_year)
 
     # Make upload zips for manual uploads/debugging
     if stat_zip_yn == "Y":
@@ -525,12 +533,6 @@ class PlayerData(Stats):
         # Data cleaning/reformatting
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
-        # "Mercedes Cristopher Crisostomo" name shortening to "Mercedes CC"
-        self.df["Pitcher"] = (
-            self.df["Pitcher"]
-            .astype(str)
-            .replace("Mercedes Cristopher Crisostomo", "Mercedes CC")
-        )
         # Number formatting
         format_maps = {
             "BB%": "{:.1%}",
@@ -664,6 +666,8 @@ class PlayerData(Stats):
         self.df = self.df[col_order]
         # Changing .33 to .1 and .66 to .2 in the IP column
         self.df["IP"] = convert_ip_column_out(self.df, "IP")
+        # Apply manual revisions
+        self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
     def org_bat(self):
         """Organize the raw batting stat csv and add additional stats"""
@@ -723,16 +727,6 @@ class PlayerData(Stats):
         # TODO: update when compatibility for 2026 is ready
         if self.suffix == "BR" and int(self.year) == 2025:
             self.append_gsheets_batter_data()
-        # "Mercedes Cristopher Crisostomo" name shortening to "Mercedes CC"
-        self.df["Player"] = (
-            self.df["Player"]
-            .astype(str)
-            .replace("Mercedes Cristopher Crisostomo", "Mercedes CC")
-        )
-        # "Davis Jonathan" name changing to "Davis JD"
-        self.df["Player"] = (
-            self.df["Player"].astype(str).replace("Davis Jonathan", "Davis JD")
-        )
 
         # Number formatting
         format_maps = {
@@ -913,6 +907,8 @@ class PlayerData(Stats):
             col_order = self.df.columns.tolist()
         self.df = self.df[col_order]
         self.df = select_league(self.df, self.suffix)
+        # Apply manual revisions
+        self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
     def org_post_pitch(self):
         """Preprocesses the raw post season's pitching stat csv for org_pitch()"""
@@ -1551,6 +1547,8 @@ class TeamData(Stats):
         self.df = self.df[col_order_arr]
         # Add "League" column
         self.df = select_league(self.df, self.suffix)
+        # Apply manual revisions
+        self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
     def org_team_pitch(self):
         """Outputs pitching team stat files using the organized player stat
@@ -1727,6 +1725,8 @@ class TeamData(Stats):
         self.df["IP"] = convert_ip_column_out(self.df, "IP")
         # Add "League" column
         self.df = select_league(self.df, self.suffix)
+        # Apply manual revisions
+        self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
 
 class StandingsData(Stats):
@@ -1922,6 +1922,8 @@ class StandingsData(Stats):
         }
         for key, value in format_maps.items():
             self.df[key] = self.df[key].apply(value.format)
+        # Apply manual revisions
+        self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
 
 class FieldingData(Stats):
@@ -2114,6 +2116,8 @@ class FieldingData(Stats):
                 "League",
             ]
         ]
+        # Apply manual revisions
+        self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
 
 class TeamFieldingData(Stats):
@@ -2273,6 +2277,8 @@ class TeamFieldingData(Stats):
         }
         for key, value in format_maps.items():
             self.df[key] = self.df[key].apply(value.format)
+        # Apply manual revisions
+        self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
 
 class TeamSummaryData(Stats):
@@ -2435,6 +2441,8 @@ class TeamSummaryData(Stats):
         format_maps = {"PCT": "{:.3f}"}
         for key, value in format_maps.items():
             self.df[key] = self.df[key].apply(value.format)
+        # Apply manual revisions
+        self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
 
 class DailyScoresData(Stats):
@@ -2545,6 +2553,8 @@ class DailyScoresData(Stats):
             self.df[col] = self.df[col].astype(str)
             self.df[col] = self.df[col].str.replace(".0", "")
             self.df[col] = self.df[col].str.replace("nan", "*")
+        # Apply manual revisions
+        self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
 
 def get_url(try_url):
@@ -2850,6 +2860,76 @@ def revise_year_title_str(year_title_str, suffix, year):
     return year_title_str
 
 
+def revise_stats(df, rel_dir, year):
+    """
+    Applies manual revisions to a dataframe based on entries in a revision CSV file.
+
+    This function reads a revision file containing corrections for player statistics,
+    identifying errors in the data and applying the specified revisions. It's intended
+    as a final sweep before outputting statistics.
+
+    Parameters:
+        df (pandas.DataFrame): The dataframe containing player statistics to be revised.
+        rel_dir (str): The relative directory path to the project root.
+        year (str): The year of the statistics being processed.
+
+    Returns:
+        pandas.DataFrame: The revised dataframe with all specified corrections applied.
+
+    Example:
+        >>> revise_stats(player_df, "/path/to/project", "2025")
+        # Returns player_df with any matching revisions from roster_revisions.csv applied
+    """
+    # Read in revision file
+    year_input_dir = os.path.join(rel_dir, "input", year)
+    revise_filename = os.path.join(year_input_dir, "roster_revisions.csv")
+    revise_df = pd.read_csv(revise_filename, dtype=str)
+
+    # Determine player identifier column based on available columns
+    if "Player" in df.columns:
+        player_col = "Player"
+    elif "Pitcher" in df.columns:
+        player_col = "Pitcher"
+    else:
+        # No player column found, return original dataframe
+        return df
+
+    # Apply each revision from the CSV
+    for _, revision_row in revise_df.iterrows():
+        col_name = revision_row["ColumnName"]
+        player_name = revision_row["PlayerName"]
+        error_value = revision_row["Error"]
+        revision_value = revision_row["Revision"]
+
+        # Check if the column exists in the dataframe
+        if col_name not in df.columns:
+            continue
+
+        # Convert column to string for consistent comparison (for non-NaN values)
+        df[col_name] = df[col_name].astype(str)
+
+        # Find rows where the player name matches
+        player_mask = df[player_col].astype(str) == player_name
+
+        # Handle NaN error values specially using pd.isna()
+        if pd.isna(error_value):
+            # When error_value is NaN, match rows where the column is NaN
+            error_mask = (
+                df[col_name].isna() | (df[col_name] == "nan") | (df[col_name] == "")
+            )
+        else:
+            # For non-NaN error values, use string comparison
+            error_mask = df[col_name].astype(str) == error_value
+
+        # Combine masks to find matching rows
+        mask = player_mask & error_mask
+
+        # Apply the revision to matching rows
+        df.loc[mask, col_name] = revision_value
+
+    return df
+
+
 def get_gsheets_data(year_dir, suffix, year):
     """Scrapes a Google Sheet to provide additional NPB batting/pitching data.
 
@@ -3122,39 +3202,73 @@ def get_roster_data(year_dir, suffix, year):
         # Pace requests to npb.jp to avoid excessive requests
         sleep(randint(3, 5))
 
-# TODO: make org_roster_data() (maybe useful code below in org_player_link())
-def org_player_link(final_player_url_file, raw_player_url_file):
-    """Updates some entries and combines the cumulative player link csv with
-    the new, scraped csv
+# TODO: fuzzy translate remaining untranslated players with no rosters (oisix and hayate)?
+def org_roster_data(year_dir, rel_dir, year):
+    """Organizes and merges raw roster data files into a cumulative roster_data.csv.
+
+    This function processes raw English and Japanese roster data scraped from NPB,
+    merges them together, applies any manual revisions from roster_revisions.csv,
+    and updates the cumulative roster_data.csv file in the input directory.
 
     Parameters:
-    writeDir (string): The directory that stores the scraped NPB links
+        year_dir (str): The directory path where year-specific statistics are stored,
+            containing the /raw/ subdirectory with scraped roster files.
+        rel_dir (str): The relative directory path to the project root, used to
+            locate the input directory and revision files.
+        year (str): The NPB season year for which roster data is being organized.
 
-    Returns: N/A"""
-    # Get cumulative and raw (newly scraped) playerUrl files
-    final_df = pd.read_csv(final_player_url_file.name)
-    raw_df = pd.read_csv(raw_player_url_file.name)
+    Returns:
+        None: This function writes data directly to files but does not return a value.
 
-    # Extra raw data dropped
-    raw_df = raw_df.drop(["PlayerNum", "Height", "Weight", "Note"], axis=1)
-    # "Mercedes Cristopher Crisostomo" name shortening to "Mercedes CC" in
-    # scraped stats
-    raw_df["Player"] = (
-        raw_df["Player"]
-        .astype(str)
-        .replace("Mercedes Cristopher Crisostomo", "Mercedes CC")
+    Side Effects:
+        - Reads raw roster data files from year_dir/raw/
+        - Reads revision data from input/{year}/roster_revisions.csv
+        - Writes/overwrites input/{year}/roster_data.csv
+
+    Example:
+        >>> org_roster_data("/path/to/stats/2025", "/path/to/project", "2025")
+        >>> # Updates: /path/to/project/input/2025/roster_data.csv
+    """
+    # Input dir has unupdated roster_data.csv - output overwrites roster_data.csv file in input dir
+    year_input_dir = os.path.join(rel_dir, "input", year)
+    roster_data_filename = os.path.join(year_input_dir, "roster_data.csv")
+
+    # year_dir has both raw roster data files
+    raw_dir = os.path.join(year_dir, "raw")
+    en_raw_filename = os.path.join(raw_dir, (year + "raw_roster_data_en.csv"))
+    jp_raw_filename = os.path.join(raw_dir, (year + "raw_roster_data_jp.csv"))
+
+    en_raw_roster_data_df = pd.read_csv(en_raw_filename, dtype=str)
+    # Create temp columns to match links
+    en_raw_roster_data_df["original_link"] = en_raw_roster_data_df["Link"]
+    en_raw_roster_data_df["Link"] = en_raw_roster_data_df["Link"].str.replace(
+        "/eng", ""
     )
-    # Update the existing dataframe file with column containing any new URLs
-    final_df = final_df.merge(
-        raw_df,
-        on=["Player", "Link", "BirthDate", "T", "B", "Team"],
-        how="outer",
-    )
-    # If a row is missing a Team, drop them (npbScrape uses this in the key)
-    final_df = final_df.dropna(subset=["Team"])
+    jp_raw_roster_data_df = pd.read_csv(jp_raw_filename, dtype=str)
 
-    # Output combined dataframe
-    final_df.to_csv(final_player_url_file.name, index=False)
+    # Merge EN and JP rosters on Team and PlayerNum
+    all_roster_data_df = en_raw_roster_data_df.merge(
+        jp_raw_roster_data_df[["PlayerNum", "jpPlayer", "Link", "Team"]],
+        on=["PlayerNum", "Link", "Team"],
+        how="left",
+    )
+
+    # Replace JP links with EN links
+    all_roster_data_df["Link"] = all_roster_data_df["original_link"]
+    all_roster_data_df = all_roster_data_df.drop("original_link", axis=1)
+    all_roster_data_df.rename(columns={"enPlayer": "Player"}, inplace=True)
+
+    # Replace invalid JP space "　" with US space char " "
+    all_roster_data_df["jpPlayer"] = all_roster_data_df["jpPlayer"].str.replace(
+        "　", " "
+    )
+
+    # Drop coaches and invalid entries (entries with no batting/throwing hands)
+    all_roster_data_df = all_roster_data_df.dropna(subset=["T", "B"])
+
+    # Update and overwrite old roster_data.csv
+    all_roster_data_df = revise_stats(all_roster_data_df, rel_dir, year)
+    all_roster_data_df.to_csv(roster_data_filename, index=False)
 
 
 def get_stat_urls(suffix, year):
@@ -3571,9 +3685,13 @@ def add_roster_data(df, suffix, year):
             tb_col = "T"
         elif suffix in ("BR", "BF"):
             tb_col = "B"
-        player_arm_dict = dict(zip(roster_df["Player"], roster_df[tb_col]))
+        # Create dict of Player Name,Team:T/B arm tag
+        player_arm_dict = dict(
+            zip((zip(roster_df["Player"], roster_df["Team"])), roster_df[tb_col])
+        )
+        df["keys"] = list(zip(df[convert_col], df["Team"]))
         df[tb_col] = (
-            df[convert_col].map(player_arm_dict).infer_objects().fillna("").astype(str)
+            df["keys"].map(player_arm_dict).infer_objects().fillna("").astype(str)
         )
 
     # Player age
@@ -3880,14 +3998,14 @@ def translate_players(df, suffix, year):
     Returns:
     df (pandas dataframe): The final stat dataframe with translated names"""
     rel_dir = os.path.dirname(__file__)
-    translation_file = rel_dir + "/input/" + year + "/name_translations.csv"
+    translation_file = rel_dir + "/input/" + year + "/roster_data.csv"
     # Read in csv that contains player and team names in JP and EN
     translation_df = pd.read_csv(translation_file)
     # Create dict of (JP name,EN team):Eng name
     player_dict = dict(
         zip(
-            (zip(translation_df["jp_name"], translation_df["en_team"])),
-            translation_df["en_name"],
+            (zip(translation_df["jpPlayer"], translation_df["Team"])),
+            translation_df["Player"],
         )
     )
     if suffix == "PP":
@@ -3984,11 +4102,6 @@ def check_input_files(rel_dir, scrape_year=str(datetime.now().year)):
         (
             "input/npb_urls.csv",
             "\nERROR: No NPB URL file found, no links to scrape...\nProvide a valid npb_urls.csv file in the /input/ directory to fix this.\n",
-            True,
-        ),
-        (
-            f"input/{scrape_year}/name_translations.csv",
-            "\nERROR: No player name translation file found, player names can't be translated...\nProvide a name_translations.csv file in the /input/ directory to fix this.\n",
             True,
         ),
         (
