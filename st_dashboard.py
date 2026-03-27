@@ -12,6 +12,7 @@ def main():
     main_pages = [
         st.Page("pages/home.py", title="Home"),
         st.Page("pages/team_overview.py", title="Team Overview"),
+        st.Page("pages/player_career.py", title="Career Overview"),
         st.Page("pages/batter_percentiles.py", title="Batter Percentiles"),
         st.Page("pages/pitcher_percentiles.py", title="Pitcher Percentiles"),
         st.Page("pages/npb_standings_scores.py", title="Standings & Scores"),

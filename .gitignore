@@ -1,3 +1,5 @@
 __pycache__/
 .venv/
 .streamlit/secrets.toml
+input/fip_const.csv
+input/google_sheet_urls.csv

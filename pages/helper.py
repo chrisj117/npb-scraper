@@ -5,6 +5,7 @@ import altair as alt
 import streamlit as st
 import pandas as pd
 import requests
+import numpy as np
 
 
 def load_csv(url=None):
@@ -24,6 +25,60 @@ def load_csv(url=None):
         return pd.read_csv(StringIO(response.text))
     st.error("Failed to load raw data.")
     return None
+
+def convert_ip_column_in(df, inn_col="IP"):
+    """Converts the decimals in the IP column TO thirds (.1 -> .33, .2 -> .66)
+    for stat calculations
+
+    Parameters:
+    df (pandas dataframe): A pitching stat dataframe with the traditional
+    .1/.2 IP representation
+    inn_col (string): The name of the column to convert (default is "IP")
+
+    Returns:
+    temp_df[inn_col] (pandas dataframe column): An IP column converted for stat
+    calculations"""
+    temp_df = pd.DataFrame(df[inn_col])
+    # Get the ".0 .1 .2" in the 'IP' column
+    ip_decimals = temp_df[inn_col] % 1
+    # Make the original 'IP' column whole numbers
+    temp_df[inn_col] = temp_df[inn_col] - ip_decimals
+    # Multiply IP decimals by .3333333333 and readd them to the whole numbers
+    ip_decimals = (ip_decimals * 10) * 0.3333333333
+    temp_df[inn_col] = temp_df[inn_col] + ip_decimals
+    return temp_df[inn_col]
+
+def convert_ip_column_out(df, inn_col="IP"):
+    """In baseball, innings are traditionally represented using .1 (single
+    inning pitched), .2 (2 innings pitched), and whole numbers. This function
+    converts the decimals FROM thirds (.33 -> .1, .66 -> .2) for sake of
+    presentation
+
+    Parameters:
+    df (pandas dataframe): A pitching stat dataframe with the "thirds"
+    representation
+    inn_col (string): The name of the column to convert (default is "IP")
+
+    Returns:
+    temp_df[inn_col] (pandas dataframe column): An innings column
+    converted back to the informal innings representation"""
+    # Innings ".0 .1 .2" fix
+    temp_df = pd.DataFrame(df[inn_col])
+    # Get the ".0 .3 .7" in the innings column
+    ip_decimals = temp_df[inn_col] % 1
+    # Make the original innings column whole numbers
+    temp_df[inn_col] = temp_df[inn_col] - ip_decimals
+    # Convert IP decimals to thirds and re-add them to the whole numbers
+    ip_decimals = (ip_decimals / 0.3333333333) / 10
+    df[inn_col] = temp_df[inn_col] + ip_decimals
+    # Entries with .3 are invalid: add 1 and remove the decimals
+    x = temp_df[inn_col] + ip_decimals
+    condlist = [((x % 1) < 0.29), ((x % 1) >= 0.29)]
+    choicelist = [x, (x - (x % 1)) + 1]
+    temp_df[inn_col] = np.select(condlist, choicelist)
+    temp_df[inn_col] = temp_df[inn_col].apply(lambda x: f"{x:.1f}")
+    temp_df[inn_col] = temp_df[inn_col].astype(float)
+    return temp_df[inn_col]
 
 
 def display_player_percentile(df, name, year, suffix):
@@ -517,7 +572,7 @@ def create_pos_filter(df, mode=None):
     return pos_list
 
 
-def create_stat_cols_filter(df, mode=None):
+def create_stat_cols_filter(df, mode=None, key=None):
     """
     Creates a Streamlit segmented control filter for selecting statistic
     columns to display.
@@ -542,7 +597,6 @@ def create_stat_cols_filter(df, mode=None):
             "Player",
             "PA",
             "HR",
-            "R",
             "RBI",
             "SB",
             "AVG",
@@ -562,7 +616,6 @@ def create_stat_cols_filter(df, mode=None):
             "W",
             "L",
             "SV",
-            "HLD",
             "ERA",
             "FIP",
             "WHIP",
@@ -638,13 +691,58 @@ def create_stat_cols_filter(df, mode=None):
             "Blocking",
             "Team",
         ]
+    elif mode == "career_bat_cols":
+        filter_default = [
+            "Year",
+            "Age",
+            "G",
+            "PA",
+            "HR",
+            "H",
+            "RBI",
+            "SB",
+            "AVG",
+            "OBP",
+            "SLG",
+            "OPS",
+            "OPS+",
+            "ISO",
+            "K%",
+            "BB%",
+            "Team",
+        ]
+    elif mode == "career_pitch_cols":
+        filter_default = [
+            "Year",
+            "Age",
+            "G",
+            "IP",
+            "W",
+            "L",
+            "SV",
+            "HLD",
+            "ERA",
+            "FIP",
+            "WHIP",
+            "HR%",
+            "ERA+",
+            "FIP-",
+            "K%",
+            "BB%",
+            "K-BB%",
+            "Team",
+        ]
     else:
         filter_default = df.columns.tolist()
 
-    # Add "select all" and "select none" columns option (checkbox ver)
+    # Add "select all" and "select none" columns option
     filter_container = st.container()
+    if key is not None:
+        all_none_key = key + "_all_none"
+    else:
+        all_none_key = key
     all_none_filter = st.segmented_control(
-        "Select Stats", options=["All", "None"], selection_mode="single"
+        "Select Stats", options=["All", "None"], selection_mode="single", key=all_none_key
     )
     if all_none_filter == "All":
         cols = filter_container.segmented_control(
@@ -673,7 +771,8 @@ def create_stat_cols_filter(df, mode=None):
     return cols
 
 
-def create_team_filter(mode=None):
+def create_team_filter(mode=None, team_col=None, key=None):
+    # TODO: docs
     """
     Creates a Streamlit multiselect filter for NPB team selection.
 
@@ -713,15 +812,14 @@ def create_team_filter(mode=None):
         )
 
     if mode == "overview":
-        team = st.selectbox(
-            "Team",
-            team_dict.values(),
+        team = st.selectbox("Team", team_dict.values(), key=key)
+    elif mode == "career":
+        team = st.multiselect(
+            "Team", team_dict.keys(), default=team_dict.keys(), key=key
         )
     else:
         team = st.multiselect(
-            "Team",
-            team_dict.keys(),
-            default=team_dict.keys(),
+            "Team", team_dict.keys(), default=team_dict.keys(), key=key
         )
         team = [team_dict[k] for k in team]
     return team
@@ -967,7 +1065,7 @@ def create_year_filter():
     return year
 
 
-def create_player_filter(df, player_col):
+def create_player_filter(df, player_col, key=None):
     """
     Creates a Streamlit select box filter for selecting players.
 
@@ -983,7 +1081,7 @@ def create_player_filter(df, player_col):
     """
     df = df.sort_values(player_col)
     player_list = df[player_col]
-    player = st.selectbox(player_col, player_list)
+    player = st.selectbox(player_col, player_list, key=key)
     return player
 
 
@@ -1006,6 +1104,12 @@ def get_column_config(suffix=None):
     """
     if suffix in ("P", "PR", "PF"):
         column_config = {
+            "Team": st.column_config.TextColumn(
+                width=90,
+            ),
+            "Year": st.column_config.TextColumn(
+                width=45,
+            ),
             "GB%": st.column_config.NumberColumn(
                 format="%.1f%%",
                 help="Ground Ball Rate: The percentage of balls in play "
@@ -1115,6 +1219,7 @@ def get_column_config(suffix=None):
                 + "number of walks and hits allowed by a pitcher per inning.",
             ),
             "ERA+": st.column_config.NumberColumn(
+                format="%.0f",
                 help="Earned Run Average Plus: A normalized version of ERA "
                 + "that adjusts for park factors, with 100 always being the "
                 + "league average. Higher values are better.",
@@ -1126,6 +1231,7 @@ def get_column_config(suffix=None):
                 + "home runs, independent of defensive performance.",
             ),
             "FIP-": st.column_config.NumberColumn(
+                format="%.0f",
                 help="Fielding Independent Pitching Minus: A normalized "
                 + "version of FIP that adjusts for park factors, with 100 "
                 + "always being the league average. Lower values are better.",
@@ -1142,6 +1248,7 @@ def get_column_config(suffix=None):
                 + "of a pitcher's ERA based on strikeout and walk rates.",
             ),
             "kwERA-": st.column_config.NumberColumn(
+                format="%.0f",
                 help="Strikeout-Walk based Earned Run Average Minus: A "
                 + "normalized version of kwERA with 100 always being the "
                 + "league average. Lower values are better.",
@@ -1178,6 +1285,7 @@ def get_column_config(suffix=None):
                 + "runs a pitcher allows per nine innings pitched.",
             ),
             "Age": st.column_config.TextColumn(
+                width=40,
                 help="Age: How old a pitcher is on June 30th of that year.",
             ),
             "T": st.column_config.TextColumn(
@@ -1186,6 +1294,12 @@ def get_column_config(suffix=None):
         }
     elif suffix in ("B", "BR", "BF"):
         column_config = {
+            "Team": st.column_config.TextColumn(
+                width=90,
+            ),
+            "Year": st.column_config.TextColumn(
+                width=45,
+            ),
             "PullAIR%": st.column_config.NumberColumn(
                 format="%.1f%%",
                 help="Pull Air Rate: The percentage of balls in play that are pulled "
@@ -1346,6 +1460,7 @@ def get_column_config(suffix=None):
                 + "player hits a ground ball that results in two outs.",
             ),
             "OPS+": st.column_config.NumberColumn(
+                format="%.0f",
                 help="On Base plus Slugging Plus: A normalized version of "
                 + "OPS that adjusts for park factors, with 100 always being "
                 + "the league average. Higher values are better.",
@@ -1355,17 +1470,19 @@ def get_column_config(suffix=None):
                 + "with 3.1 PA per team game played (NPB) or 2.7 PA per team "
                 + "game played (Farm).",
             ),
-            "H": st.column_config.TextColumn(
+            "H": st.column_config.NumberColumn(
                 help="Hits: The number of times a player reaches safely on "
                 + "a ball put in play without an error or fielder's choice.",
             ),
             "Age": st.column_config.TextColumn(
+                width=40,
                 help="Age: How old a player is on June 30th of that year.",
             ),
             "B": st.column_config.TextColumn(
                 help="Bats: A player's batting hand.",
             ),
             "Pos": st.column_config.TextColumn(
+                width=40,
                 help="Position: A player's position on the field.",
             ),
             "Range": st.column_config.NumberColumn(
@@ -1427,6 +1544,7 @@ def get_column_config(suffix=None):
                 + "recorded in one-third increments.",
             ),
             "Pos": st.column_config.TextColumn(
+                width=40,
                 help="Position: A player's position on the field.",
             ),
             "Pos Adj": st.column_config.NumberColumn(
@@ -1452,6 +1570,7 @@ def get_column_config(suffix=None):
                 + "143 games or 1287 innings (a full NPB season).",
             ),
             "Age": st.column_config.TextColumn(
+                width=40,
                 help="Age: How old a player is on June 30th of that year.",
             ),
         }
