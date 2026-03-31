@@ -3,6 +3,7 @@
 from time import sleep
 from random import randint
 from datetime import datetime
+from typing import Any
 from urllib.error import HTTPError, URLError
 import os
 import sys
@@ -14,9 +15,20 @@ import numpy as np
 from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from playwright.sync_api import sync_playwright
 
 
 # TODO: declutter main() by putting most scraping/org functions in a separate function + redoing get_user_input()
+# TODO: need more robust error checking surrounding scrape and org functions
+# TODO: split into multiple class files for organization
+# TODO: update github docs
+# TODO: see about importing csvs to streamlit server instead of reloading from dropbox everytime
+# TODO: set up dropbox (logged in now) - cron auto scraping *
+# TODO: streamlit - selected years on career cause problems on other player's stats? *
+# TODO: streamlit - update secrets.toml with 2026 stuff *
+# TODO: streamlit - year filters *
+# TODO: change farm 2026 fielding "League" to "Division" *
+# TODO: refactor daily scores
 # TODO: move input dir creation here?
 def main():
     """The main function for the NPB/Farm League Statistic Scraper.
@@ -97,16 +109,16 @@ def main():
 
     # Roster data update
     if roster_data_yn == "Y":
-        #if scrape_year != str(datetime.now().year):
-        #    print(
-        #        "WARNING: scrape year does not match current year, skipping roster update."
-        #    )
-        #else:
+        if scrape_year != str(datetime.now().year):
+            print(
+                "WARNING: scrape year does not match current year, skipping roster update."
+            )
+        # else:
         print("Updating roster_data.csv...")
-        # TODO: debug removal to fix raw files, put a year check so old raw files dont get overwritten, remove before push
-        #get_roster_data(year_dir, "en", scrape_year)
-        #get_roster_data(year_dir, "jp", scrape_year)
-        #org_roster_data(year_dir, rel_dir, scrape_year)
+        # TODO: put a year check so old raw files dont get overwritten
+        get_roster_data(year_dir, "en", scrape_year)
+        get_roster_data(year_dir, "jp", scrape_year)
+        org_roster_data(year_dir, rel_dir, scrape_year)
     else:
         print("Skipping roster update...")
 
@@ -114,10 +126,11 @@ def main():
         # Scrape regular season batting and pitching URLs
         get_stats(input_dir, year_dir, "BR", scrape_year)
         get_stats(input_dir, year_dir, "PR", scrape_year)
-        get_standings(year_dir, "C", scrape_year)
-        get_standings(year_dir, "P", scrape_year)
+        get_standings(year_dir, "C_npb", scrape_year)
+        get_standings(year_dir, "P_npb", scrape_year)
         get_fielding(year_dir, "R", scrape_year)
     # NPB Daily Scores (only executes on current year)
+    # TODO: fix, new url and look for 2026 @ https://npb.jp/bis/eng/2026/games/
     if scrape_year == str(datetime.now().year):
         if npb_scrape_yn == "Y":
             get_daily_scores(year_dir, "R", scrape_year)
@@ -132,10 +145,10 @@ def main():
         npb_fielding.df, stats_dir, year_dir, "R", scrape_year
     )
     # NPB Standings
-    # NOTE: standings must be organized before any player stats to calculate
-    # correct IP/PA drop consts
-    central_standings = StandingsData(stats_dir, year_dir, "C", scrape_year)
-    pacific_standings = StandingsData(stats_dir, year_dir, "P", scrape_year)
+    # NOTE: standings must be organized before any player stats to calculate correct IP/PA drop consts
+    # TODO: double check farm IP/PA drop consts arent bad due to "3 standings" issue
+    npb_central_standings = StandingsData(stats_dir, year_dir, "C_npb", scrape_year)
+    npb_pacific_standings = StandingsData(stats_dir, year_dir, "P_npb", scrape_year)
     # NPB Player stats
     npb_bat_player_stats = PlayerData(stats_dir, year_dir, "BR", scrape_year)
     npb_pitch_player_stats = PlayerData(stats_dir, year_dir, "PR", scrape_year)
@@ -151,8 +164,8 @@ def main():
     # NPB team summary
     npb_team_summary = TeamSummaryData(
         npb_team_fielding.df,
-        central_standings.df,
-        pacific_standings.df,
+        npb_central_standings.df,
+        npb_pacific_standings.df,
         npb_bat_team_stats.df,
         npb_pitch_team_stats.df,
         stats_dir,
@@ -165,8 +178,8 @@ def main():
     npb_pitch_player_stats.output_final()
     npb_bat_team_stats.output_final()
     npb_pitch_team_stats.output_final()
-    central_standings.output_final(npb_bat_team_stats.df, npb_pitch_team_stats.df)
-    pacific_standings.output_final(npb_bat_team_stats.df, npb_pitch_team_stats.df)
+    npb_central_standings.output_final(npb_bat_team_stats.df, npb_pitch_team_stats.df)
+    npb_pacific_standings.output_final(npb_bat_team_stats.df, npb_pitch_team_stats.df)
     npb_fielding.output_final()
     npb_team_fielding.output_final()
     npb_team_summary.output_final()
@@ -175,9 +188,10 @@ def main():
     if farm_scrape_yn == "Y":
         get_stats(input_dir, year_dir, "BF", scrape_year)
         get_stats(input_dir, year_dir, "PF", scrape_year)
-        # TODO: 2026 urls = https://npb.jp/bis/eng/2026/stats/std_2e.html, https://npb.jp/bis/eng/2026/stats/std_2c.html, https://npb.jp/bis/eng/2026/stats/std_2w.html
-        get_standings(year_dir, "E", scrape_year)
-        get_standings(year_dir, "W", scrape_year)
+        get_standings(year_dir, "E_farm", scrape_year)
+        get_standings(year_dir, "W_farm", scrape_year)
+        if int(scrape_year) >= 2026:
+            get_standings(year_dir, "C_farm", scrape_year)
         get_fielding(year_dir, "F", scrape_year)
     # Farm Fielding
     farm_fielding = FieldingData(stats_dir, year_dir, "F", scrape_year)
@@ -186,8 +200,13 @@ def main():
         farm_fielding.df, stats_dir, year_dir, "F", scrape_year
     )
     # Farm Standings
-    eastern_standings = StandingsData(stats_dir, year_dir, "E", scrape_year)
-    western_standings = StandingsData(stats_dir, year_dir, "W", scrape_year)
+    # TODO: standings broke and farm central overwrites npb central - change suffixes to "npb" and "farm"
+    farm_eastern_standings = StandingsData(stats_dir, year_dir, "E_farm", scrape_year)
+    farm_western_standings = StandingsData(stats_dir, year_dir, "W_farm", scrape_year)
+    if int(scrape_year) >= 2026:
+        farm_central_standings = StandingsData(
+            stats_dir, year_dir, "C_farm", scrape_year
+        )
     # Farm Player stats
     farm_bat_player_stats = PlayerData(stats_dir, year_dir, "BF", scrape_year)
     farm_pitch_player_stats = PlayerData(stats_dir, year_dir, "PF", scrape_year)
@@ -205,32 +224,45 @@ def main():
     farm_pitch_player_stats.output_final()
     farm_bat_team_stats.output_final()
     farm_pitch_team_stats.output_final()
-    eastern_standings.output_final(farm_bat_team_stats.df, farm_pitch_team_stats.df)
-    western_standings.output_final(farm_bat_team_stats.df, farm_pitch_team_stats.df)
+    farm_eastern_standings.output_final(
+        farm_bat_team_stats.df, farm_pitch_team_stats.df
+    )
+    farm_western_standings.output_final(
+        farm_bat_team_stats.df, farm_pitch_team_stats.df
+    )
+    if int(scrape_year) >= 2026:
+        farm_central_standings.output_final(
+            farm_bat_team_stats.df, farm_pitch_team_stats.df
+        )
     farm_fielding.output_final()
     farm_team_fielding.output_final()
     print("Farm statistics finished!\n")
-    # TODO: make a check for whether npb_urls has the scrape_year
-    # Post season stat scraping
-    if post_scrape_yn == "Y":
-        get_post_season_stats(year_dir, "BP", scrape_year)
-        get_post_season_stats(year_dir, "PP", scrape_year)
-    # Post season player stats
-    post_bat_player_stats = PlayerData(stats_dir, year_dir, "BP", scrape_year)
-    post_pitch_player_stats = PlayerData(stats_dir, year_dir, "PP", scrape_year)
-    # Post season team stats
-    post_bat_team_stats = TeamData(
-        post_bat_player_stats.df, stats_dir, year_dir, "BP", scrape_year
-    )
-    post_pitch_team_stats = TeamData(
-        post_pitch_player_stats.df, stats_dir, year_dir, "PP", scrape_year
-    )
-    # Post season output
-    post_bat_player_stats.output_final()
-    post_pitch_player_stats.output_final()
-    post_bat_team_stats.output_final()
-    post_pitch_team_stats.output_final()
-    print("Post season statistics finished!\n")
+    # If there are no post season URLs in npb_urls.csv, skip post season
+    bp_urls, _ = get_stat_urls("BP", scrape_year)
+    pp_urls, _ = get_stat_urls("PP", scrape_year)
+    if len(bp_urls) > 0 and len(pp_urls) > 0:
+        # Post season stat scraping
+        if post_scrape_yn == "Y":
+            get_post_season_stats(year_dir, "BP", scrape_year)
+            get_post_season_stats(year_dir, "PP", scrape_year)
+        # Post season player stats
+        post_bat_player_stats = PlayerData(stats_dir, year_dir, "BP", scrape_year)
+        post_pitch_player_stats = PlayerData(stats_dir, year_dir, "PP", scrape_year)
+        # Post season team stats
+        post_bat_team_stats = TeamData(
+            post_bat_player_stats.df, stats_dir, year_dir, "BP", scrape_year
+        )
+        post_pitch_team_stats = TeamData(
+            post_pitch_player_stats.df, stats_dir, year_dir, "PP", scrape_year
+        )
+        # Post season output
+        post_bat_player_stats.output_final()
+        post_pitch_player_stats.output_final()
+        post_bat_team_stats.output_final()
+        post_pitch_team_stats.output_final()
+        print("Post season statistics finished!\n")
+    else:
+        print("No post season URLs detected in npb_urls.csv, skipping...")
 
     # Make upload zips for manual uploads/debugging
     if stat_zip_yn == "Y":
@@ -240,7 +272,6 @@ def main():
     # Career data scrape and organize
     if career_yn == "Y":
         get_career_data(rel_dir, scrape_year)
-    # TODO: translate more players
     career_bio_df = CareerData(
         stats_dir, os.path.join(stats_dir, "all"), "bio", scrape_year
     )
@@ -354,7 +385,7 @@ class Stats:
 
         # Import additional NPB data from Google Sheets
         # TODO: errors out when passing career data for append bat and pitch gsheet data
-        if self.suffix in ("BR", "B") and 2021 <= int(year) <= 2025:
+        if self.suffix in ("BR", "B") and 2021 <= int(year):
             self.append_gsheets_batter_data(year)
 
     def org_player_pitch(self, suffix, year):
@@ -404,7 +435,7 @@ class Stats:
             self.df["FIP-"] = 100 * (self.df["FIP"] / (total_fip * self.df["ParkF"]))
 
         # Import additional NPB data from Google Sheets
-        if self.suffix in ("PR", "P") and 2021 <= int(year) <= 2025:
+        if self.suffix in ("PR", "P") and 2021 <= int(year):
             self.append_gsheets_pitcher_data(year)
 
         # Changing .33 to .1 and .66 to .2 in the IP column
@@ -415,9 +446,17 @@ class Stats:
         # Some IP entries can be '+', replace with 0 for conversions and
         # calculations
         self.df["IP"] = self.df["IP"].astype(str).replace("+", "0")
+        # For tables past post season 2025 (new table doesnt split IP into 2 cols)
+        if (self.suffix in ("PR", "PF") and int(self.year) >= 2026) or (
+            self.suffix == "PP" and int(self.year) >= 2025
+        ):
+            # Convert back to float after finding bad chars
+            self.df["IP"] = self.df["IP"].astype(float)
         # Original scraped tables split IP into 2 columns
         # Convert all NaN to 0 (as floats)
-        if self.suffix == "PR" or (self.suffix == "PP" and int(self.year) <= 2024):
+        elif (self.suffix == "PR" and int(self.year) <= 2025) or (
+            self.suffix == "PP" and int(self.year) >= 2025
+        ):
             self.df.iloc[:, 11] = self.df.iloc[:, 11].fillna(0)
             self.df.iloc[:, 11] = self.df.iloc[:, 11].astype(float)
             # Combine the incorrectly split IP stat columns
@@ -432,10 +471,6 @@ class Stats:
             self.df["IP"] = self.df["IP"].astype(float)
             self.df["IP"] = self.df["IP"] + self.df.iloc[:, 10]
             self.df = self.df.drop(self.df.columns[10], axis=1)
-        # For tables past post season 2025 (new table doesnt split IP into 2 cols)
-        elif self.suffix == "PP" and int(self.year) >= 2025:
-            # Convert back to float after finding bad chars
-            self.df["IP"] = self.df["IP"].astype(float)
         # For career pitching, the 2 cols are "IP" and "IP_2"
         else:
             self.df["IP_2"] = self.df["IP_2"].astype(str).replace("+", "0")
@@ -575,6 +610,7 @@ class Stats:
 
     def rescale_gsheet_pct_stats(self):
         """TODO: docs"""
+        # TODO: remove? might not be needed since gsheet data scaling has
         new_pct_stats = [
             "PullAIR%",
             "Chase%",
@@ -588,8 +624,7 @@ class Stats:
 
         for x in new_pct_stats:
             if x in self.df.columns.to_list():
-                # self.df[x] = self.df[x] / 100
-                pass
+                self.df[x] = self.df[x] / 100
 
 
 class PlayerData(Stats):
@@ -616,7 +651,7 @@ class PlayerData(Stats):
         org_player_pitch():
             Organizes raw pitching statistics and calculates additional
             metrics.
-        # TODO: remove these mentions of org player bat/pitch
+        # TODO: remove these mentions of org player bat/pitch, replace with format_player_bat/pitch
         org_player_bat():
             Organizes raw batting statistics and calculates additional metrics.
         org_post_pitch():
@@ -640,24 +675,25 @@ class PlayerData(Stats):
     def __init__(self, stats_dir, year_dir, suffix, year):
         super().__init__(stats_dir, year_dir, suffix, year)
         # Initialize data frame to store stats
-        if os.path.exists(self.year_dir + "/raw/" + year + "StatsRaw" + suffix + ".csv"):
+        if os.path.exists(
+            self.year_dir + "/raw/" + year + "StatsRaw" + suffix + ".csv"
+        ):
             self.df = pd.read_csv(
                 self.year_dir + "/raw/" + year + "StatsRaw" + suffix + ".csv",
                 index_col=False,
             )
         else:
             self.df = pd.DataFrame()
-        # Fix raw IP cols in pitching
-        if self.suffix in ("PR", "PF", "PP"):
-            self.fix_raw_pitch_col()
         # Modify df for correct stats
         if self.suffix in ("BF", "BR"):
             self.org_player_bat(self.suffix, self.year)
         elif self.suffix in ("PF", "PR"):
+            self.fix_raw_pitch_col()
             self.org_player_pitch(self.suffix, self.year)
         elif self.suffix == "BP":
             self.org_post_player_bat()
         elif self.suffix == "PP":
+            self.fix_raw_pitch_col()
             self.org_post_pitch()
 
     def output_final(self):
@@ -863,7 +899,7 @@ class PlayerData(Stats):
                 self.df[col] = self.df[col].astype(str).replace("nan", "")
         # Replace BB/K infs with '1.00' (same format as MLB website)
         self.df["BB/K"] = self.df["BB/K"].str.replace("inf", "1.00")
-        self.df = select_league(self.df, self.suffix)
+        self.df = select_league(self.df, self.suffix, self.year)
         # Add age and throwing/batting arm columns
         if self.suffix in ("BR", "BF"):
             self.df = add_roster_data(self.df, self.suffix, self.year)
@@ -1033,7 +1069,7 @@ class PlayerData(Stats):
         self.df["FIP-"] = self.df["FIP-"].astype(str).replace("inf", "")
         self.df["WHIP"] = self.df["WHIP"].astype(str).replace("inf", "")
         self.df["Diff"] = self.df["Diff"].astype(str).replace("nan", "")
-        self.df = select_league(self.df, self.suffix)
+        self.df = select_league(self.df, self.suffix, self.year)
         # Reordering columns
         if self.suffix in ("PR", "PF"):
             col_order = [
@@ -1232,20 +1268,30 @@ class PlayerData(Stats):
 
         # Read in the correct raw const files for reg season or farm
         # Regular season team,game files
-        standings_file1 = ""
-        standings_file2 = ""
+        # TODO: refactor the mess below
+        # TODO: rename past year standings files
+        ip_pa_df = pd.DataFrame()
         if self.suffix in ("BR", "PR"):
-            standings_file1 = const_dir + "/" + self.year + "const_rawC.csv"
-            standings_file2 = const_dir + "/" + self.year + "const_rawP.csv"
+            standings_file1 = const_dir + "/" + self.year + "const_rawC_npb.csv"
+            standings_file2 = const_dir + "/" + self.year + "const_rawP_npb.csv"
+            # Combine into 1 raw const df/file
+            standings_df1 = pd.read_csv(standings_file1)
+            standings_df2 = pd.read_csv(standings_file2)
+            ip_pa_df = pd.concat([standings_df1, standings_df2])
         # Farm team,game files
-        if self.suffix in ("BF", "PF"):
-            standings_file1 = const_dir + "/" + self.year + "const_rawW.csv"
-            standings_file2 = const_dir + "/" + self.year + "const_rawE.csv"
-
-        # Combine into 1 raw const df/file
-        standings_df1 = pd.read_csv(standings_file1)
-        standings_df2 = pd.read_csv(standings_file2)
-        ip_pa_df = pd.concat([standings_df1, standings_df2])
+        elif self.suffix in ("BF", "PF"):
+            standings_file1 = const_dir + "/" + self.year + "const_rawW_farm.csv"
+            standings_file2 = const_dir + "/" + self.year + "const_rawE_farm.csv"
+            # Combine into 1 raw const df/file
+            standings_df1 = pd.read_csv(standings_file1)
+            standings_df2 = pd.read_csv(standings_file2)
+            # Post 2026 farm splits into 3 divisions
+            if int(self.year) >= 2026:
+                standings_file3 = const_dir + "/" + self.year + "const_rawC_farm.csv"
+                standings_df3 = pd.read_csv(standings_file3)
+                ip_pa_df = pd.concat([standings_df1, standings_df2, standings_df3])
+            else:
+                ip_pa_df = pd.concat([standings_df1, standings_df2])
 
         # DEBUG: this file should have all combined teams and games
         # new_csv_name = (const_dir + "/" + self.year + "Const" + self.suffix +
@@ -1613,7 +1659,7 @@ class TeamData(Stats):
         ]
         self.df = self.df[col_order_arr]
         # Add "League" column
-        self.df = select_league(self.df, self.suffix)
+        self.df = select_league(self.df, self.suffix, self.year)
         # Apply manual revisions
         self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
@@ -1791,7 +1837,7 @@ class TeamData(Stats):
         # Changing .33 to .1 and .66 to .2 in the IP column
         self.df["IP"] = convert_ip_column_out(self.df, "IP")
         # Add "League" column
-        self.df = select_league(self.df, self.suffix)
+        self.df = select_league(self.df, self.suffix, self.year)
         # Apply manual revisions
         self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
@@ -1828,6 +1874,7 @@ class StandingsData(Stats):
             self.year_dir + "/raw/" + year + "StandingsRaw" + suffix + ".csv"
         )
 
+        # TODO: check since v2 standings is present for 2026
         # Do bare minimum to prepare IP/PA const file for PlayerData objects
         # Further organization of stats comes later in output_final()
         # Drop last unnamed column
@@ -1848,7 +1895,23 @@ class StandingsData(Stats):
             "Hokkaido Nippon-HamFighters": "Nipponham Fighters",
             "Oisix NiigataAlbirex BC": "Oisix Albirex",
             "Kufu HAYATEVentures Shizuoka": "HAYATE Ventures",
+            # 2026 and onwards raw files have different spacing
+            "Hanshin Tigers": "Hanshin Tigers",
+            "Hiroshima Toyo Carp": "Hiroshima Carp",
+            "YOKOHAMA DeNA BAYSTARS": "DeNA BayStars",
+            "Yomiuri Giants": "Yomiuri Giants",
+            "Tokyo Yakult Swallows": "Yakult Swallows",
+            "Chunichi Dragons": "Chunichi Dragons",
+            "ORIX Buffaloes": "ORIX Buffaloes",
+            "Chiba Lotte Marines": "Lotte Marines",
+            "Fukuoka SoftBank Hawks": "SoftBank Hawks",
+            "Tohoku Rakuten Golden Eagles": "Rakuten Eagles",
+            "Saitama Seibu Lions": "Seibu Lions",
+            "Hokkaido Nippon-Ham Fighters": "Nipponham Fighters",
+            "Oisix Niigata Albirex BC": "Oisix Albirex",
+            "HAYATE Ventures Shizuoka": "HAYATE Ventures",
         }
+
         for raw, corrected in team_dict.items():
             self.df.loc[self.df.Team == raw, "Team"] = corrected
         # Column renaming (Int = Inter, adding space between vs and team abbr.)
@@ -1892,9 +1955,9 @@ class StandingsData(Stats):
         self.org_standings(tb_df, tp_df)
 
         # Make dir that will store files uploaded to yakyucosmo.com
-        if self.suffix in ("C", "P"):
+        if self.suffix in ("C_npb", "P_npb"):
             upload_dir = os.path.join(self.year_dir, "npb")
-        elif self.suffix in ("W", "E"):
+        elif self.suffix in ("W_farm", "E_farm", "C_farm"):
             upload_dir = os.path.join(self.year_dir, "farm")
         else:
             upload_dir = self.year_dir
@@ -1924,9 +1987,14 @@ class StandingsData(Stats):
         # Convert the standings to a string and output to user
         std_dict = {
             "C": "Central",
-            "E": "Eastern",
-            "W": "Western",
+            "E": "East",
+            "W": "West",
             "P": "Pacific",
+            "C_npb": "Central",
+            "C_farm": "Central (farm)",
+            "E_farm": "East",
+            "W_farm": "West",
+            "P_npb": "Pacific",
         }
 
         print(
@@ -2026,6 +2094,25 @@ class FieldingData(Stats):
 
     def output_final(self):
         """Outputs final files using the fielding dataframes"""
+        # Final sweep for nans
+        self.df = self.df.astype(str).replace("nan", "")
+
+        # Output names with JP characters
+        untranslated = self.df[
+            self.df["Player"].str.contains(
+                r"[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]", na=False
+            )
+        ]
+        if not untranslated.empty:
+            if self.suffix == "R":
+                print("\nWARNING: untranslated players in NPB fielding stats...")
+            elif self.suffix == "F":
+                print("\nWARNING: untranslated players in farm fielding stats...")
+            print(untranslated[["Player", "Team"]])
+
+        # Filter to only English names (ASCII characters)
+        self.df = self.df[self.df["Player"].str.contains(r"^[\x00-\x7F]+$", na=False)]
+
         # Make dir that will store alt views of the dataframes
         alt_dir = os.path.join(self.year_dir, "alt")
         # Make dirs that will store files uploaded to yakyucosmo.com
@@ -2079,8 +2166,10 @@ class FieldingData(Stats):
 
     def org_fielding(self):
         """Organize the fielding stat csv and adds new stats (TZR, TZR/143)"""
-        # Drop empty last column and convert column names
-        self.df = self.df.drop(self.df.columns[-1], axis=1)
+        # Drop empty last column and convert column names if pre 2026
+        if int(self.year) < 2026:
+            self.df = self.df.drop(self.df.columns[-1], axis=1)
+        # TODO: refactor
         if self.suffix == "R":
             self.df.rename(
                 columns={
@@ -2103,6 +2192,17 @@ class FieldingData(Stats):
 
         if "Error" in self.df.columns:
             self.df = self.df.rename(columns={"Error": "ErrR"})
+
+        # Rename abbreviated columns from npbbasement CSV download
+        abbrev_renames = {}
+        if "FRM" in self.df.columns:
+            abbrev_renames["FRM"] = "Framing"
+        if "BLK" in self.df.columns:
+            abbrev_renames["BLK"] = "Blocking"
+        if "POS Adj" in self.df.columns:
+            abbrev_renames["POS Adj"] = "Pos Adj"
+        if abbrev_renames:
+            self.df = self.df.rename(columns=abbrev_renames)
 
         # '-' converted to nan
         self.df["RngR"] = self.df["RngR"].astype(str).replace("-", "")
@@ -2142,7 +2242,7 @@ class FieldingData(Stats):
         # Innings conversion
         self.df["Inn"] = convert_ip_column_out(self.df, "Inn")
         # Add League and Age cols
-        self.df = select_league(self.df, self.suffix)
+        self.df = select_league(self.df, self.suffix, self.year)
         self.df = add_roster_data(self.df, self.suffix, self.year)
         # Column reordering
         self.df = self.df[
@@ -2295,7 +2395,7 @@ class TeamFieldingData(Stats):
             self.df,
             self.fielding_df.groupby("Team", as_index=False)["Blocking"].sum(),
         )
-        self.df = select_league(self.df, self.suffix)
+        self.df = select_league(self.df, self.suffix, self.year)
 
         # Column reordering
         self.df = self.df[
@@ -2465,7 +2565,7 @@ class TeamSummaryData(Stats):
             on="Team",
             how="left",
         )
-        self.df = select_league(self.df, self.suffix)
+        self.df = select_league(self.df, self.suffix, self.year)
 
         # Column reordering
         self.df = self.df[
@@ -2666,9 +2766,11 @@ class CareerData(Stats):
         )
         self.df = translate_players(self.df, self.suffix, self.year, mode="career")
         # For career bio, sort so failed translations are first for easy ID
-        self.df['_temp_sort'] = self.df["Player"].apply(lambda x: any(ord(c) > 127 for c in x))
-        self.df = self.df.sort_values(by='_temp_sort', ascending=False)
-        self.df = self.df.drop(columns=['_temp_sort'])
+        self.df["_temp_sort"] = self.df["Player"].apply(
+            lambda x: any(ord(c) > 127 for c in x)
+        )
+        self.df = self.df.sort_values(by="_temp_sort", ascending=False)
+        self.df = self.df.drop(columns=["_temp_sort"])
 
         # Birthday translate = remove kanji, add appropriate separators
         self.df["BirthDate"] = self.df["BirthDate"].str.replace("年", "/")
@@ -2696,7 +2798,6 @@ class CareerData(Stats):
         )
 
         # Position translation
-        # TODO: grab fielding pos from career_bat if possible (merge), fill with translated if unavailable
         self.df["Pos"] = self.df["Pos"].str.replace("内野手", "Infielder")
         self.df["Pos"] = self.df["Pos"].str.replace("投手", "Pitcher")
         self.df["Pos"] = self.df["Pos"].str.replace("外野手", "Outfielder")
@@ -2817,7 +2918,7 @@ class CareerData(Stats):
             # Call org_player_bat with the single year
             self.org_player_bat(self.suffix, year)
 
-            # TODO: Add positions from fielding
+            # Add positions from fielding
             self.append_career_bat_positions(year)
 
             # Store the processed year dataframe
@@ -2956,7 +3057,7 @@ class CareerData(Stats):
                 batting_df[["Player", "Team", "Pos"]],
                 on=["Player", "Team"],
                 how="left",
-                suffixes=("_career", "_year")
+                suffixes=("_career", "_year"),
             )
 
             # If no Pos from merge, try to use any existing Pos column
@@ -2988,6 +3089,7 @@ def get_url(try_url):
         print(ue)
     return response
 
+
 def make_session():
     """TODO: docs"""
     retry = Retry(
@@ -3002,17 +3104,19 @@ def make_session():
     adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
 
     s = requests.Session()
-    s.headers.update({
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "application/json,text/plain,*/*",
-    })
+    s.headers.update(
+        {
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/json,text/plain,*/*",
+        }
+    )
     s.mount("http://", adapter)
     s.mount("https://", adapter)
     return s
 
+
 def get_daily_scores(year_dir, suffix, year):
-    """The main daily scores scraping function that produces Raw daily scores
-    files"""
+    """The main daily scores scraping function that produces Raw daily scores files"""
     # Make output file
     output_file = make_raw_daily_scores_file(year_dir, suffix, year)
     output_file.write("HomeTeam,RunsHome,RunsAway,AwayTeam\n")
@@ -3022,21 +3126,41 @@ def get_daily_scores(year_dir, suffix, year):
     r = get_url(url)
     # Create the soup for parsing the html content
     soup = BeautifulSoup(r.content, "html.parser")
-    game_divs = soup.find_all("div", class_="contentsgame")
-    # Extract table rows from npb.jp daily game stats
-    for result in game_divs:
-        teams = result.find_all(class_="contentsTeam")
-        runs = result.find_all(class_="contentsRuns")
-        i = 0
-        while i < len(teams):
-            team1 = teams[i].get_text()
-            team1_runs = runs[i].get_text()
-            team2 = teams[i + 1].get_text()
-            team2_runs = runs[i + 1].get_text()
-            i += 2
-            output_file.write(
-                team1 + "," + team1_runs + "," + team2_runs + "," + team2 + "\n"
-            )
+
+    if int(year) < 2026:
+        game_divs = soup.find_all("div", class_="contentsgame")
+        # Extract table rows from npb.jp daily game stats
+        for result in game_divs:
+            teams = result.find_all(class_="contentsTeam")
+            runs = result.find_all(class_="contentsRuns")
+            i = 0
+            while i < len(teams):
+                team1 = teams[i].get_text()
+                team1_runs = runs[i].get_text()
+                team2 = teams[i + 1].get_text()
+                team2_runs = runs[i + 1].get_text()
+                i += 2
+                output_file.write(
+                    team1 + "," + team1_runs + "," + team2_runs + "," + team2 + "\n"
+                )
+    else:
+        games = soup.find_all("div", class_="unit")
+        # Extract table rows from npb.jp daily game stats
+        for result in games:
+            teams = result.find_all(class_="team_name")
+            left_team_runs = result.find_all(class_="score_text score_left")
+            right_team_runs = result.find_all(class_="score_text score_right")
+            i = 0
+            while i < len(teams):
+                team1 = teams[i].get_text()
+                team1_runs = left_team_runs[i].get_text()
+                team2 = teams[i+1].get_text()
+                team2_runs = right_team_runs[i].get_text()
+                i += 2
+                output_file.write(
+                    team1 + "," + team1_runs + "," + team2_runs + "," + team2 + "\n"
+                )
+
     # After all URLs are scraped, close output file
     r.close()
     output_file.close()
@@ -3056,32 +3180,39 @@ def get_stats(input_dir, year_dir, suffix, year):
     "BF" = farm batting stat URLs passed in
     "PF" = farm pitching stat URLs passed in
     year (string): The desired NPB year to scrape"""
+    # TODO: gsheets source changes and previous years get wiped - skip this scrape if the current year doesnt match the scrape year (maybe remove google_sheet_urls.csv entirely?)
     # Make output file
     output_file = make_raw_player_file(year_dir, suffix, year)
     # Grab URLs to scrape
-    url_arr, _ = get_stat_urls(suffix, year)
+    url_arr, version = get_stat_urls(suffix, year)
     # Create header row
     if suffix == "BR":
         get_gsheets_data(input_dir, year_dir, suffix, year)
         output_file.write(
-            "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,"
-            "IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
-        )
-    elif suffix == "PR":
-        get_gsheets_data(input_dir, year_dir, suffix, year)
-        output_file.write(
-            "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,"
-            "HB,SO,WP,BK,R,ER,ERA,Team,\n"
+            "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
         )
     elif suffix == "BF":
         output_file.write(
-            "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,"
-            "IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
+            "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
         )
-    elif suffix == "PF":
+    elif suffix == "PR" and version == "v1":
+        get_gsheets_data(input_dir, year_dir, suffix, year)
         output_file.write(
-            "Pitcher,G,W,L,SV,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,"
-            "ERA,Team,\n"
+            "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
+        )
+    elif suffix == "PR" and version == "v2":
+        get_gsheets_data(input_dir, year_dir, suffix, year)
+        output_file.write(
+            "Pitcher,G,W,L,SV,HLD,HP,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
+        )
+    elif suffix == "PF" and version == "v1":
+        output_file.write(
+            "Pitcher,G,W,L,SV,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
+        )
+    elif suffix == "PF" and version == "v2":
+        get_gsheets_data(input_dir, year_dir, suffix, year)
+        output_file.write(
+            "Pitcher,G,W,L,SV,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
         )
 
     # Loop through all team stat pages in url_arr
@@ -3091,34 +3222,58 @@ def get_stats(input_dir, year_dir, suffix, year):
         # Create the soup for parsing the html content
         soup = BeautifulSoup(r.content, "html.parser")
 
-        # Since header row was created, skip to stat rows
-        iter_soup = iter(soup.table)
-        # Left handed pitcher/batter and switch hitter row skip
-        next(iter_soup)
-        # npb.jp header row skip
-        next(iter_soup)
-
-        # Extract table rows from npb.jp team stats
-        for table_row in iter_soup:
-            # Skip first column for left handed batter/pitcher or switch hitter
-            iter_table = iter(table_row)
-            next(iter_table)
-            # Write output in csv file format
-            for entry in iter_table:
-                # Remove commas in first and last names
-                entry_text = entry.get_text()
-                if entry_text.find(","):
-                    entry_text = entry_text.replace(",", "")
+        if version == "v1":
+            # Since header row was created, skip to stat rows
+            iter_soup = iter(soup.table)
+            # Left handed pitcher/batter and switch hitter row skip
+            next(iter_soup)
+            # npb.jp header row skip
+            next(iter_soup)
+            # Extract table rows from npb.jp team stats
+            for table_row in iter_soup:
+                # Skip first column for left handed batter/pitcher or switch hitter
+                iter_table = iter(table_row)
+                next(iter_table)
                 # Write output in csv file format
-                output_file.write(entry_text + ",")
+                for entry in iter_table:
+                    # Remove commas in first and last names
+                    entry_text = entry.get_text()
+                    if entry_text.find(","):
+                        entry_text = entry_text.replace(",", "")
+                    # Write output in csv file format
+                    output_file.write(entry_text + ",")
 
-            # Get team
-            title_div = soup.find(id="stdivtitle")
-            year_title_str = revise_year_title_str(
-                title_div.h1.get_text(), suffix, year
-            )
-            # Append as last entry and move to next row
-            output_file.write(year_title_str + ",\n")
+                # Get team
+                title_div = soup.find(id="stdivtitle")
+                year_title_str = revise_year_title_str(
+                    title_div.h1.get_text(), suffix, year
+                )
+                # Append as last entry and move to next row
+                output_file.write(year_title_str + ",\n")
+
+        # New 2025 post season and onwards table type
+        elif version == "v2":
+            player_stat_rows = iter(soup.find_all("tr"))
+            # Skip header row
+            next(player_stat_rows)
+            for row in player_stat_rows:
+                for entry in row.find_all("td"):
+                    # TODO: remove if statements? text filtering possibly handled in later code
+                    # TODO: fix: asterisks made their way through this and any other text filtering
+                    entry_text = entry.get_text()
+                    entry_text = entry_text.strip()
+                    entry_text = entry_text.replace(",", "")
+                    entry_text = entry_text.replace("　", " ")
+                    entry_text = entry_text.replace("*", "")
+                    entry_text = entry_text.replace("+", "")
+                    # Write output in csv file format
+                    output_file.write(entry_text + ",")
+
+                # Get team
+                title = soup.find("span")
+                year_title_str = revise_year_title_str(str(title.string), suffix, year)
+                # Append as last entry and move to next row
+                output_file.write(year_title_str + ",\n")
 
         # Close request
         r.close()
@@ -3151,18 +3306,15 @@ def get_post_season_stats(year_dir, suffix, year):
     # Create header row
     if suffix == "BP":
         output_file.write(
-            "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,"
-            "IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
+            "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
         )
     if suffix == "PP" and version == "v1":
         output_file.write(
-            "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,"
-            "HB,SO,WP,BK,R,ER,ERA,Team,\n"
+            "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
         )
     if suffix == "PP" and version == "v2":
         output_file.write(
-            "Pitcher,G,W,L,SV,HLD,HP,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,"
-            "HB,SO,WP,BK,R,ER,ERA,Team,\n"
+            "Pitcher,G,W,L,SV,HLD,HP,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
         )
 
     # Loop through all team stat pages in url_arr
@@ -3199,6 +3351,7 @@ def get_post_season_stats(year_dir, suffix, year):
                 )
                 # Append as last entry and move to next row
                 output_file.write(year_title_str + ",\n")
+
         # New 2025 post season and onwards table type
         elif version == "v2":
             player_stat_rows = iter(soup.find_all("tr"))
@@ -3255,6 +3408,7 @@ def revise_year_title_str(year_title_str, suffix, year):
         >>> revise_year_title_str("2024年度 阪神タイガース", "PP", "2024")
         'Hanshin Tigers'
     """
+    # TODO: remove and keep actual "raw" title from npb site, then manipulate later
     if suffix in ("BR", "PR", "BF", "PF"):
         replacements = {
             "Fukuoka SoftBank Hawks": "SoftBank Hawks",
@@ -3266,6 +3420,7 @@ def revise_year_title_str(year_title_str, suffix, year):
             "Tokyo Yakult Swallows": "Yakult Swallows",
             "Tohoku Rakuten Golden Eagles": "Rakuten Eagles",
             "Kufu HAYATE Ventures Shizuoka": "HAYATE Ventures",
+            "HAYATE Ventures Shizuoka": "HAYATE Ventures",
             "Oisix Niigata Albirex BC": "Oisix Albirex",
         }
     elif suffix in ("BP", "PP"):
@@ -3378,7 +3533,7 @@ def get_gsheets_data(input_dir, year_dir, suffix, year):
     # Google sheet stats not available before 2021, so return immediately
     if int(year) < 2021:
         return
-    
+
     gsheet_df = pd.read_csv(os.path.join(input_dir, "google_sheet_urls.csv"))
 
     # Drop all rows that are not the df's year or suffix then scrape
@@ -3411,6 +3566,7 @@ def get_gsheets_data(input_dir, year_dir, suffix, year):
 def get_standings(year_dir, suffix, year):
     """Scrape the games played table for relevant stats to calculate PA/IP
     qualifier drop stats and for reference
+    # TODO: docs
 
     Parameters:
     year_dir (string): The directory to store relevant year statistics
@@ -3419,18 +3575,28 @@ def get_standings(year_dir, suffix, year):
     "P" = pacific league reg season standing URLs passed in
     "E" = eastern league farm standing URLs passed in
     "W" = western league farm standing URLs passed in
-    year (string):The desired standings stat year"""
+    year (string): The desired standings stat year"""
     output_file = make_raw_standings_file(year_dir, suffix, year)
     # Get URL to scrape
-    url_base = "https://npb.jp/bis/eng/{0}/stats/std_{1}.html"
-    url = url_base.format(year, suffix.lower())
+    if suffix in ("C_farm", "E_farm", "W_farm") and int(year) >= 2026:
+        url_suffix = suffix.replace("_farm", "").lower()
+        url = f"https://npb.jp/bis/eng/{year}/stats/std_2{url_suffix}.html"
+    else:
+        url_suffix = suffix.replace("_farm", "").lower()
+        url_suffix = suffix.replace("_npb", "").lower()
+        url = f"https://npb.jp/bis/eng/{year}/stats/std_{url_suffix}.html"
     r = get_url(url)
     # Create the soup for parsing the html content
     soup = BeautifulSoup(r.content, "html.parser")
 
-    # Grab all rows in the first subtable on the page
-    if len(soup.find_all("table")) >= 2:
+    # Grab all rows in the first subtable on the page (pre 2026 tables)
+    version = "v1"
+    if len(soup.find_all("table")) >= 2 and int(year) < 2026:
         table = soup.find_all("table")[1].find_all("tr")
+    # (post 2026 tables)
+    elif soup.find_all("table", {"class": "tablefix2"}):
+        version = "v2"
+        table = soup.find("table", {"class": "tablefix2"})
     # Stop running if no table is available
     else:
         # Close request and output file
@@ -3438,35 +3604,61 @@ def get_standings(year_dir, suffix, year):
         output_file.close()
         return
 
-    # Create header row
-    iter_table = iter(table)
-    tr = next(iter_table)
-    # Loop through each td in a table row
-    for td in tr:
-        entry_text = td.get_text()
-        # Skip empty column
-        if entry_text == "":
-            continue
-        # Insert each entry using csv format
-        output_file.write(entry_text + ",")
-    output_file.write("\n")
-
-    # Since header row was created, skip to stat rows
-    for tr in iter_table:
+    if version == "v1":
+        # Create header row
+        iter_table = iter(table)
+        tr = next(iter_table)
         # Loop through each td in a table row
         for td in tr:
             entry_text = td.get_text()
-            # Standardize blank spots in the csv
-            if entry_text == "***":
-                entry_text = "--"
-            # Skip empty columns
+            # Skip empty column
             if entry_text == "":
                 continue
             # Insert each entry using csv format
             output_file.write(entry_text + ",")
-        # Skip duplicate named table row
-        next(iter_table)
         output_file.write("\n")
+
+        # Since header row was created, skip to stat rows
+        for tr in iter_table:
+            # Loop through each td in a table row
+            for td in tr:
+                entry_text = td.get_text()
+                # Standardize blank spots in the csv
+                if entry_text == "***":
+                    entry_text = "--"
+                # Skip empty columns
+                if entry_text == "":
+                    continue
+                # Insert each entry using csv format
+                output_file.write(entry_text + ",")
+            # Skip duplicate named table row
+            next(iter_table)
+            output_file.write("\n")
+    elif version == "v2":
+        # Loop through each th in the header table row
+        for th in table.find_all("th"):
+            entry_text = th.get_text()
+            # Skip empty column
+            if entry_text == "":
+                continue
+            # Insert each entry using csv format
+            output_file.write(entry_text + ",")
+
+        # Process stat rows
+        for tr in table.find_all("tr"):
+            for td in tr.find_all("td"):
+                entry_text = td.get_text()
+                # Standardize blank spots in the csv
+                if entry_text == "***":
+                    entry_text = "--"
+                # Skip empty columns
+                if entry_text == "":
+                    continue
+                # Insert each entry using csv format
+                output_file.write(entry_text + ",")
+            # Skip duplicate named table row
+            # next(iter_table)
+            output_file.write("\n")
 
     # Close request and output file
     r.close()
@@ -3487,6 +3679,7 @@ def get_fielding(year_dir, suffix, year):
     rel_dir = os.path.dirname(__file__)
     url_file = rel_dir + "/input/fielding_urls.csv"
     # Grab singular fielding URL from file
+    # TODO: implement better url filtering since npbbasement has all stats at 1 url
     df = pd.read_csv(url_file)
     df = df.drop(df[df.Year.astype(str) != year].index)
     if "R" in suffix:
@@ -3497,22 +3690,52 @@ def get_fielding(year_dir, suffix, year):
     fielding_url = df["Link"].iloc[0]
 
     output_file = make_raw_fielding_file(year_dir, suffix, year)
-    r = get_url(fielding_url)
-    soup = BeautifulSoup(r.content, "html.parser")
-    # Grab all fielding table entries
-    fielding_tr = soup.find_all("tr")
-    for tr in fielding_tr:
-        if tr.get_text() == "":
-            continue
-        for td in tr:
-            entry_text = td.get_text()
-            entry_text = entry_text.strip()
-            if entry_text == "":
+
+    # Pre 2026/pre migration to https://npbbasement.com/fielding
+    if "bo-no05.hatenadiary.org" in fielding_url:
+        r = get_url(fielding_url)
+        soup = BeautifulSoup(r.content, "html.parser")
+        # Grab all fielding table entries
+        fielding_tr = soup.find_all("tr")
+        for tr in fielding_tr:
+            if tr.get_text() == "":
                 continue
-            output_file.write(entry_text + ",")
-        output_file.write("\n")
-    r.close()
-    # Pace requests to npb.jp to avoid excessive requests
+            for td in tr:
+                entry_text = td.get_text()
+                entry_text = entry_text.strip()
+                if entry_text == "":
+                    continue
+                output_file.write(entry_text + ",")
+            output_file.write("\n")
+        r.close()
+
+    # Post 2026/migration to https://npbbasement.com/fielding
+    if "npbbasement.com" in fielding_url:
+        division = "farm" if "F" in suffix else "top"
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=True)
+            page = browser.new_page()
+            print(f"Connecting to: {fielding_url}")
+            page.goto(fielding_url, wait_until="networkidle", timeout=30000)
+            sleep(3)
+            # Select division (top = NPB regular season, farm = farm league)
+            page.locator("select").first.select_option(division)
+            sleep(1)
+            # Select year
+            page.locator("select").nth(1).select_option(year)
+            sleep(1)
+            # Download CSV via button click
+            with page.expect_download(timeout=30000) as download_info:
+                page.locator("button:has-text('DOWNLOAD CSV')").click()
+            download = download_info.value
+            # Read downloaded file content, strip BOM, write to output
+            download_path = download.path()
+            with open(download_path, "r", encoding="utf-8-sig") as dl_file:
+                csv_content = dl_file.read()
+            output_file.write(csv_content)
+            browser.close()
+
+    # Pace requests to avoid excessive requests
     sleep(randint(1, 3))
     # After all URLs are scraped, close output file
     output_file.close()
@@ -3803,7 +4026,9 @@ def scrape_player_career_stats(
         print(f"    Error scraping {player_name}: {e}")
 
 
-def get_cdx_rows(url, session, from_year=None, to_year=None, limit=1000, timeout=(10, 60)):
+def get_cdx_rows(
+    url, session, from_year=None, to_year=None, limit=1000, timeout=(10, 60)
+):
     params = {
         "url": url,
         "output": "json",
@@ -3818,6 +4043,7 @@ def get_cdx_rows(url, session, from_year=None, to_year=None, limit=1000, timeout
         params["to"] = str(to_year)
 
     # TODO : DEBUG
+    # TODO: around this area, remove unused functions
     print(params)
 
     r = session.get(
@@ -3831,19 +4057,23 @@ def get_cdx_rows(url, session, from_year=None, to_year=None, limit=1000, timeout
     # Choose the 2 snapshots closest to the middle of the year
     for row in r.json():
         score = 0
-        #score += date_proximity_score(row["timestamp"], target_date)
-        delta = datetime.strptime(row["timestamp"], "%Y%b%d") - datetime.strptime((str(from_year)+"0615"), "%Y%b%d")
+        # score += date_proximity_score(row["timestamp"], target_date)
+        delta = datetime.strptime(row["timestamp"], "%Y%b%d") - datetime.strptime(
+            (str(from_year) + "0615"), "%Y%b%d"
+        )
         score += delta.days
         candidates.append((score, row))
     candidates.sort(reverse=True)
 
     return candidates
 
+
 def fetch_archived_html(original_url, session, timestamp, timeout=(10, 45)):
     archive_url = f"https://web.archive.org/web/{timestamp}id_/{original_url}"
     r = session.get(archive_url, timeout=timeout)
     r.raise_for_status()
     return r.text
+
 
 def get_roster_data(year_dir, suffix, year):
     """Scrapes NPB team rosters to collect player information and links.
@@ -3866,8 +4096,6 @@ def get_roster_data(year_dir, suffix, year):
     Example:
         >>> get_roster_data("/path/to/stats/2025", "en", "2025")
         >>> # Creates file at: /path/to/stats/2025/raw/2025raw_roster_data_en.csv
-    """
-
     """
     if suffix == "en":
         roster_url_dict = {
@@ -3931,9 +4159,10 @@ def get_roster_data(year_dir, suffix, year):
         }
     else:
         roster_url_dict = {}
-    """
+
     # TODO: make this function so this only scrapes current year, and skips automatically otherwise
     # might be bad idea to post wayback machine links in an input file for github
+    # TODO: remove unused wayback machine functions, integrate wayback machine scraping
     """
     # if current year doesnt equal inputted year, scrape wayback
     s = make_session()
@@ -3948,6 +4177,7 @@ def get_roster_data(year_dir, suffix, year):
         #html = fetch_archived_html(row["original"], s, row["timestamp"])
     """
 
+    """
     if suffix == "en":
         # TODO: 2023 and before (just change the first 4 digits in the timestamp part of each url)
         roster_url_dict = {
@@ -4005,19 +4235,20 @@ def get_roster_data(year_dir, suffix, year):
         }
     else:
         roster_url_dict = {}
+    """
 
     output_file = make_raw_roster_data_file(year_dir, suffix, year)
 
     # Loop through all roster URLs passed in
     for url, team in roster_url_dict.items():
         # Make GET request
-        #r = get_url(url)
+        # r = get_url(url)
         # TODO: debug, making session to connect
         s = make_session()
-        print("team: " + team + " - connecting to: " + url)
+        print("Current team: " + team + " - Connecting to: " + url)
         r = s.get(url, timeout=(10, 45))
         r.raise_for_status()
-        #r = session_r.text
+        # r = session_r.text
 
         # Create the soup for parsing the html content
         soup = BeautifulSoup(r.content, "html.parser")
@@ -4046,9 +4277,9 @@ def get_roster_data(year_dir, suffix, year):
             output_file.write("\n")
 
         # TODO: debug
-        #r.close()
+        # r.close()
         # Pace requests to npb.jp to avoid excessive requests
-        #sleep(randint(3, 5))
+        # sleep(randint(3, 5))
         sleep(10.0)
 
 
@@ -4366,13 +4597,10 @@ def get_scrape_year(args_in=None):
                 continue
             # Bounds for scrapable years
             # Min year on npb.jp = 2008, but scraping is only tested until 2020
-
-            # TODO: remove the unindented break, change back/change min year
-            break
-            #if 2020 <= args_in <= datetime.now().year:
-            #    print(str(args_in) + " entered. Continuing...")
-            #    break
-            #print("Please enter a valid year (2020-" + str(datetime.now().year) + ").")
+            if 2020 <= args_in <= datetime.now().year:
+                print(str(args_in) + " entered. Continuing...")
+                break
+            print("Please enter a valid year (2020-" + str(datetime.now().year) + ").")
 
     # Argument check
     else:
@@ -4707,8 +4935,9 @@ def select_fip_const(suffix, year):
     return fip_const
 
 
-def select_league(df, suffix):
+def select_league(df, suffix, year):
     """Adds a "League" column based on the team
+    # TODO: docs
 
     Parameters:
     df (pandas dataframe): A team or player dataframe
@@ -4718,7 +4947,6 @@ def select_league(df, suffix):
     """
     league_dict = {}
     if suffix in ("BR", "PR", "R", "PP", "BP", "B"):
-        # Contains all 2020-2024 reg baseball team names and leagues
         league_dict = {
             "Hanshin Tigers": "CL",
             "Hiroshima Carp": "CL",
@@ -4736,8 +4964,7 @@ def select_league(df, suffix):
             "Kintetsu Buffaloes": "PL",
             "Yokohama BayStars": "CL",
         }
-    elif suffix in ("BF", "PF", "F", "P"):
-        # Contains all 2020-2024 farm baseball team names and links
+    elif suffix in ("BF", "PF", "F", "P") and int(year) < 2026:
         league_dict = {
             "Hanshin Tigers": "WL",
             "Hiroshima Carp": "WL",
@@ -4753,6 +4980,23 @@ def select_league(df, suffix):
             "Nipponham Fighters": "EL",
             "Oisix Albirex": "EL",
             "HAYATE Ventures": "WL",
+        }
+    elif suffix in ("BF", "PF", "F", "P") and int(year) >= 2026:
+        league_dict = {
+            "Hanshin Tigers": "W",
+            "Hiroshima Carp": "W",
+            "DeNA BayStars": "C",
+            "Yomiuri Giants": "C",
+            "Yakult Swallows": "E",
+            "Chunichi Dragons": "C",
+            "ORIX Buffaloes": "W",
+            "Lotte Marines": "E",
+            "SoftBank Hawks": "W",
+            "Rakuten Eagles": "E",
+            "Seibu Lions": "C",
+            "Nipponham Fighters": "E",
+            "Oisix Albirex": "E",
+            "HAYATE Ventures": "C",
         }
 
     for team, league in league_dict.items():
@@ -4871,8 +5115,11 @@ def translate_players(df, suffix, year, mode=None):
     if mode == "career":
         base_input_dir = os.path.join(rel_dir, "input")
         # List all directories in base_input_dir that are numeric (years) and exist
-        year_dirs = [d for d in os.listdir(base_input_dir)
-                    if os.path.isdir(os.path.join(base_input_dir, d)) and d.isdigit()]
+        year_dirs = [
+            d
+            for d in os.listdir(base_input_dir)
+            if os.path.isdir(os.path.join(base_input_dir, d)) and d.isdigit()
+        ]
         # We'll collect dataframes
         dfs = []
         for y in year_dirs:
@@ -4880,15 +5127,17 @@ def translate_players(df, suffix, year, mode=None):
             if os.path.exists(trans_file):
                 df_year = pd.read_csv(trans_file)
                 # Add year column to track source year
-                df_year['_source_year'] = int(y)
+                df_year["_source_year"] = int(y)
                 dfs.append(df_year)
         if dfs:
             translation_df = pd.concat(dfs, ignore_index=True)
             # Sort by source year descending (newest first) and drop duplicates
-            translation_df = translation_df.sort_values('_source_year', ascending=False)
-            translation_df = translation_df.drop_duplicates(subset=['Link'], keep='first')
+            translation_df = translation_df.sort_values("_source_year", ascending=False)
+            translation_df = translation_df.drop_duplicates(
+                subset=["Link"], keep="first"
+            )
             # Drop the temporary year column
-            translation_df = translation_df.drop('_source_year', axis=1)
+            translation_df = translation_df.drop("_source_year", axis=1)
             translation_df = translation_df.reset_index(drop=True)
         else:
             # If no files found, we create an empty dataframe
