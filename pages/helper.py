@@ -8,6 +8,7 @@ import requests
 import numpy as np
 
 
+@st.cache_data(ttl=600, show_spinner=False)
 def load_csv(url=None):
     """
     Loads a csv from a link and returns it as a dataframe.
@@ -1042,6 +1043,7 @@ def convert_pct_cols_to_float(df):
         float.
     """
     # Format data that has percent format since it breaks sorting
+    df = df.copy()
     for col in df.columns.tolist():
         if df[col].astype(str).str.contains("%").any():
             df[col] = df[col].str.rstrip("%").astype("float")

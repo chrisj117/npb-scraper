@@ -51,6 +51,16 @@ def main():
     user_link = career_bio_df.loc[career_bio_df["Player"] == user_player, "Link"].iloc[
         0
     ]
+    # Reset year selections when player changes
+    if st.session_state.get("career_last_link") != user_link:
+        st.session_state["career_last_link"] = user_link
+        # Force-reset multiselect keys so they reflect the new player's years
+        st.session_state["bat_year_selection"] = sorted(
+            career_bat_df.loc[career_bat_df["Link"] == user_link, "Year"].tolist()
+        )
+        st.session_state["pitch_year_selection"] = sorted(
+            career_pitch_df.loc[career_pitch_df["Link"] == user_link, "Year"].tolist()
+        )
     # Convert bat positions to letter notation
     pos_dict = {
         "1": "P",
@@ -192,54 +202,40 @@ def main():
                 )
             )
 
-        bat_original_df = bat_display_df.copy()
         # Use multiselect to choose which seasons to display
-        available_years = sorted(bat_original_df["Year"].tolist())
+        available_years = sorted(bat_display_df["Year"].tolist())
+        # Default options set by session state after user chooses player
         selected_years = st.multiselect(
             "Select seasons to display",
             options=available_years,
-            default=available_years,
             key="bat_year_selection",
         )
 
-        # Filter to selected years (keep original totals row for reference)
+        # Recalculate totals based on selected years
         filtered_df = bat_display_df[
             bat_display_df["Year"].isin(sorted(selected_years))
-            | (bat_display_df.index == "Total")
         ].copy()
+        recalc_totals = recalculate_bat_totals(filtered_df, bat_display_df)
 
-        # Recalculate totals based on selected years
-        if selected_years:
-            # Get selected data from original
-            selected_data = bat_original_df[
-                bat_original_df["Year"].isin(selected_years)
-            ]
-            recalc_totals = recalculate_bat_totals(selected_data, bat_display_df)
+        filtered_df = filtered_df.sort_values(by=["Year"])
+        # Reset index for row zebra coloring
+        filtered_df = filtered_df.reset_index()
+        for col, val in recalc_totals.items():
+            # Ensure column type matches value's type
+            if isinstance(val, float):
+                filtered_df[col] = filtered_df[col].astype(float)
+            elif isinstance(val, int):
+                filtered_df[col] = filtered_df[col].astype(int)
+            filtered_df.loc["Total", col] = val
+        filtered_df = filtered_df.convert_dtypes()
+        filtered_df["Year"] = (
+            filtered_df["Year"].astype("Int64").astype(str).replace("<NA>", "")
+        )
+        filtered_df["Age"] = (
+            filtered_df["Age"].astype("Int64").astype(str).replace("<NA>", "")
+        )
+        filtered_df.index = filtered_df.index.astype(str)
 
-            filtered_df = filtered_df.sort_values(by=["Year"])
-            # Drop the old Total row and recreate it with recalculated values
-            # Reset index for row zebra coloring
-            # filtered_df = filtered_df.reset_index()
-            filtered_df = filtered_df[filtered_df.index != "Total"]
-            # Reset index for row zebra coloring
-            filtered_df = filtered_df.reset_index()
-            for col, val in recalc_totals.items():
-                # Ensure column type matches value's type
-                if isinstance(val, float):
-                    filtered_df[col] = filtered_df[col].astype(float)
-                elif isinstance(val, int):
-                    filtered_df[col] = filtered_df[col].astype(int)
-                filtered_df.loc["Total", col] = val
-            filtered_df = filtered_df.convert_dtypes()
-            filtered_df["Year"] = (
-                filtered_df["Year"].astype("Int64").astype(str).replace("<NA>", "")
-            )
-            filtered_df["Age"] = (
-                filtered_df["Age"].astype("Int64").astype(str).replace("<NA>", "")
-            )
-            filtered_df.index = filtered_df.index.astype(str)
-
-        # Display dataframe
         st.dataframe(
             filtered_df[user_cols]
             .style.apply(apply_zebra_rows, axis=1)
@@ -342,51 +338,38 @@ def main():
                 )
             )
 
-        pitch_original_df = pitch_display_df.copy()
         # Use multiselect to choose which seasons to display
-        available_years = sorted(pitch_original_df["Year"].tolist())
+        available_years = sorted(pitch_display_df["Year"].tolist())
+        # Default options set by session state after user chooses player
         selected_years = st.multiselect(
             "Select seasons to display",
             options=available_years,
-            default=available_years,
             key="pitch_year_selection",
         )
 
-        # Filter to selected years (keep original totals row for reference)
-        filtered_df = pitch_display_df[
-            pitch_display_df["Year"].isin(sorted(selected_years))
-            | (pitch_display_df.index == "Total")
-        ].copy()
-
         # Recalculate totals based on selected years
-        if selected_years:
-            # Get selected data from original
-            selected_data = pitch_original_df[
-                pitch_original_df["Year"].isin(selected_years)
-            ]
-            recalc_totals = recalculate_pitch_totals(selected_data, pitch_original_df)
+        filtered_df = pitch_display_df[pitch_display_df["Year"].isin(selected_years)]
+        recalc_totals = recalculate_pitch_totals(filtered_df, pitch_display_df)
 
-            filtered_df = filtered_df.sort_values(by=["Year"])
-            # Drop the old Total row and recreate it with recalculated values
-            filtered_df = filtered_df.reset_index()
-            filtered_df = filtered_df[filtered_df.index != "Total"]
-            for col, val in recalc_totals.items():
-                # Ensure column type matches value's type
-                if isinstance(val, float):
-                    filtered_df[col] = filtered_df[col].astype(float)
-                elif isinstance(val, int):
-                    filtered_df[col] = filtered_df[col].astype(int)
-                filtered_df.loc["Total", col] = val
-            filtered_df = filtered_df.convert_dtypes()
-            filtered_df["Year"] = (
-                filtered_df["Year"].astype("Int64").astype(str).replace("<NA>", "")
-            )
-            filtered_df["Age"] = (
-                filtered_df["Age"].astype("Int64").astype(str).replace("<NA>", "")
-            )
-            filtered_df.index = filtered_df.index.astype(str)
+        filtered_df = filtered_df.sort_values(by=["Year"])
+        # Reset index for row zebra coloring
+        filtered_df = filtered_df.reset_index()
+        for col, val in recalc_totals.items():
+            # Ensure column type matches value's type
+            if isinstance(val, float):
+                filtered_df[col] = filtered_df[col].astype(float)
+            elif isinstance(val, int):
+                filtered_df[col] = filtered_df[col].astype(int)
+            filtered_df.loc["Total", col] = val
+        filtered_df = filtered_df.convert_dtypes()
+        filtered_df["Year"] = (
+            filtered_df["Year"].astype("Int64").astype(str).replace("<NA>", "")
+        )
+        filtered_df["Age"] = (
+            filtered_df["Age"].astype("Int64").astype(str).replace("<NA>", "")
+        )
+        filtered_df.index = filtered_df.index.astype(str)
 
-        # Display dataframe
         filtered_df["IP"] = hp.convert_ip_column_out(filtered_df)
         st.dataframe(
             filtered_df[user_cols]
@@ -549,16 +532,22 @@ def recalculate_bat_totals(selected_df, original_df):
         totals["OBP"] = np.nan
     totals["OPS"] = totals.get("OBP", 0) + totals.get("SLG", 0)
     totals["ISO"] = totals.get("SLG", 0) - totals.get("AVG", 0)
-    totals["K%"] = (totals.get("SO", 0) / totals.get("PA", 0)) * 100
-    totals["BB%"] = (totals.get("BB", 0) / totals.get("PA", 0)) * 100
+    if totals.get("PA", 0) != 0:
+        totals["K%"] = (totals.get("SO", 0) / totals.get("PA", 0)) * 100
+        totals["BB%"] = (totals.get("BB", 0) / totals.get("PA", 0)) * 100
+        totals["TTO%"] = (
+            (totals.get("HR", 0) + totals.get("SO", 0) + totals.get("BB", 0))
+            / totals.get("PA", 0)
+        ) * 100
+    else:
+        totals["K%"] = np.nan
+        totals["BB%"] = np.nan
+        totals["TTO%"] = np.nan
     if totals.get("SO", 0) != 0:
         totals["BB/K"] = totals.get("BB", 0) / totals.get("SO", 0)
     else:
         totals["BB/K"] = np.nan
-    totals["TTO%"] = (
-        (totals.get("HR", 0) + totals.get("SO", 0) + totals.get("BB", 0))
-        / totals.get("PA", 0)
-    ) * 100
+
     babip_denominator = (
         totals.get("AB", 0)
         - totals.get("SO", 0)

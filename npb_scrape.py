@@ -3,7 +3,6 @@
 from time import sleep
 from random import randint
 from datetime import datetime
-from typing import Any
 from urllib.error import HTTPError, URLError
 import os
 import sys
@@ -24,9 +23,10 @@ from playwright.sync_api import sync_playwright
 # TODO: update github docs
 # TODO: see about importing csvs to streamlit server instead of reloading from dropbox everytime
 # TODO: set up dropbox (logged in now) - cron auto scraping *
-# TODO: streamlit - selected years on career cause problems on other player's stats? *
+# TODO: add streamlit career page description on home page
 # TODO: streamlit - update secrets.toml with 2026 stuff *
 # TODO: streamlit - year filters *
+# TODO: gsheet links are ephermal, no need for url sheet?
 # TODO: change farm 2026 fielding "League" to "Division" *
 # TODO: refactor daily scores
 # TODO: move input dir creation here?
