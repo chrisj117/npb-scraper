@@ -2100,7 +2100,7 @@ class FieldingData(Stats):
         # Output names with JP characters
         untranslated = self.df[
             self.df["Player"].str.contains(
-                r"[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]", na=False
+                "[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]", na=False
             )
         ]
         if not untranslated.empty:
@@ -2111,7 +2111,7 @@ class FieldingData(Stats):
             print(untranslated[["Player", "Team"]])
 
         # Filter to only English names (ASCII characters)
-        self.df = self.df[self.df["Player"].str.contains(r"^[\x00-\x7F]+$", na=False)]
+        self.df = self.df[self.df["Player"].str.contains("^[\x00-\x7f]+$", na=False)]
 
         # Make dir that will store alt views of the dataframes
         alt_dir = os.path.join(self.year_dir, "alt")
