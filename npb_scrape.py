@@ -22,12 +22,10 @@ from playwright.sync_api import sync_playwright
 # TODO: split into multiple class files for organization
 # TODO: update github docs
 # TODO: see about importing csvs to streamlit server instead of reloading from dropbox everytime
-# TODO: set up dropbox (logged in now) - cron auto scraping *
 # TODO: add streamlit career page description on home page
 # TODO: streamlit - update secrets.toml with 2026 stuff *
 # TODO: streamlit - year filters *
 # TODO: streamlit - fix leaders jiggle/vibrate upon loading
-# TODO: fielding alt files have NaNs
 # TODO: put read in check before every google sheet raw to better avoid errors
 # TODO: gsheet links are ephermal, no need for url sheet?
 # TODO: change farm 2026 fielding "League" to "Division" *
@@ -408,6 +406,7 @@ class Stats:
         if int(year) >= 2014:
             # Counting stat column totals
             total_era = 9 * (self.df["ER"].sum() / self.df["IP"].sum())
+            fip_const = self.calculate_fip_const()
             total_fip = (
                 (
                     13 * self.df["HR"].sum()
@@ -415,7 +414,7 @@ class Stats:
                     - 2 * self.df["SO"].sum()
                 )
                 / self.df["IP"].sum()
-            ) + select_fip_const(self.suffix, self.year)
+            ) + fip_const
             total_kwera = 4.80 - (
                 10 * ((self.df["SO"].sum() - self.df["BB"].sum()) / self.df["BF"].sum())
             )
@@ -430,7 +429,7 @@ class Stats:
                     - 2 * self.df["SO"]
                 )
                 / self.df["IP"]
-            ) + select_fip_const(self.suffix, year)
+            ) + fip_const
             self.df["Diff"] = self.df["ERA"] - self.df["FIP"]
             self.df["FIP-"] = 100 * (self.df["FIP"] / (total_fip * self.df["ParkF"]))
 
@@ -440,6 +439,49 @@ class Stats:
 
         # Changing .33 to .1 and .66 to .2 in the IP column
         self.df["IP"] = convert_ip_column_out(self.df, "IP")
+
+    def calculate_fip_const(self):
+        """Calculates reg and farm FIP constants
+
+        Returns:
+        fip_const (float): The correct FIP const according to year and farm/NPB reg
+        season"""
+        fip_df = pd.read_csv(os.path.dirname(__file__) + "/input/fip_const.csv")
+        if self.suffix in ("BF", "PF"):
+            fip_suffix = "Farm"
+        else:
+            fip_suffix = "NPB"
+
+        # Calculate a fresh FIP constant if all columns are present
+        if {"R", "IP", "HR", "BB", "IBB", "HB", "SO"}.issubset(self.df.columns):
+            lg_ra = self.df["R"].sum() * 9 / self.df["IP"].sum()
+            numerator = (
+                (13 * self.df["HR"].sum())
+                + (
+                    3
+                    * (self.df["BB"].sum() - self.df["IBB"].sum() + self.df["HB"].sum())
+                )
+                - (2 * self.df["SO"].sum())
+            )
+            fip_const = lg_ra - ((numerator) / (self.df["IP"].sum()))
+            # Store new FIP constant
+            fip_df.loc[
+                (fip_df["Year"].astype(str) == self.year)
+                & (fip_df["League"] == fip_suffix),
+                "FIP",
+            ] = fip_const
+            fip_df.to_csv(
+                (os.path.dirname(__file__) + "/input/fip_const.csv"), index=False
+            )
+        # Using year and suffix, determine FIP constant to use from fallback CSV
+        else:
+            filtered = fip_df[
+                (fip_df["Year"].astype(str) == self.year)
+                & (fip_df["League"] == fip_suffix)
+            ]
+            fip_const = filtered["FIP"].iloc[-1]
+
+        return fip_const
 
     def fix_raw_pitch_col(self):
         """Converts IP and ERA cols to appropriate float types"""
@@ -609,8 +651,14 @@ class Stats:
         )
 
     def rescale_gsheet_pct_stats(self):
-        """TODO: docs"""
-        # TODO: remove? might not be needed since gsheet data scaling has
+        """Rescales percentage statistics from Google Sheets data.
+
+        Google Sheets data contains percentages as whole numbers (e.g., 50 for 50%).
+        This method converts them to decimal format (e.g., 0.50) for proper percentage
+        display in the final output files.
+
+        The following columns are rescaled:
+        - PullAIR%, Chase%, Z-Con%, Swing%, SwStr%, GB%, Con%, CSW%"""
         new_pct_stats = [
             "PullAIR%",
             "Chase%",
@@ -648,12 +696,10 @@ class PlayerData(Stats):
     Methods:
         output_final():
             Outputs the final organized statistics to CSV files for upload.
-        org_player_pitch():
-            Organizes raw pitching statistics and calculates additional
-            metrics.
-        # TODO: remove these mentions of org player bat/pitch, replace with format_player_bat/pitch
-        org_player_bat():
-            Organizes raw batting statistics and calculates additional metrics.
+        format_player_pitch():
+            Applies appropriate CSV formatting to pitch stat files.
+        format_player_bat():
+            Applies appropriate CSV formatting to batting stat files.
         org_post_pitch():
             Preprocesses post season batting stats for org_player_bat().
         org_post_player_bat():
@@ -852,7 +898,16 @@ class PlayerData(Stats):
                 )
 
     def format_player_bat(self):
-        """TODO: docs"""
+        """Formats batting statistics for final output.
+
+        Performs the following operations on the player batting dataframe:
+        1. Rescales percentage statistics from Google Sheets data.
+        2. Applies number formatting to all statistics (e.g., AVG to 3 decimals).
+        3. Replaces inf/nan values with empty strings for clean display.
+        4. Filters data by league if applicable.
+        5. Adds roster data (age, position, batting arm) for regular/farm stats.
+        6. Reorders columns to a standard layout based on suffix and year.
+        7. Applies manual revisions from the revisions CSV file."""
         self.rescale_gsheet_pct_stats()
         # Number formatting
         format_maps = {
@@ -877,26 +932,15 @@ class PlayerData(Stats):
         for key, value in format_maps.items():
             if key in self.df.columns:
                 self.df[key] = self.df[key].apply(value.format)
-        # Replace all NaN in BB/K, wOBA and BABIP with ''
-        nan_cols = [
-            "AVG",
-            "OBP",
-            "SLG",
-            "OPS",
-            "OPS+",
-            "ISO",
-            "BB/K",
-            "BABIP",
-            "PullAIR%",
-            "Chase%",
-            "Z-Con%",
-            "Swing%",
-            "SwStr%",
-        ]
-        for col in nan_cols:
-            if col in self.df.columns:
-                self.df[col] = self.df[col].astype(str).replace("nan%", "")
+
+        # Replace infs/nans in select stat cols after formatting applied
+        for col in self.df.columns.to_list():
+            if self.df[col].astype(str).str.contains("nan").any():
                 self.df[col] = self.df[col].astype(str).replace("nan", "")
+            if self.df[col].astype(str).str.contains("nan%").any():
+                self.df[col] = self.df[col].astype(str).replace("nan%", "")
+            if self.df[col].astype(str).str.contains("inf").any():
+                self.df[col] = self.df[col].astype(str).replace("inf", "")
         # Replace BB/K infs with '1.00' (same format as MLB website)
         self.df["BB/K"] = self.df["BB/K"].str.replace("inf", "1.00")
         self.df = select_league(self.df, self.suffix, self.year)
@@ -1034,7 +1078,20 @@ class PlayerData(Stats):
         self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
     def format_player_pitch(self):
-        """TODO: Docs"""
+        """Formats pitching statistics for final output.
+
+        Performs the following operations on the player pitching dataframe:
+        1. Rescales percentage statistics from Google Sheets data.
+        2. Removes the temporary Park Factor column used for calculations.
+        3. Applies number formatting to all statistics (e.g., ERA to 2 decimals).
+        4. Replaces inf/nan values with empty strings for clean display.
+        5. Filters data by league if applicable.
+        6. Reorders columns to a standard layout based on suffix:
+           - PR/PF: Includes all stats (W, L, SV, HLD, etc.) with roster data (Age, T)
+           - PP: Post-season format without HLD column
+        7. Removes Google Sheets columns (GB%, Chase%, etc.) for farm and pre-2021.
+        8. Removes HLD column for farm stats.
+        9. Applies manual revisions from the revisions CSV file."""
         # Data cleaning/reformatting
         self.rescale_gsheet_pct_stats()
         # Remove temp Park Factor column
@@ -1063,12 +1120,14 @@ class PlayerData(Stats):
             if key in self.df.columns.to_list():
                 self.df[key] = self.df[key].apply(value.format)
 
-        # Replace infs/nans in select stat cols
-        self.df["ERA"] = self.df["ERA"].astype(str).replace("inf", "")
-        self.df["FIP"] = self.df["FIP"].astype(str).replace("inf", "")
-        self.df["FIP-"] = self.df["FIP-"].astype(str).replace("inf", "")
-        self.df["WHIP"] = self.df["WHIP"].astype(str).replace("inf", "")
-        self.df["Diff"] = self.df["Diff"].astype(str).replace("nan", "")
+        # Replace infs/nans in select stat cols after formatting applied
+        for col in self.df.columns.to_list():
+            if self.df[col].astype(str).str.contains("nan").any():
+                self.df[col] = self.df[col].astype(str).replace("nan", "")
+            if self.df[col].astype(str).str.contains("nan%").any():
+                self.df[col] = self.df[col].astype(str).replace("nan%", "")
+            if self.df[col].astype(str).str.contains("inf").any():
+                self.df[col] = self.df[col].astype(str).replace("inf", "")
         self.df = select_league(self.df, self.suffix, self.year)
         # Reordering columns
         if self.suffix in ("PR", "PF"):
@@ -1735,9 +1794,10 @@ class TeamData(Stats):
         total_bf = self.player_df["BF"].sum()
         total_era = 9 * (total_er / total_ip)
         total_kwera = 4.80 - (10 * ((total_so - total_bb) / total_bf))
+        fip_const = self.calculate_fip_const()
         total_fip = (
             ((13 * total_hr) + (3 * (total_bb + total_hb)) - (2 * total_so)) / total_ip
-        ) + select_fip_const(self.suffix, self.year)
+        ) + fip_const
 
         # Calculations for RATE stats
         self.df["ERA"] = 9 * (self.df["ER"] / self.df["IP"])
@@ -1755,7 +1815,7 @@ class TeamData(Stats):
                 - (2 * self.df["SO"])
             )
             / self.df["IP"]
-        ) + select_fip_const(self.suffix, self.year)
+        ) + fip_const
         # NO PARK FACTOR TEST
         # self.df['FIP-'] = (100 * (self.df['FIP'] / (total_fip)))
         self.df["FIP-"] = 100 * (self.df["FIP"] / (total_fip * self.df["ParkF"]))
@@ -1874,7 +1934,6 @@ class StandingsData(Stats):
             self.year_dir + "/raw/" + year + "StandingsRaw" + suffix + ".csv"
         )
 
-        # TODO: check since v2 standings is present for 2026
         # Do bare minimum to prepare IP/PA const file for PlayerData objects
         # Further organization of stats comes later in output_final()
         # Drop last unnamed column
@@ -2707,27 +2766,45 @@ class DailyScoresData(Stats):
 
 
 class CareerData(Stats):
-    """A class to handle organizing the cumulative career data.
-    # TODO: docs
+    """A class to handle organizing cumulative career statistics and biographical data.
+
     This class extends the `Stats` class and is responsible for organizing,
-    processing, and outputting daily game scores. It reads raw CSV files,
-    formats the data, and prepares it for final output.
+    processing, and outputting career batting, pitching, and biographical data
+    across all years. It reads raw CSV files, translates Japanese text, formats
+    the data, and prepares it for final output.
 
     Attributes:
-        df (pandas.DataFrame): Holds the daily game scores.
+        df (pandas.DataFrame): Holds the career statistics or biographical data.
+        suffix (str): Type of data - "bio" (biographical), "B" (batting), or "P" (pitching).
+        year (str): The year being processed.
 
     Methods:
+        org_career_bio():
+            Organizes biographical data - translates columns, converts Japanese
+            text (birthdate, draft info, position, handedness), converts metric
+            to imperial units, and splits data into separate columns.
+        org_career_bat():
+            Organizes career batting statistics - calculates OPS+ and aggregates
+            multiple years of data.
+        org_career_pitch():
+            Organizes career pitching statistics - calculates ERA+ and aggregates
+            multiple years of data.
         output_final():
-            Outputs the final organized daily game scores to CSV files for
-            upload.
-        org_daily_scores():
-            Organizes raw daily game scores, converts team abbreviations to
-            full names, and formats the data for presentation."""
+            Outputs the final organized career data to CSV files for upload.
+        metric_to_imperial():
+            Helper to convert height (cm) and weight (kg) to feet/inches and pounds."""
 
     def __init__(self, stats_dir, year_dir, suffix, year):
-        # TODO: docs
-        """CareerData new variables:
-        df (pandas dataframe): Holds the scores of the games"""
+        """Initialize CareerData with the appropriate raw career data file.
+
+        Args:
+            stats_dir (str): The directory containing all yearly stats folders.
+            year_dir (str): The directory for the specific year's stats (e.g., "2024").
+            suffix (str): Type of career data - "bio" (biographical), "B" (batting), or "P" (pitching).
+            year (str): The year being processed.
+
+        Loads the raw CSV file based on the suffix and calls the appropriate
+        organization method to process the data."""
         super().__init__(stats_dir, year_dir, suffix, year)
         # Load dataframe from file and organize data
         if self.suffix == "bio":
@@ -2751,7 +2828,20 @@ class CareerData(Stats):
             self.df = pd.DataFrame()
 
     def org_career_bio(self):
-        """TODO: docs"""
+        """Organizes biographical data from raw career bio CSV.
+
+        Performs the following transformations:
+        1. Drops the career history column (経歴).
+        2. Renames columns from Japanese to English (Pos, T/B, Height/Weight, etc.).
+        3. Translates player names from Japanese to English.
+        4. Sorts players with untranslated names to the top for easy identification.
+        5. Converts birthdate from Japanese format (年月日) to ISO format (YYYY/MM/DD).
+        6. Translates draft information (draft type, round, high school, etc.).
+        7. Translates positions (Infielder, Pitcher, Outfielder, Catcher).
+        8. Translates handedness (投打) to T/B columns (R/L/S).
+        9. Converts metric height/weight to imperial (feet/inches and pounds).
+        10. Splits combined columns into separate ones (Height/Weight -> Height, Weight).
+        11. Reorders columns to a standard layout."""
         self.df = self.df.drop(["経歴"], axis=1)
         self.df.rename(columns={"Unnamed: 0": "Link"}, inplace=True)
         # Translate column names and players
@@ -2843,7 +2933,17 @@ class CareerData(Stats):
         self.df.to_csv(os.path.join(self.year_dir, "streamlit_src", "career_bio.csv"))
 
     def metric_to_imperial(self, hw):
-        """TODO: docs"""
+        """Convert metric height and weight to imperial units.
+
+        Args:
+            hw (str): A string in format "cm/kg" (e.g., "180/75").
+
+        Returns:
+            str: A string in format "feet-inches/lbs" (e.g., "5-11/165").
+
+        Example:
+            >>> self.metric_to_imperial("180/75")
+            '5-11/165'"""
         if not isinstance(hw, str):
             return hw
 
@@ -2864,7 +2964,15 @@ class CareerData(Stats):
         return f"{feet}-{inches}/{lbs}"
 
     def org_career_bat(self):
-        """TODO: docs"""
+        """Organizes career batting statistics from raw career bat CSV.
+
+        Performs the following transformations:
+        1. Renames columns from Japanese to English (Year, Team, PA, AB, H, HR, etc.).
+        2. Translates player and team names from Japanese to English.
+        3. Processes each year separately to calculate year-specific stats (AVG, OBP, SLG, OPS+).
+        4. Adds position data from fielding for each player.
+        5. Combines all years back into a single DataFrame.
+        6. Outputs the processed career batting data to a Streamlit CSV file."""
         # Translate column names, players, and teams
         self.df.rename(
             columns={
@@ -2935,7 +3043,16 @@ class CareerData(Stats):
         self.df.to_csv(os.path.join(self.year_dir, "streamlit_src", "career_bat.csv"))
 
     def org_career_pitch(self):
-        """TODO: docs"""
+        """Organizes career pitching statistics from raw career pitch CSV.
+
+        Performs the following transformations:
+        1. Renames columns from Japanese to English (Year, Team, W, L, SV, IP, H, HR, etc.).
+        2. Fixes the split IP columns and ERA values for calculations.
+        3. Drops unnecessary columns (HP, 無四球).
+        4. Translates player and team names from Japanese to English.
+        5. Processes each year separately to calculate year-specific stats (ERA, FIP, WHIP, ERA+).
+        6. Combines all years back into a single DataFrame.
+        7. Outputs the processed career pitching data to a Streamlit CSV file."""
         # Translate column names, players, and teams
         self.df.rename(
             columns={
@@ -3005,7 +3122,16 @@ class CareerData(Stats):
         self.df.to_csv(os.path.join(self.year_dir, "streamlit_src", "career_pitch.csv"))
 
     def append_career_bat_positions(self, year):
-        """TODO: docs"""
+        """Appends player positions to career batting data from yearly stats.
+
+        Args:
+            year (str): The year to retrieve position data from.
+
+        Reads the yearly batting stats file for the given year, extracts the
+        Player and Team columns, normalizes team names by removing HTML links,
+        and merges position data back into the career dataframe using a left
+        join on Player and Team. Prints debugging information about the number
+        of matching player-team combinations found."""
         batting_df_filename = os.path.join(
             self.stats_dir, year, "npb", (year + "StatsFinalBR.csv")
         )
@@ -3092,7 +3218,14 @@ def get_url(try_url):
 
 
 def make_session():
-    """TODO: docs"""
+    """Create and configure a requests Session with retry logic.
+
+    Returns:
+        requests.Session: A configured session with:
+        - Retry strategy: 5 total retries with 1.5x backoff factor
+        - Retry on status codes: 429, 500, 502, 503, 504
+        - Custom User-Agent and Accept headers
+        - HTTP adapter with connection pooling (10 connections, 10 max size)"""
     retry = Retry(
         total=5,
         connect=5,
@@ -3155,7 +3288,7 @@ def get_daily_scores(year_dir, suffix, year):
             while i < len(teams):
                 team1 = teams[i].get_text()
                 team1_runs = left_team_runs[i].get_text()
-                team2 = teams[i+1].get_text()
+                team2 = teams[i + 1].get_text()
                 team2_runs = right_team_runs[i].get_text()
                 i += 2
                 output_file.write(
@@ -3260,7 +3393,6 @@ def get_stats(input_dir, year_dir, suffix, year):
             for row in player_stat_rows:
                 for entry in row.find_all("td"):
                     # TODO: remove if statements? text filtering possibly handled in later code
-                    # TODO: fix: asterisks made their way through this and any other text filtering
                     entry_text = entry.get_text()
                     entry_text = entry_text.strip()
                     entry_text = entry_text.replace(",", "")
@@ -3565,18 +3697,20 @@ def get_gsheets_data(input_dir, year_dir, suffix, year):
 
 
 def get_standings(year_dir, suffix, year):
-    """Scrape the games played table for relevant stats to calculate PA/IP
-    qualifier drop stats and for reference
-    # TODO: docs
+    """Scrape NPB/Farm league standings to calculate PA/IP qualifier drop stats.
 
     Parameters:
-    year_dir (string): The directory to store relevant year statistics
-    suffix (string): Indicates URL being scraped:
-    "C" = central league reg season standing URLs passed in
-    "P" = pacific league reg season standing URLs passed in
-    "E" = eastern league farm standing URLs passed in
-    "W" = western league farm standing URLs passed in
-    year (string): The desired standings stat year"""
+        year_dir (string): The directory to store relevant year statistics.
+        suffix (string): Indicates which league standings to scrape:
+            - "C_npb" or "C": Central League NPB regular season
+            - "P_npb" or "P": Pacific League NPB regular season
+            - "E_farm" or "E": Eastern League Farm
+            - "W_farm" or "W": Western League Farm
+            - "C_farm": Central League Farm (2026+)
+        year (string): The desired standings stat year.
+
+    Scrapes the official NPB standings page, extracts team statistics (G, W, L, PCT, etc.),
+    and writes them to a raw CSV file for later processing into PA/IP drop constants."""
     output_file = make_raw_standings_file(year_dir, suffix, year)
     # Get URL to scrape
     if suffix in ("C_farm", "E_farm", "W_farm") and int(year) >= 2026:
@@ -3743,33 +3877,26 @@ def get_fielding(year_dir, suffix, year):
 
 
 def get_career_data(rel_dir, year):
-    # TODO: update docs
-    """Scrapes all NPB team player entries and their career stats from the
-    official NPB player search page.
+    """Scrape all NPB team player entries and their career stats.
 
-    This function navigates the NPB team player directory, extracts individual
-    player links, and scrapes career statistics from each player's personal page.
-    The data includes biographical information, batting career totals, and pitching
-    career totals for all players across all 12 NPB teams.
+    Navigates the NPB team player directory, extracts individual player links,
+    and scrapes career statistics from each player's personal page. The data
+    includes biographical information, batting career totals, and pitching career
+    totals for all players across all 12 NPB teams.
 
     Parameters:
         rel_dir (str): The directory path where year-specific statistics are stored.
         year (str): The base year for the player search URL (e.g., "2024").
 
-    Returns:
-        None: This function saves data directly to CSV files but does not return a value.
-
     Side Effects:
-        Creates three CSV files in the current working directory:
-            - career_bio_df.csv: Player biographical information (name, link, bio stats)
-            - career_batting_df.csv: Career batting statistics for all players
-            - career_pitching_df.csv: Career pitching statistics for all players
+        Creates three CSV files in stats/all/raw/:
+            - raw_career_bio.csv: Player biographical information
+            - raw_career_bat.csv: Career batting statistics for all players
+            - raw_career_pitch.csv: Career pitching statistics for all players
 
-    Example:
-        >>> get_career_data("/path/to/stats/2024", "2024")
-        >>> # Creates: *year*_raw_career_bio_df.csv, *year*_raw_career_batting_df.csv,
-        *year*_raw_career_pitching_df.csv
-    """
+    Note:
+        Attempts to load existing career data files first to avoid re-scraping
+        players that already have data."""
     team_url_dict = {
         "Hanshin Tigers": f"https://npb.jp/bis/players/search/yearly/{year}/1961001/",
         "Hiroshima Carp": f"https://npb.jp/bis/players/search/yearly/{year}/1968001/",
@@ -4030,6 +4157,23 @@ def scrape_player_career_stats(
 def get_cdx_rows(
     url, session, from_year=None, to_year=None, limit=1000, timeout=(10, 60)
 ):
+    """Search the Internet Archive for cached snapshots of a URL.
+
+    Parameters:
+        url (str): The original URL to search for archived snapshots.
+        session (requests.Session): A configured requests session.
+        from_year (int, optional): Filter snapshots from this year.
+        to_year (int, optional): Filter snapshots to this year.
+        limit (int, optional): Maximum number of snapshots to retrieve (default 1000).
+        timeout (tuple, optional): Request timeout as (connect timeout, read timeout).
+
+    Returns:
+        list: A list of (score, row) tuples sorted by proximity to June 15th of from_year.
+              Higher scores indicate closer to mid-year.
+
+    Note:
+        Uses the Internet Archive CDX API to find snapshots. The score is based on
+        how close each snapshot's timestamp is to June 15th of the target year."""
     params = {
         "url": url,
         "output": "json",
@@ -4070,6 +4214,20 @@ def get_cdx_rows(
 
 
 def fetch_archived_html(original_url, session, timestamp, timeout=(10, 45)):
+    """Fetch an archived HTML page from the Internet Archive.
+
+    Parameters:
+        original_url (str): The original URL that was archived.
+        session (requests.Session): A configured requests session.
+        timestamp (str): The archive.org timestamp (e.g., "20240615000000").
+        timeout (tuple, optional): Request timeout as (connect timeout, read timeout).
+
+    Returns:
+        str: The HTML content of the archived page.
+
+    Note:
+        Uses the Wayback Machine's "id_" variant which redirects to the closest
+        available snapshot if the exact timestamp doesn't exist."""
     archive_url = f"https://web.archive.org/web/{timestamp}id_/{original_url}"
     r = session.get(archive_url, timeout=timeout)
     r.raise_for_status()
@@ -4100,63 +4258,33 @@ def get_roster_data(year_dir, suffix, year):
     """
     if suffix == "en":
         roster_url_dict = {
-            # Hanshin Tigers
             "https://npb.jp/bis/eng/teams/rst_t.html": "Hanshin Tigers",
-            # Hiroshima Toyo Carp
             "https://npb.jp/bis/eng/teams/rst_c.html": "Hiroshima Carp",
-            # YOKOHAMA DeNA BAYSTARS
             "https://npb.jp/bis/eng/teams/rst_db.html": "DeNA BayStars",
-            # Yomiuri Giants
             "https://npb.jp/bis/eng/teams/rst_g.html": "Yomiuri Giants",
-            # Tokyo Yakult Swallows
             "https://npb.jp/bis/eng/teams/rst_s.html": "Yakult Swallows",
-            # Chunichi Dragons
             "https://npb.jp/bis/eng/teams/rst_d.html": "Chunichi Dragons",
-            # ORIX Buffaloes
             "https://npb.jp/bis/eng/teams/rst_b.html": "ORIX Buffaloes",
-            # China Lotte Marines
             "https://npb.jp/bis/eng/teams/rst_m.html": "Lotte Marines",
-            # Fukuoka SoftBank Hawks
             "https://npb.jp/bis/eng/teams/rst_h.html": "SoftBank Hawks",
-            # Tohoku Rakuten Golden Eagles
             "https://npb.jp/bis/eng/teams/rst_e.html": "Rakuten Eagles",
-            # Saitama Seibu Lions
             "https://npb.jp/bis/eng/teams/rst_l.html": "Seibu Lions",
-            # Hokkaido Nippon-Ham Fighters
             "https://npb.jp/bis/eng/teams/rst_f.html": "Nipponham Fighters",
-            # N/A Links (new farm teams):
-            # Oisix Niigata Albirex BC
-            # (Formerly Kufu) HAYATE Ventures Shizuoka
         }
     elif suffix == "jp":
         roster_url_dict = {
-            # Hanshin Tigers
             "https://npb.jp/bis/teams/rst_t.html": "Hanshin Tigers",
-            # Hiroshima Toyo Carp
             "https://npb.jp/bis/teams/rst_c.html": "Hiroshima Carp",
-            # YOKOHAMA DeNA BAYSTARS
             "https://npb.jp/bis/teams/rst_db.html": "DeNA BayStars",
-            # Yomiuri Giants
             "https://npb.jp/bis/teams/rst_g.html": "Yomiuri Giants",
-            # Tokyo Yakult Swallows
             "https://npb.jp/bis/teams/rst_s.html": "Yakult Swallows",
-            # Chunichi Dragons
             "https://npb.jp/bis/teams/rst_d.html": "Chunichi Dragons",
-            # ORIX Buffaloes
             "https://npb.jp/bis/teams/rst_b.html": "ORIX Buffaloes",
-            # China Lotte Marines
             "https://npb.jp/bis/teams/rst_m.html": "Lotte Marines",
-            # Fukuoka SoftBank Hawks
             "https://npb.jp/bis/teams/rst_h.html": "SoftBank Hawks",
-            # Tohoku Rakuten Golden Eagles
             "https://npb.jp/bis/teams/rst_e.html": "Rakuten Eagles",
-            # Saitama Seibu Lions
             "https://npb.jp/bis/teams/rst_l.html": "Seibu Lions",
-            # Hokkaido Nippon-Ham Fighters
             "https://npb.jp/bis/teams/rst_f.html": "Nipponham Fighters",
-            # N/A Links (new farm teams):
-            # Oisix Niigata Albirex BC
-            # (Formerly Kufu) HAYATE Ventures Shizuoka
         }
     else:
         roster_url_dict = {}
@@ -4912,40 +5040,24 @@ def select_park_factor(df, suffix, year):
     return df
 
 
-def select_fip_const(suffix, year):
-    """Chooses FIP constant for 2020-2024 reg and farm years
-
-    Parameters:
-    suffix (string): Indicates whether to use farm or reg season FIP constants
-    year (string): The year of FIP constants to pull
-
-    Returns:
-    fip_const (float): The correct FIP const according to year and farm/NPB reg
-    season"""
-    fip_df = pd.read_csv(os.path.dirname(__file__) + "/input/fip_const.csv")
-    # Drop all rows that are not the df's year
-    fip_df = fip_df.drop(fip_df[fip_df.Year.astype(str) != year].index)
-    # Drop all rows that do not match the df's league
-    if suffix in ("BF", "PF"):
-        fip_suffix = "Farm"
-    else:
-        fip_suffix = "NPB"
-    fip_df = fip_df.drop(fip_df[fip_df.League != fip_suffix].index)
-    # Return FIP for that year and league
-    fip_const = fip_df.at[fip_df.index[-1], "FIP"]
-    return fip_const
-
-
 def select_league(df, suffix, year):
-    """Adds a "League" column based on the team
-    # TODO: docs
+    """Add a "League" column to a dataframe based on team names.
 
     Parameters:
-    df (pandas dataframe): A team or player dataframe
+        df (pandas DataFrame): A team or player dataframe with a "Team" column.
+        suffix (str): The stat type determining league mapping:
+            - "BR", "PR", "R", "PP", "BP", "B": NPB (Central/ Pacific)
+            - "BF", "PF", "F", "P" < 2026: Farm (Eastern/Western)
+            - "BF", "PF", "F", "P" >= 2026: Farm (Central/Eastern/Western)
+        year (str): The year being processed (affects farm league mapping).
 
     Returns:
-    df (pandas dataframe): The dataframe with the correct "League" column added
-    """
+        pandas DataFrame: The dataframe with a new "League" column added.
+
+    League mappings:
+        - NPB: CL (Central League), PL (Pacific League)
+        - Farm 2014-2025: EL (Eastern League), WL (Western League)
+        - Farm 2026+: C (Central), E (Eastern), W (Western)"""
     league_dict = {}
     if suffix in ("BR", "PR", "R", "PP", "BP", "B"):
         league_dict = {
@@ -5187,7 +5299,20 @@ def translate_players(df, suffix, year, mode=None):
 
 
 def translate_teams(df, suffix):
-    """TODO: docs"""
+    """Translate team names from Japanese abbreviations to full English names.
+
+    Parameters:
+        df (pandas DataFrame): A dataframe with a "Team" column containing Japanese team names.
+        suffix (str): The stat type determining which team name mapping to use:
+            - "R" or "F": Fielding stats with single-character abbreviations (e.g., "巨", "中", "神")
+            - Other: Career data or other stats with full Japanese team names (e.g., "読 売", "中 日")
+
+    Returns:
+        pandas DataFrame: The dataframe with team names translated to English.
+
+    Note:
+        Also normalizes team names by replacing Japanese Unicode spaces with US spaces.
+    """
     # Filter out JP unicode space "　" and replace with US space " "
     df["Team"] = df["Team"].str.replace("　", " ")
     # Fielding team names in Bouno's files
