@@ -26,6 +26,9 @@ from playwright.sync_api import sync_playwright
 # TODO: add streamlit career page description on home page
 # TODO: streamlit - update secrets.toml with 2026 stuff *
 # TODO: streamlit - year filters *
+# TODO: streamlit - fix leaders jiggle/vibrate upon loading
+# TODO: fielding alt files have NaNs
+# TODO: put read in check before every google sheet raw to better avoid errors
 # TODO: gsheet links are ephermal, no need for url sheet?
 # TODO: change farm 2026 fielding "League" to "Division" *
 # TODO: refactor daily scores
@@ -55,7 +58,7 @@ def main():
             - -1 if an error occurs.
             - 0 if the program completes successfully.
             - 1 if the program completes successfully with user input."""
-    print("NPB/Farm League Statistic Scraper")
+    print("NPB/Farm League Statistic Scraper (" + str(datetime.now()) + ")")
     # Open the directory to store the scraped stat csv files
     rel_dir = os.path.dirname(__file__)
     stats_dir = os.path.join(rel_dir, "stats")
@@ -130,7 +133,6 @@ def main():
         get_standings(year_dir, "P_npb", scrape_year)
         get_fielding(year_dir, "R", scrape_year)
     # NPB Daily Scores (only executes on current year)
-    # TODO: fix, new url and look for 2026 @ https://npb.jp/bis/eng/2026/games/
     if scrape_year == str(datetime.now().year):
         if npb_scrape_yn == "Y":
             get_daily_scores(year_dir, "R", scrape_year)
@@ -146,7 +148,6 @@ def main():
     )
     # NPB Standings
     # NOTE: standings must be organized before any player stats to calculate correct IP/PA drop consts
-    # TODO: double check farm IP/PA drop consts arent bad due to "3 standings" issue
     npb_central_standings = StandingsData(stats_dir, year_dir, "C_npb", scrape_year)
     npb_pacific_standings = StandingsData(stats_dir, year_dir, "P_npb", scrape_year)
     # NPB Player stats
@@ -200,7 +201,6 @@ def main():
         farm_fielding.df, stats_dir, year_dir, "F", scrape_year
     )
     # Farm Standings
-    # TODO: standings broke and farm central overwrites npb central - change suffixes to "npb" and "farm"
     farm_eastern_standings = StandingsData(stats_dir, year_dir, "E_farm", scrape_year)
     farm_western_standings = StandingsData(stats_dir, year_dir, "W_farm", scrape_year)
     if int(scrape_year) >= 2026:
@@ -2095,7 +2095,7 @@ class FieldingData(Stats):
     def output_final(self):
         """Outputs final files using the fielding dataframes"""
         # Final sweep for nans
-        self.df = self.df.astype(str).replace("nan", "")
+        self.df = self.df.fillna("")
 
         # Output names with JP characters
         untranslated = self.df[
@@ -2701,6 +2701,7 @@ class DailyScoresData(Stats):
             self.df[col] = self.df[col].astype(str)
             self.df[col] = self.df[col].str.replace(".0", "")
             self.df[col] = self.df[col].str.replace("nan", "*")
+            self.df[col] = self.df[col].str.replace(" ", "*")
         # Apply manual revisions
         self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
@@ -5253,7 +5254,7 @@ def build_html(row, name_col):
     Returns:
     html_line (str): The <a> tag if there is a link, else just the team/player
     name"""
-    if row["Link"] != "nan":
+    if pd.notna(row["Link"]) and str(row["Link"]).strip() != "":
         html_line = f'<a href={row["Link"]}>{row[name_col]}</a>'
     else:
         html_line = row[name_col]
