@@ -18,7 +18,7 @@ def main():
     Returns:
         None
     """
-    st.set_page_config(layout="centered")
+    st.set_page_config(layout="centered", initial_sidebar_state="collapsed")
 
     # User input boxes
     r1c1, r1c2 = st.columns([1, 1])
