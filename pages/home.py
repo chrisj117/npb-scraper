@@ -10,12 +10,14 @@ def main():
     st.title("Yakyu Cosmopolitan Dashboard")
 
     st.write(
-        "Welcome to the Yakyu Cosmopolitan Dashboard, your hub for up-to-date Nippon Professional Baseball stats. Batting and pitching stats are updated daily while fielding stats refresh about twice a month."
+        "Welcome to the Yakyu Cosmopolitan Dashboard, your hub for up-to-date Nippon Professional Baseball stats. Batting, pitching, and fielding stats are updated daily."
     )
     st.header("Team Overview")
     st.write(
         "Each team's primary lineup, rotation, and bullpen, plus top bench players. Starting position players are selected by defensive innings, bench players by plate appearances, starting pitchers by innings pitched, and relievers by saves and holds."
     )
+    st.header("Career Overview")
+    st.write("An NPB player's bio information and career statistics. Select from a wide range of stats and explore trends in numbers. Please note that this database only includes players who appeared from 2016 onward, and the numbers may not be comprehensive.")
     st.header("Player Percentiles")
     st.write(
         "Interactive bar graphs to compare players across key stats to the rest of the league, with filters for plate appearance and innings pitched minimums. Higher percentiles indicate stronger performance."

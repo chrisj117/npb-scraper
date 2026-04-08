@@ -1,5 +1,6 @@
 """Displays NPB team summary data with Streamlit"""
 
+from datetime import datetime
 import streamlit as st
 import pages.helper as hp
 
@@ -15,7 +16,9 @@ def main():
         None
     """
     st.set_page_config(layout="wide")
-    display_df = hp.load_csv(st.secrets["2025TeamSummaryFinalR_link"])
+    display_df = hp.load_csv(
+        st.secrets[str(datetime.now().year) + "TeamSummaryFinalR_link"]
+    )
     display_df = hp.convert_pct_cols_to_float(display_df)
     st.dataframe(
         display_df,

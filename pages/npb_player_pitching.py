@@ -18,8 +18,6 @@ def main():
         None
     """
     st.set_page_config(layout="wide")
-    lead_pitch_df = hp.load_csv(st.secrets["2025LeadersPR_link"])
-    player_pitch_df = hp.load_csv(st.secrets["2025StatsFinalPR_link"])
 
     # Split filters away from dataframe
     with st.container(border=True):
@@ -27,6 +25,9 @@ def main():
         r1c1, r1c2 = st.columns([2, 7], vertical_alignment="center")
 
         with r1c1:
+            user_year = hp.create_year_filter()
+            lead_pitch_df = hp.load_csv(st.secrets[user_year + "LeadersPR_link"])
+            player_pitch_df = hp.load_csv(st.secrets[user_year + "StatsFinalPR_link"])
             leader_view = st.toggle("Qualifiers")
             if leader_view is True:
                 display_df = lead_pitch_df.drop("#", axis=1)

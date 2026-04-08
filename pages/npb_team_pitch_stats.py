@@ -17,7 +17,6 @@ def main():
         None
     """
     st.set_page_config(layout="wide")
-    display_df = hp.load_csv(st.secrets["2025TeamPR_link"])
 
     # Split filters away from dataframe
     with st.container(border=True):
@@ -25,6 +24,8 @@ def main():
         r1c1, r1c2 = st.columns([1, 9], vertical_alignment="center")
 
         with r1c1:
+            user_year = hp.create_year_filter()
+            display_df = hp.load_csv(st.secrets[user_year + "TeamPR_link"])
             user_league = hp.create_league_filter(mode="npb")
         with r1c2:
             user_team = hp.create_team_filter(mode="npb")

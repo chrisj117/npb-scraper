@@ -26,13 +26,21 @@ def main():
         # Drop all sub-5 IP players to help alleviate merging errors
         pitch_df = pitch_df.drop(pitch_df[pitch_df.IP < 5].index)
     with r1c2:
-        drop_ip = hp.create_ip_filter(pitch_df, "percentile")
-    # Drop players below IP threshold
-    pitch_df = pitch_df.drop(pitch_df[pitch_df.IP < drop_ip].index)
-    user_pitcher = hp.create_player_filter(pitch_df, "Pitcher")
+        if pitch_df["IP"].max() >= 10.0:
+            drop_ip = hp.create_ip_filter(pitch_df, "percentile")
+            disable_percentiles = False
+        else:
+            drop_ip = 0
+            disable_percentiles = True
 
-    # Display data
-    hp.display_player_percentile(pitch_df, user_pitcher, user_year, "PR")
+    # Only display percentiles if enough data is present
+    if disable_percentiles is False:
+        # Drop players below IP threshold
+        pitch_df = pitch_df.drop(pitch_df[pitch_df.IP < drop_ip].index)
+        user_pitcher = hp.create_player_filter(pitch_df, "Pitcher")
+        hp.display_player_percentile(pitch_df, user_pitcher, user_year, "PR")
+    else:
+        st.write("The sample size minimum has not been met yet. Please come back soon.")
 
 
 if __name__ == "__main__":

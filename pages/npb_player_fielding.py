@@ -18,13 +18,15 @@ def main():
         None
     """
     st.set_page_config(layout="wide")
-    display_df = hp.load_csv(st.secrets["2025FieldingFinalR_link"])
+    
     # Split filters away from dataframe
     with st.container(border=True):
         # Smaller filters split by cols, larger filters receive exclusive cols
         r1c1, r1c2, r1c3 = st.columns([2, 1, 6], vertical_alignment="center")
 
         with r1c1:
+            user_year = hp.create_year_filter()
+            display_df = hp.load_csv(st.secrets[user_year + "FieldingFinalR_link"])
             user_inn = hp.create_inn_filter(display_df, mode="player")
             # Drop players below Inn threshold
             display_df = display_df.drop(display_df[display_df.Inn < user_inn].index)
