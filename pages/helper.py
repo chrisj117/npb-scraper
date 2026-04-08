@@ -1133,7 +1133,7 @@ def get_column_config(suffix=None):
     if suffix in ("P", "PR", "PF"):
         column_config = {
             "#": st.column_config.NumberColumn(
-                width=15,
+                width=20,
                 alignment="left",
             ),
             "Team": st.column_config.TextColumn(
@@ -1324,7 +1324,7 @@ def get_column_config(suffix=None):
     elif suffix in ("B", "BR", "BF"):
         column_config = {
             "#": st.column_config.NumberColumn(
-                width=15,
+                width=20,
                 alignment="left",
             ),
             "Team": st.column_config.TextColumn(
