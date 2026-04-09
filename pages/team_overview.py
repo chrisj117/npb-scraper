@@ -9,32 +9,33 @@ def main():
     """
     Main entry point for the Streamlit NPB team overview.
 
-    Displays a dropdown for team selection and generates team-specific
-    dashboards. When a team is selected, displays the projected starting
-    lineup, reserve, starting rotation, and bullpen for that team using data
-    loaded from GitHub.
+    Displays dropdowns for year and team selection with an advanced stats toggle,
+    then generates team-specific dashboards showing the projected starting lineup,
+    reserve batters, starting rotation, bullpen, and team statistics.
 
     Functions called:
-        - create_lineup(team): Shows the team's starting lineup and reserve
-        batter.
-        - create_rotation_bullpen(team): Shows the team's starting rotation and
-        bullpen.
+        - create_lineup(team, user_year, advanced_view): Shows the team's starting lineup and reserve batters.
+        - create_rotation_bullpen(team, user_year, advanced_view): Shows the team's starting rotation and bullpen.
+        - create_team_stats(team, user_year): Shows team batting and pitching stats compared to League Average.
 
     Returns:
         None
     """
 
     st.set_page_config(layout="centered")
-    # User dropdown box
+    # User selections
+    user_year = hp.create_year_filter()
     user_team = hp.create_team_filter(mode="overview")
+    advanced_view = st.toggle("Advanced Stats")
 
     # Streamlit dataframe displays
-    create_lineup(user_team)
-    create_rotation_bullpen(user_team)
-    create_team_stats(user_team)
+    create_lineup(user_team, user_year, advanced_view)
+    create_rotation_bullpen(user_team, user_year, advanced_view)
+    create_team_stats(user_team, user_year)
 
 
-def create_lineup(team):
+@st.cache_data
+def create_lineup(team, user_year, advanced_view):
     """
     Displays the projected starting lineup and reserve batter for the selected
     team.
@@ -48,12 +49,14 @@ def create_lineup(team):
 
     Parameters:
         team (str): The name of the team to display the lineup for.
+        user_year (str): The season year to load data for.
+        advanced_view (bool): Whether to display additional stats columns.
 
     Returns:
         None
     """
-    bat_df = hp.load_csv(st.secrets["2025StatsFinalBR_link"])
-    field_df = hp.load_csv(st.secrets["2025FieldingFinalR_link"])
+    bat_df = hp.load_csv(st.secrets[user_year + "StatsFinalBR_link"])
+    field_df = hp.load_csv(st.secrets[user_year + "FieldingFinalR_link"])
     # Drop all sub-10 PA players to help alleviate merging errors
     bat_df = bat_df.drop(bat_df[bat_df.PA < 10].index)
     try:
@@ -90,7 +93,7 @@ def create_lineup(team):
     )
     lineup_df = pd.concat([lineup_df, reserve])
 
-    # Column reordering
+    # Convert Tablepress number position representation to abbreviations
     pos_map = {
         "2": "C",
         "3": "1B",
@@ -104,21 +107,36 @@ def create_lineup(team):
         "UTL": "UTL",
     }
     lineup_df["Pos"] = lineup_df["Pos"].map(pos_map)
-    lineup_df = lineup_df[
-        [
-            "Pos",
-            "Player",
-            "Age",
-            "B",
-            "PA",
-            "HR",
-            "SB",
+
+    # Column reordering
+    chosen_lineup_cols = [
+        "Pos",
+        "Player",
+        "Age",
+        "B",
+        "PA",
+    ]
+    if advanced_view:
+        chosen_lineup_cols = chosen_lineup_cols + [
+            "OBP",
+            "SLG",
+            "ISO",
             "K%",
             "BB%",
-            "AVG",
+            "Chase%",
             "OPS+",
         ]
-    ]
+    else:
+        chosen_lineup_cols = chosen_lineup_cols + [
+            "H",
+            "HR",
+            "RBI",
+            "SB",
+            "SO",
+            "BB",
+            "AVG",
+        ]
+    lineup_df = lineup_df[chosen_lineup_cols]
     lineup_df = hp.convert_pct_cols_to_float(lineup_df)
 
     # Display data
@@ -132,7 +150,8 @@ def create_lineup(team):
     )
 
 
-def create_rotation_bullpen(team):
+@st.cache_data
+def create_rotation_bullpen(team, user_year, advanced_view):
     """
     Displays the projected starting rotation and bullpen for the selected team.
 
@@ -143,11 +162,13 @@ def create_rotation_bullpen(team):
 
     Parameters:
         team (str): The name of the team to display the pitching staff for.
+        user_year (str): The season year to load data for.
+        advanced_view (bool): Whether to display additional stats columns.
 
     Returns:
         None
     """
-    pitch_df = hp.load_csv(st.secrets["2025StatsFinalPR_link"])
+    pitch_df = hp.load_csv(st.secrets[user_year + "StatsFinalPR_link"])
     # Only look at one team
     pitch_df = pitch_df.drop(pitch_df[pitch_df.Team != team].index)
 
@@ -159,68 +180,37 @@ def create_rotation_bullpen(team):
     sp_df = sp_df.drop(sp_df[sp_df.GIP > 0.66].index)
     sp_df = sp_df.sort_values("IP", ascending=False).head(7)
 
+    # Conditionally fill RP depending on length of reliever
+    sp_entries = []
+    i = 1
+    while i <= len(sp_df):
+        sp_entries.append("SP" + str(i))
+        i += 1
+    sp_df["Role"] = sp_entries
+
     # Column reordering
-    sp_df["Role"] = [
-        "SP1",
-        "SP2",
-        "SP3",
-        "SP4",
-        "SP5",
-        "SP6",
-        "SP7",
+    chosen_sp_cols = [
+        "Role",
+        "Pitcher",
+        "Age",
+        "T",
+        "IP",
     ]
-    sp_df = sp_df[
-        [
-            "Role",
-            "Pitcher",
-            "Age",
-            "T",
-            "IP",
-            "W",
-            "CG",
+    if advanced_view:
+        chosen_sp_cols = chosen_sp_cols + [
+            "FB Velo",
+            "CSW%",
+            "GB%",
             "K%",
             "BB%",
-            "ERA",
             "FIP-",
+            "ERA+",
         ]
-    ]
+    else:
+        chosen_sp_cols = chosen_sp_cols + ["W", "CG", "HR", "SO", "BB", "WHIP", "ERA"]
+    sp_df = sp_df[chosen_sp_cols]
     sp_df = hp.convert_pct_cols_to_float(sp_df)
 
-    # Bullpen
-    closer = pitch_df.sort_values("SV", ascending=False).head(1)
-    # Drop closer from potential relievers
-    pitch_df = pitch_df.drop(closer.index)
-    reliever = pitch_df.sort_values("HLD", ascending=False).head(6)
-    bp_df = pd.concat([closer, reliever])
-
-    # Column reordering
-    bp_df["Role"] = [
-        "CL",
-        "SU",
-        "RP",
-        "RP",
-        "RP",
-        "RP",
-        "RP",
-    ]
-    bp_df = bp_df[
-        [
-            "Role",
-            "Pitcher",
-            "Age",
-            "T",
-            "IP",
-            "SV",
-            "HLD",
-            "K%",
-            "BB%",
-            "ERA",
-            "FIP-",
-        ]
-    ]
-    bp_df = hp.convert_pct_cols_to_float(bp_df)
-
-    # Display data
     st.write("Rotation")
     st.dataframe(
         sp_df,
@@ -229,6 +219,47 @@ def create_rotation_bullpen(team):
         row_height=25,
         column_config=hp.get_column_config("PR"),
     )
+
+    # Bullpen
+    closer = pitch_df.sort_values("SV", ascending=False).head(1)
+    # Drop closer from potential relievers
+    pitch_df = pitch_df.drop(closer.index)
+    # Drop anybody with 0 HLD
+    pitch_df = pitch_df.drop(pitch_df[pitch_df["HLD"] == 0].index)
+    reliever = pitch_df.sort_values("HLD", ascending=False).head(6)
+    bp_df = pd.concat([closer, reliever])
+
+    # Conditionally fill RP depending on length of reliever
+    roles = ["CL", "SU"]
+    i = 1
+    while i < len(reliever):
+        roles.append("RP")
+        i += 1
+    bp_df["Role"] = roles
+
+    # Column reordering
+    chosen_bp_cols = [
+        "Role",
+        "Pitcher",
+        "Age",
+        "T",
+        "IP",
+    ]
+    if advanced_view:
+        chosen_bp_cols = chosen_bp_cols + [
+            "FB Velo",
+            "CSW%",
+            "GB%",
+            "K%",
+            "BB%",
+            "FIP-",
+            "ERA+",
+        ]
+    else:
+        chosen_bp_cols = chosen_bp_cols + ["SV", "HLD", "HR", "SO", "BB", "WHIP", "ERA"]
+    bp_df = bp_df[chosen_bp_cols]
+    bp_df = hp.convert_pct_cols_to_float(bp_df)
+
     st.write("Bullpen")
     st.dataframe(
         bp_df,
@@ -239,21 +270,24 @@ def create_rotation_bullpen(team):
     )
 
 
-def create_team_stats(team):
-    """Displays the related stats for the selected team.
+@st.cache_data
+def create_team_stats(team, user_year):
+    """
+    Displays team batting and pitching stats compared to League Average.
 
-    Loads team batting/pitching data from a remote CSV file, cleans and filters
-    it for the specified team and League Average.
+    Loads team batting and pitching data from remote CSV files, filters for
+    the specified team and League Average, and displays both sets of stats
+    in Streamlit dataframes.
 
     Parameters:
-        team (str): The name of the team to display the pitching/batting stats
-        for.
+        team (str): The name of the team to display stats for.
+        user_year (str): The season year to load data for.
 
     Returns:
         None
     """
-    npb_team_bat_df = hp.load_csv(st.secrets["2025TeamBR_link"])
-    npb_team_pitch_df = hp.load_csv(st.secrets["2025TeamPR_link"])
+    npb_team_bat_df = hp.load_csv(st.secrets[user_year + "TeamBR_link"])
+    npb_team_pitch_df = hp.load_csv(st.secrets[user_year + "TeamPR_link"])
 
     # Get only filtered team + League Average
     team_bat = npb_team_bat_df.drop(npb_team_bat_df[npb_team_bat_df.Team != team].index)
@@ -262,7 +296,7 @@ def create_team_stats(team):
     )
     bat_final_df = pd.concat([team_bat, lg_avg]).reset_index(drop=True)
     # Filter batting stats
-    bat_final_df = bat_final_df[["Team", "HR", "SB", "K%", "BB%", "AVG", "OPS+"]]
+    bat_final_df = bat_final_df[["Team", "HR", "SB", "K%", "BB%", "AVG", "ISO", "OPS+"]]
     bat_final_df = hp.convert_pct_cols_to_float(bat_final_df)
     bat_final_df = bat_final_df.astype(str)
 
@@ -274,7 +308,9 @@ def create_team_stats(team):
     )
     pitch_final_df = pd.concat([team_pitch, lg_avg]).reset_index(drop=True)
     # Filter pitch stats
-    pitch_final_df = pitch_final_df[["Team", "W", "CG", "K%", "BB%", "ERA", "FIP-"]]
+    pitch_final_df = pitch_final_df[
+        ["Team", "W", "CG", "K%", "BB%", "ERA", "FIP-", "ERA+"]
+    ]
     pitch_final_df = hp.convert_pct_cols_to_float(pitch_final_df)
     pitch_final_df = pitch_final_df.astype(str)
 

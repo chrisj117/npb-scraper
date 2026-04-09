@@ -27,6 +27,7 @@ def load_csv(url=None):
     st.error("Failed to load raw data.")
     return None
 
+
 def convert_ip_column_in(df, inn_col="IP"):
     """Converts the decimals in the IP column TO thirds (.1 -> .33, .2 -> .66)
     for stat calculations
@@ -48,6 +49,7 @@ def convert_ip_column_in(df, inn_col="IP"):
     ip_decimals = (ip_decimals * 10) * 0.3333333333
     temp_df[inn_col] = temp_df[inn_col] + ip_decimals
     return temp_df[inn_col]
+
 
 def convert_ip_column_out(df, inn_col="IP"):
     """In baseball, innings are traditionally represented using .1 (single
@@ -762,7 +764,10 @@ def create_stat_cols_filter(df, mode=None, key=None):
     else:
         all_none_key = key
     all_none_filter = st.segmented_control(
-        "Select Stats", options=["All", "None"], selection_mode="single", key=all_none_key
+        "Select Stats",
+        options=["All", "None"],
+        selection_mode="single",
+        key=all_none_key,
     )
     if all_none_filter == "All":
         cols = filter_container.segmented_control(
@@ -1089,7 +1094,7 @@ def create_year_filter():
         string: The user's chosen year.
     """
     # Always place newest year first
-    year = st.selectbox("Year", ["2026","2025"])
+    year = st.selectbox("Year", ["2026", "2025"])
     return year
 
 
