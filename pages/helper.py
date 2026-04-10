@@ -123,13 +123,14 @@ def display_player_percentile(df, name, year, suffix):
             "K-BB%",
             "BB%",
             "K%",
+            "HR/FB",
             "HR%",
             "WHIP",
             "FIP-",
             "ERA+",
             "IP",
         ]
-        invert_cols = ["HR%", "WHIP", "FIP-", "BB%"]
+        invert_cols = ["HR%", "HR/FB", "WHIP", "FIP-", "BB%"]
     elif suffix in ("BR", "BF"):
         # Rename positions
         pos_dict = {
@@ -148,6 +149,7 @@ def display_player_percentile(df, name, year, suffix):
         name_col = "Player"
         plot_cols = [
             "Def Value",
+            "sSeager",
             "SwStr%",
             "Z-Con%",
             "Chase%",
@@ -198,11 +200,7 @@ def display_player_percentile(df, name, year, suffix):
 
     # Generate percentiles for given cols
     for col in plot_cols:
-        # Standardize all stat cols as floats
-        if "%" in col:
-            df[col] = df[col].str.rstrip("%").astype("float") / 100.0
-        else:
-            df[col] = df[col].astype("float")
+        df = convert_pct_cols_to_float(df)
         df[col] = df[col].rank(pct=True)
         # Percentile adjustment (I.E. 0th percentile = lowest)
         df[col] = (df[col] - df[col].min()) / (df[col].max() - df[col].min())

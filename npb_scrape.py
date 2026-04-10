@@ -23,9 +23,7 @@ from playwright.sync_api import sync_playwright
 # TODO: update github docs
 # TODO: see about importing csvs to streamlit server instead of reloading from dropbox everytime
 # TODO: add streamlit career page description on home page
-# TODO: streamlit - update secrets.toml with 2026 stuff *
-# TODO: streamlit - year filters *
-# TODO: streamlit - fix leaders jiggle/vibrate upon loading
+# TODO: implement streamlit ttl and max entries in @st.cache_data(ttl=21600, show_spinner=False)?
 # TODO: put read in check before every google sheet raw to better avoid errors
 # TODO: gsheet links are ephermal, no need for url sheet?
 # TODO: change farm 2026 fielding "League" to "Division" *
@@ -441,11 +439,25 @@ class Stats:
         self.df["IP"] = convert_ip_column_out(self.df, "IP")
 
     def calculate_fip_const(self):
-        """Calculates reg and farm FIP constants
+        """Calculate the FIP (Fielding Independent Pitching) constant for a league.
+
+        The FIP constant adjusts the FIP formula to align with actual ERA. It is
+        calculated using the formula: FIP_const = lg_RA - (numerator / IP), where
+        lg_RA is the league's runs allowed per inning and the numerator combines
+        home runs, walks, hit-by-pitch, and strikeouts.
 
         Returns:
-        fip_const (float): The correct FIP const according to year and farm/NPB reg
-        season"""
+        fip_const (float): The FIP constant for the given year and league (NPB or Farm).
+
+        Process:
+            1. Reads the fallback FIP constants from input/fip_const.csv.
+            2. Determines whether to use NPB or Farm constants based on suffix.
+            3. If required columns (R, IP, HR, BB, IBB, HB, SO) are present in the
+               dataframe, calculates a fresh FIP constant from the data:
+               - Computes league runs allowed per 9 innings (lg_ra)
+               - Applies the FIP formula numerator
+               - Stores the calculated value back to the CSV for future use
+            4. Otherwise, falls back to the pre-existing value from the CSV."""
         fip_df = pd.read_csv(os.path.dirname(__file__) + "/input/fip_const.csv")
         if self.suffix in ("BF", "PF"):
             fip_suffix = "Farm"
@@ -533,7 +545,7 @@ class Stats:
 
     # TODO: change self.year to local passed in year
     def append_gsheets_pitcher_data(self, year):
-        """Adds GB%, Chase%, Contact%, SwStr%, CSW%, FB Velo for NPB pitchers"""
+        """Adds GB%, Chase%, Z-Con%, SwStr%, CSW%, FB Velo, HR/FB, Sec% for NPB pitchers"""
         # Read in raw Google Sheet file
         gsheet_df = pd.read_csv(
             os.path.join(self.stats_dir, year) + "/raw/" + year + "GSheetsRawPR.csv"
@@ -543,7 +555,6 @@ class Stats:
             columns={
                 "pitcher_team_name_short": "Team",
                 "pitcher_name": "Pitcher",
-                "Contact%": "Con%",
             }
         )
 
@@ -580,10 +591,12 @@ class Stats:
                     "Team",
                     "GB%",
                     "Chase%",
-                    "Con%",
                     "SwStr%",
                     "CSW%",
                     "FB Velo",
+                    "Z-Con%",
+                    "Sec%",
+                    "HR/FB",
                 ]
             ],
             self.df,
@@ -591,8 +604,9 @@ class Stats:
             how="right",
         )
 
+    # TODO: add "tablepress" and "streamlit" modes to add more stats only for streamlit
     def append_gsheets_batter_data(self, year):
-        """Adds PullAIR%, Chase%, Z-Con%, Swing%, and SwStr% for NPB batters"""
+        """Adds PullAIR%, Chase%, Z-Con%, Swing%, SwStr%, HR/FB, sSeager for NPB batters"""
         # Read in raw Google Sheet file
         gsheet_df = pd.read_csv(
             os.path.join(self.stats_dir, year) + "/raw/" + year + "GSheetsRawBR.csv"
@@ -604,6 +618,7 @@ class Stats:
                 "batter_name": "Player",
                 "Batter": "Player",
                 "Pull AIR%": "PullAIR%",
+                "sSEAGER": "sSeager",
             }
         )
 
@@ -643,6 +658,8 @@ class Stats:
                     "Z-Con%",
                     "Swing%",
                     "SwStr%",
+                    "sSeager",
+                    "HR/FB",
                 ]
             ],
             self.df,
@@ -650,15 +667,18 @@ class Stats:
             how="right",
         )
 
+    # TODO: add new stats as they come in from append_gsheets
     def rescale_gsheet_pct_stats(self):
-        """Rescales percentage statistics from Google Sheets data.
+        """
+        Rescales percentage statistics from Google Sheets data.
 
         Google Sheets data contains percentages as whole numbers (e.g., 50 for 50%).
         This method converts them to decimal format (e.g., 0.50) for proper percentage
         display in the final output files.
 
         The following columns are rescaled:
-        - PullAIR%, Chase%, Z-Con%, Swing%, SwStr%, GB%, Con%, CSW%"""
+        - PullAIR%, Chase%, Z-Con%, Swing%, SwStr%, GB%, CSW%, HR/FB, sSeager, Sec%
+        """
         new_pct_stats = [
             "PullAIR%",
             "Chase%",
@@ -666,8 +686,9 @@ class Stats:
             "Swing%",
             "SwStr%",
             "GB%",
-            "Con%",
             "CSW%",
+            "HR/FB",
+            "Sec%",
         ]
 
         for x in new_pct_stats:
@@ -709,12 +730,6 @@ class PlayerData(Stats):
         get_team_games():
             Combines team games played into a single DataFrame for IP/PA
             calculations.
-        append_gsheets_pitcher_data():
-            Adds additional pitching statistics from a Google sheet produced by
-            Ramos & Ramos.
-        append_gsheets_batter_data():
-            Adds additional batting statistics from a Google sheet produced by
-            Ramos & Ramos.
         append_positions(field_df, pitch_df):
             Adds the primary position of a player to the player DataFrame."""
 
@@ -925,6 +940,8 @@ class PlayerData(Stats):
             "Chase%": "{:.1%}",
             "Z-Con%": "{:.1%}",
             "Swing%": "{:.1%}",
+            "sSeager": "{:.1f}",
+            "HR/FB": "{:.1%}",
             "SwStr%": "{:.1%}",
             "TTO%": "{:.1%}",
             "wSB": "{:.1f}",
@@ -980,11 +997,13 @@ class PlayerData(Stats):
                     "BB%",
                     "BB/K",
                     "wSB",
+                    "HR/FB",
                     "PullAIR%",
                     "Chase%",
                     "Z-Con%",
                     "Swing%",
                     "SwStr%",
+                    "sSeager",
                     "TTO%",
                     "Age",
                     "Pos",
@@ -1112,7 +1131,9 @@ class PlayerData(Stats):
             "FIP-": "{:.0f}",
             "GB%": "{:.1%}",
             "Chase%": "{:.1%}",
-            "Con%": "{:.1%}",
+            "Z-Con%": "{:.1%}",
+            "HR/FB": "{:.1%}",
+            "Sec%": "{:.1%}",
             "SwStr%": "{:.1%}",
             "CSW%": "{:.1%}",
         }
@@ -1163,11 +1184,13 @@ class PlayerData(Stats):
                 "K%",
                 "BB%",
                 "K-BB%",
+                "HR/FB",
                 "GB%",
                 "Chase%",
-                "Con%",
+                "Z-Con%",
                 "SwStr%",
                 "CSW%",
+                "Sec%",
                 "FB Velo",
                 "Team",
                 "League",
@@ -1177,10 +1200,12 @@ class PlayerData(Stats):
                 gsheet_stat_cols = [
                     "GB%",
                     "Chase%",
-                    "Con%",
                     "SwStr%",
                     "CSW%",
                     "FB Velo",
+                    "Z-Con%",
+                    "Sec%",
+                    "HR/FB",
                 ]
                 for col in gsheet_stat_cols:
                     if col in col_order:
@@ -3344,7 +3369,6 @@ def get_stats(input_dir, year_dir, suffix, year):
             "Pitcher,G,W,L,SV,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
         )
     elif suffix == "PF" and version == "v2":
-        get_gsheets_data(input_dir, year_dir, suffix, year)
         output_file.write(
             "Pitcher,G,W,L,SV,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
         )
