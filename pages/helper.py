@@ -233,7 +233,7 @@ def display_player_percentile(df, name, year, suffix):
 
     # Determine title/subtitle contents
     emoji_dict = {
-        "ORIX Buffaloes": "🦬",
+        "ORIX Buffaloes": "🐃",
         "Hiroshima Carp": "🎏",
         "Chunichi Dragons": "🐉",
         "DeNA BayStars": "🌟",
@@ -1152,6 +1152,21 @@ def get_column_config(suffix=None):
                 help="Ground Ball Rate: The percentage of balls in play against a pitcher that are hit on the ground.",
                 alignment="left",
             ),
+            "HR/FB": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Home Run to Fly Ball Ratio: The rate of fly balls that end up as home runs. While pitchers have some control over distance of fly balls induced, HR/FB can help explain how lucky or unlucky a pitcher has been.",
+                alignment="left",
+            ),
+            "Sec%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Secondary Pitch Rate: The percentage of a pitcher's pitches that are NOT fastballs (4-Seam, Sinker, Cutter).",
+                alignment="left",
+            ),
+            "Z-Con%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="In-Zone Contact Rate: The percentage of swings on pitches in the strike zone that result in contact, including both fair and foul balls.",
+                alignment="left",
+            ),
             "Chase%": st.column_config.NumberColumn(
                 format="%.1f%%",
                 help="Chase Rate: The percentage of pitches outside the strike zone that batters swing at. Recognized by PitcherList.com in 2018 as one of the “Big Three” plate discipline metrics.",
@@ -1336,6 +1351,16 @@ def get_column_config(suffix=None):
             ),
             "Year": st.column_config.TextColumn(
                 width=45,
+                alignment="left",
+            ),
+            "sSeager": st.column_config.NumberColumn(
+                format="%.1f",
+                help="Simple Seager: A simplified version of SEAGER (named after Corey Seager) that measures swing choices using zone vs. out-of-zone pitches instead of more complex pitch-level models. It rewards hitters for swinging at strikes and taking balls, and it can be calculated as D/(A+D) - C/(C+D) using four pitch-decision buckets.",
+                alignment="left",
+            ),
+            "HR/FB": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Home Run to Fly Ball Ratio: The rate of fly balls that end up as home runs. HR/FB is useful in providing context about how sustainable a hitter's power is.",
                 alignment="left",
             ),
             "PullAIR%": st.column_config.NumberColumn(
