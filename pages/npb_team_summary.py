@@ -16,12 +16,41 @@ def main():
         None
     """
     st.set_page_config(layout="wide")
-    display_df = hp.load_csv(
-        st.secrets[str(datetime.now().year) + "TeamSummaryFinalR_link"]
-    )
+
+    with st.container(border=True):
+        # Sorting options
+        user_year = hp.create_year_filter()
+        display_df = hp.load_csv(st.secrets[user_year + "TeamSummaryFinalR_link"])
+        user_sort_col, user_sort_asc = hp.create_sort_filter(
+            display_df.columns.to_list(), mode="team_summary"
+        )
+
+    # Apply sorting and reset index (must be after convert_pct_cols_to_float())
+    display_df = display_df.sort_values(
+        user_sort_col, ascending=user_sort_asc
+    ).reset_index(drop=True)
+    display_df.index += 1
+
     display_df = hp.convert_pct_cols_to_float(display_df)
+
+    # Declare columns to be colored percentiles
+    pct_cols = [
+        "W",
+        "PCT",
+        "Diff",
+        "HR",
+        "SB",
+        "OPS+",
+        "ERA+",
+        "K-BB%",
+        "wSB",
+        "TZR",
+    ]
+    invert_pct_cols = ["L", "FIP-"]
     st.dataframe(
-        display_df,
+        display_df.style.apply(
+            hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols)
+        ),
         width="stretch",
         hide_index=True,
         row_height=25,

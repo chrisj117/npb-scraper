@@ -198,9 +198,12 @@ def display_player_percentile(df, name, year, suffix):
     elif suffix in ("PR", "PF"):
         plot_cols.remove("IP")
 
+    # Ensure chosen percentile cols have correct types before creating percentiles
+    df = convert_pct_cols_to_float(df)
+    df[plot_cols] = df[plot_cols].apply(pd.to_numeric, errors="coerce")
+
     # Generate percentiles for given cols
     for col in plot_cols:
-        df = convert_pct_cols_to_float(df)
         df[col] = df[col].rank(pct=True)
         # Percentile adjustment (I.E. 0th percentile = lowest)
         df[col] = (df[col] - df[col].min()) / (df[col].max() - df[col].min())
@@ -408,6 +411,7 @@ def create_sort_filter(cols, mode):
             "Player": None,
             "Age": "asc",
             "PA": "desc",
+            "G": "desc",
             "AB": "desc",
             "R": "desc",
             "H": "desc",
@@ -436,11 +440,13 @@ def create_sort_filter(cols, mode):
             "BB%": "desc",
             "BB/K": "desc",
             "wSB": "desc",
+            "HR/FB": "desc",
             "PullAIR%": "desc",
             "Chase%": "asc",
             "Z-Con%": "desc",
             "Swing%": "desc",
             "SwStr%": "asc",
+            "sSeager": "desc",
             "TTO%": "desc",
             "B": None,
             "Pos": None,
@@ -487,12 +493,14 @@ def create_sort_filter(cols, mode):
             "K-BB%": "desc",
             "CSW%": "desc",
             "HR%": "asc",
-            "Con%": "desc",
+            "Z-Con%": "desc",
             "SwStr%": "desc",
             "Chase%": "desc",
             "GB%": "desc",
             "LD%": "desc",
             "FB Velo": "desc",
+            "HR/FB": "asc",
+            "Sec%": "desc",
             "Team": None,
             "League": None,
         }
@@ -520,6 +528,28 @@ def create_sort_filter(cols, mode):
             "Blocking": "desc",
             "Team": None,
             "League": None,
+        }
+        # Set index of default sort column for individual stat pages
+        if "Inn" in cols:
+            default_sort_col_index = cols.index("Inn")
+        # Set index of default sort column for team stat pages
+        else:
+            default_sort_col_index = cols.index("TZR")
+    elif mode == "team_summary":
+        default_sort = {
+            "W": "desc",
+            "L": "desc",
+            "TZR": "desc",
+            "wSB": "desc",
+            "K-BB%": "desc",
+            "FIP-": "asc",
+            "ERA+": "desc",
+            "HR": "desc",
+            "Diff": "desc",
+            "OPS+": "desc",
+            "SB": "desc",
+            "PCT": "desc",
+            "Team": None,
         }
         # Set index of default sort column for individual stat pages
         if "Inn" in cols:
@@ -1114,6 +1144,65 @@ def create_player_filter(df, player_col, key=None):
     player_list = df[player_col]
     player = st.selectbox(player_col, player_list, key=key)
     return player
+
+
+def hex_to_rgb(hex_color):
+    hex_color = hex_color.lstrip("#")
+    return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+
+
+def interpolate_color(percentile, color_range):
+    low, mid, high = map(hex_to_rgb, color_range)
+    if percentile <= 0.5:
+        t = percentile * 2
+        r = int(low[0] + (mid[0] - low[0]) * t)
+        g = int(low[1] + (mid[1] - low[1]) * t)
+        b = int(low[2] + (mid[2] - low[2]) * t)
+    else:
+        t = (percentile - 0.5) * 2
+        r = int(mid[0] + (high[0] - mid[0]) * t)
+        g = int(mid[1] + (high[1] - mid[1]) * t)
+        b = int(mid[2] + (high[2] - mid[2]) * t)
+    return f"background-color: rgb({r}, {g}, {b})"
+
+
+def color_by_percentile(col, pct_cols, invert_pct_cols):
+    """
+    Apply background color based on percentile rank within the column.
+
+    Parameters:
+        col (pandas.Series): A column from a DataFrame to apply coloring to.
+        pct_cols (list): List of column names to apply percentile coloring to.
+        invert_pct_cols (list): List of column names where lower values are better.
+
+    Functionality:
+        - Calculates the percentile rank of each value within the column.
+        - For normal stats, applies blue→gray→red gradient based on percentile
+          (lower values get blue, middle get gray, higher get red).
+        - For inverted stats where lower is better, reverses the percentile calculation.
+        - Skips columns not in pct_cols or invert_pct_cols.
+
+    Returns:
+        list: List of CSS background-color strings for each cell in the column.
+    """
+    col_data = pd.to_numeric(col, errors="coerce")
+    valid_data = col_data.dropna()
+    if len(valid_data) == 0:
+        return [""] * len(col)
+
+    colors = []
+    color_range = ["#4d79d1", "#c2c2c2", "#e04d4d"]
+    for val in col_data:
+        if pd.isna(val) or col.name not in (pct_cols + invert_pct_cols):
+            colors.append("")
+        # "Inverse" percentile stats
+        elif col.name in invert_pct_cols:
+            pct = (valid_data > val).sum() / len(valid_data)
+            colors.append(interpolate_color(pct, color_range))
+        else:
+            pct = (valid_data < val).sum() / len(valid_data)
+            colors.append(interpolate_color(pct, color_range))
+    return colors
 
 
 def get_column_config(suffix=None):

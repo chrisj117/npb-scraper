@@ -60,10 +60,36 @@ def main():
     ).reset_index(drop=True)
     display_df.index += 1
 
+    # Declare columns to be colored percentiles
+    pct_cols = [
+        "ERA+",
+        "Diff",
+        "K%",
+        "K-BB%",
+        "GB%",
+        "Chase%",
+        "SwStr%",
+        "CSW%",
+        "Sec%",
+        "FB Velo",
+    ]
+    invert_pct_cols = [
+        "ERA",
+        "FIP",
+        "kwERA",
+        "WHIP",
+        "FIP-",
+        "kwERA-",
+        "HR%",
+        "BB%",
+        "HR/FB",
+        "Z-Con%",
+    ]
+
     # Display dataframe
     st.dataframe(
-        display_df[user_cols].style.highlight_between(
-            color="#F8F9FB", subset=user_sort_col, axis="columns"
+        display_df[user_cols].style.apply(
+            hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols)
         ),
         width="stretch",
         hide_index=False,

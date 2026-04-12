@@ -21,8 +21,8 @@ def main():
     Returns:
         None
     """
-
     st.set_page_config(layout="centered")
+
     # User selections
     user_year = hp.create_year_filter()
     user_team = hp.create_team_filter(mode="overview")
@@ -34,7 +34,6 @@ def main():
     create_team_stats(user_team, user_year)
 
 
-@st.cache_data
 def create_lineup(team, user_year, advanced_view):
     """
     Displays the projected starting lineup and reserve batter for the selected
@@ -123,7 +122,7 @@ def create_lineup(team, user_year, advanced_view):
             "ISO",
             "K%",
             "BB%",
-            "Chase%",
+            "sSeager",
             "OPS+",
         ]
     else:
@@ -139,10 +138,26 @@ def create_lineup(team, user_year, advanced_view):
     lineup_df = lineup_df[chosen_lineup_cols]
     lineup_df = hp.convert_pct_cols_to_float(lineup_df)
 
+    # Declare columns to be colored percentiles
+    pct_cols = [
+        "OBP",
+        "SLG",
+        "ISO",
+        "K%",
+        "BB%",
+        "sSeager",
+        "OPS+",
+        "AVG",
+        "PA",
+    ]
+    invert_pct_cols = []
+
     # Display data
     st.write("Lineup")
     st.dataframe(
-        lineup_df,
+        lineup_df.style.apply(
+            hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols)
+        ),
         width="stretch",
         hide_index=True,
         row_height=25,
@@ -150,7 +165,6 @@ def create_lineup(team, user_year, advanced_view):
     )
 
 
-@st.cache_data
 def create_rotation_bullpen(team, user_year, advanced_view):
     """
     Displays the projected starting rotation and bullpen for the selected team.
@@ -211,15 +225,6 @@ def create_rotation_bullpen(team, user_year, advanced_view):
     sp_df = sp_df[chosen_sp_cols]
     sp_df = hp.convert_pct_cols_to_float(sp_df)
 
-    st.write("Rotation")
-    st.dataframe(
-        sp_df,
-        width="stretch",
-        hide_index=True,
-        row_height=25,
-        column_config=hp.get_column_config("PR"),
-    )
-
     # Bullpen
     closer = pitch_df.sort_values("SV", ascending=False).head(1)
     # Drop closer from potential relievers
@@ -260,9 +265,26 @@ def create_rotation_bullpen(team, user_year, advanced_view):
     bp_df = bp_df[chosen_bp_cols]
     bp_df = hp.convert_pct_cols_to_float(bp_df)
 
+    # Declare columns to be colored percentiles
+    pct_cols = ["IP", "FB Velo", "CSW%", "GB%", "K%", "BB%", "FIP-", "ERA+"]
+    invert_pct_cols = ["ERA", "FIP-"]
+
+    st.write("Rotation")
+    st.dataframe(
+        sp_df.style.apply(
+            hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols)
+        ),
+        width="stretch",
+        hide_index=True,
+        row_height=25,
+        column_config=hp.get_column_config("PR"),
+    )
+
     st.write("Bullpen")
     st.dataframe(
-        bp_df,
+        bp_df.style.apply(
+            hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols)
+        ),
         width="stretch",
         hide_index=True,
         row_height=25,
@@ -270,7 +292,6 @@ def create_rotation_bullpen(team, user_year, advanced_view):
     )
 
 
-@st.cache_data
 def create_team_stats(team, user_year):
     """
     Displays team batting and pitching stats compared to League Average.
