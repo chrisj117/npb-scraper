@@ -143,14 +143,13 @@ def create_lineup(team, user_year, advanced_view):
         "OBP",
         "SLG",
         "ISO",
-        "K%",
         "BB%",
         "sSeager",
         "OPS+",
         "AVG",
         "PA",
     ]
-    invert_pct_cols = []
+    invert_pct_cols = ["K%"]
 
     # Display data
     st.write("Lineup")
@@ -266,8 +265,8 @@ def create_rotation_bullpen(team, user_year, advanced_view):
     bp_df = hp.convert_pct_cols_to_float(bp_df)
 
     # Declare columns to be colored percentiles
-    pct_cols = ["IP", "FB Velo", "CSW%", "GB%", "K%", "BB%", "FIP-", "ERA+"]
-    invert_pct_cols = ["ERA", "FIP-"]
+    pct_cols = ["IP", "FB Velo", "CSW%", "GB%", "K%", "FIP-", "ERA+"]
+    invert_pct_cols = ["ERA", "FIP-", "BB%"]
 
     st.write("Rotation")
     st.dataframe(
