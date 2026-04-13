@@ -50,7 +50,7 @@ def main():
     st.dataframe(
         display_df.style.apply(
             hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols)
-        ),
+        ).apply(hp.color_by_team, axis=0),
         width="stretch",
         hide_index=True,
         row_height=25,

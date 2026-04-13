@@ -89,9 +89,9 @@ def main():
 
     # Display dataframe
     st.dataframe(
-        display_df[user_cols].style.apply(
-            hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols)
-        ),
+        display_df[user_cols]
+        .style.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
+        .apply(hp.color_by_team, axis=0),
         width="stretch",
         hide_index=False,
         row_height=25,

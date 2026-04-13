@@ -52,8 +52,8 @@ def main():
             chosen_col = r1c3
 
         with chosen_col:
-            # 3rd column will always be stat name
-            st.header(table.columns.to_list()[2])
+            # 2nd column will always be stat name
+            st.header(table.columns.to_list()[1])
             # Determine stat display/hover configs
             if "Player" in table.columns.to_list():
                 config = "BR"
@@ -63,9 +63,9 @@ def main():
                 config = ""
 
             chosen_col.dataframe(
-                table,
+                table.style.apply(hp.color_by_team, axis=0),
                 width="stretch",
-                hide_index=True,
+                hide_index=False,
                 row_height=25,
                 height=160,
                 column_config=hp.get_column_config(config),
@@ -151,14 +151,17 @@ def build_leader_tables(user_year, user_bat_pitch, user_league):
             # Convert to correct notation for Streamlit
             display_df = hp.convert_pct_cols_to_float(display_df)
 
-            # Rank by given column
+            # Sort by given column and use index as rank
             if key in flip_rank_stats:
-                display_df["#"] = display_df[key].rank(method="min")
+                display_df = display_df.sort_values(key)
             else:
-                display_df["#"] = display_df[key].rank(method="min", ascending=False)
+                display_df = display_df.sort_values(key, ascending=False)
+
+            display_df = display_df.reset_index(drop=True)
+            display_df.index = display_df.index + 1
 
             # Extract needed columns
-            display_df = display_df[["#", name_col, key, "Team"]].sort_values("#")
+            display_df = display_df[[name_col, key, "Team"]]
             leader_tables.append(display_df)
 
     return leader_tables

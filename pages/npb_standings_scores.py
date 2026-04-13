@@ -22,7 +22,7 @@ def main():
         st.secrets[str(datetime.now().year) + "StandingsFinalC_npb_link"]
     )
     st.dataframe(
-        central_df,
+        central_df.style.apply(hp.color_by_team, axis=0),
         width="stretch",
         hide_index=True,
         row_height=25,
@@ -34,7 +34,7 @@ def main():
         st.secrets[str(datetime.now().year) + "StandingsFinalP_npb_link"]
     )
     st.dataframe(
-        pacific_df,
+        pacific_df.style.apply(hp.color_by_team, axis=0),
         width="stretch",
         hide_index=True,
         row_height=25,

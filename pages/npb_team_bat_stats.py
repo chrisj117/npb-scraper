@@ -55,9 +55,7 @@ def main():
 
     # Display df
     st.dataframe(
-        display_df[user_cols].style.highlight_between(
-            color="#F8F9FB", subset=user_sort_col, axis="columns"
-        ),
+        display_df[user_cols].style.apply(hp.color_by_team, axis=0),
         width="stretch",
         hide_index=False,
         row_height=25,

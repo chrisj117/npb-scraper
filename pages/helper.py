@@ -825,22 +825,26 @@ def create_stat_cols_filter(df, mode=None, key=None):
 
 
 def create_team_filter(mode=None, team_col=None, key=None):
-    # TODO: docs
     """
     Creates a Streamlit multiselect filter for NPB team selection.
 
     Parameters:
-        mode (str, optional): If set to "farm", includes farm league teams in
-            the filter.
+        mode (str, optional): Controls the filter behavior:
+            - "farm": Includes farm league teams (HAYATE Ventures, Oisix Albirex).
+            - "overview": Returns a single team (selectbox), returns full name.
+            - "career": Returns abbreviations (multiselect), defaults to all.
+            - None (default): Returns full team names (multiselect).
+        team_col (str, optional): Unused parameter, kept for compatibility.
+        key (str, optional): Streamlit widget key for state management.
 
     Functionality:
         - Maps team abbreviations to full team names.
         - Optionally adds farm league teams if mode is "farm".
-        - Displays a multiselect widget for users to choose teams.
-        - Returns a list of selected full team names.
+        - Returns team names (full or abbreviated) based on mode.
 
     Returns:
-        list/str: List/string of selected full team name(s).
+        list/str: List of selected full team names, single team name (overview),
+            or list of team abbreviations (career).
     """
     team_dict = {
         "Hanshin": "Hanshin Tigers",
@@ -1147,11 +1151,32 @@ def create_player_filter(df, player_col, key=None):
 
 
 def hex_to_rgb(hex_color):
+    """
+    Converts a hexadecimal color string to an RGB tuple.
+
+    Parameters:
+        hex_color (str): A hex color string in the format "#RRGGBB" or "RRGGBB".
+
+    Returns:
+        tuple: A tuple of three integers (R, G, B) representing the RGB values.
+    """
     hex_color = hex_color.lstrip("#")
     return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
 
 
 def interpolate_color(percentile, color_range):
+    """
+    Interpolates between three colors based on a percentile value.
+
+    Parameters:
+        percentile (float): A value between 0 and 1 representing the position
+            in the color gradient.
+        color_range (list): A list of three hex color strings [low, mid, high]
+            defining the gradient endpoints.
+
+    Returns:
+        str: A CSS background-color string in the format "rgb(r, g, b)".
+    """
     low, mid, high = map(hex_to_rgb, color_range)
     if percentile <= 0.5:
         t = percentile * 2
@@ -1202,6 +1227,52 @@ def color_by_percentile(col, pct_cols, invert_pct_cols):
         else:
             pct = (valid_data < val).sum() / len(valid_data)
             colors.append(interpolate_color(pct, color_range))
+    return colors
+
+
+def color_by_team(col):
+    """
+    Apply background color based on team colors.
+
+    Parameters:
+        col (pandas.Series): A column from a DataFrame with team names.
+
+    Functionality:
+        - Maps team names to their official colors and "League Average" to white.
+        - Returns CSS background-color strings for each cell.
+
+    Returns:
+        list: List of CSS background-color strings for each cell in the column.
+    """
+    valid_data = col.dropna()
+    if len(valid_data) == 0 or col.name != "Team":
+        return [""] * len(col)
+
+    team_colors = {
+        "Rakuten": "#b63a52",
+        "Nipponham": "#4f8cb2",
+        "ORIX": "#bbaa31",
+        "SoftBank": "#fcc800",
+        "Seibu": "#6b7fcf",
+        "Lotte": "#9a9a9a",
+        "Hiroshima": "#f9271a",
+        "Chunichi": "#4a68c2",
+        "Yomiuri": "#f69822",
+        "Hanshin": "#ffe200",
+        "DeNA": "#9b8cf2",
+        "Yakult": "#4dba84",
+        "League Average": "#ffffff"
+    }
+
+    colors = []
+    for team_str in col:
+        if pd.isna(team_str):
+            colors.append("")
+        else:
+            for key, color_code in team_colors.items():
+                if key in team_str:
+                    r, g, b = hex_to_rgb(color_code)
+                    colors.append(f"background-color: rgb({r}, {g}, {b})")
     return colors
 
 
