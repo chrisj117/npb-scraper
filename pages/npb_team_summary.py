@@ -25,13 +25,13 @@ def main():
             display_df.columns.to_list(), mode="team_summary"
         )
 
+    display_df = hp.convert_pct_cols_to_float(display_df)
+
     # Apply sorting and reset index (must be after convert_pct_cols_to_float())
     display_df = display_df.sort_values(
         user_sort_col, ascending=user_sort_asc
     ).reset_index(drop=True)
     display_df.index += 1
-
-    display_df = hp.convert_pct_cols_to_float(display_df)
 
     # Declare columns to be colored percentiles
     pct_cols = [
