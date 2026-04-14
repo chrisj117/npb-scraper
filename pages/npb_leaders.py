@@ -1,6 +1,5 @@
 """Displays subsets of leaders in key statistics using Streamlit"""
 
-import time
 import streamlit as st
 import pages.helper as hp
 

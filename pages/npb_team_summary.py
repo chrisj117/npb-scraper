@@ -1,6 +1,5 @@
 """Displays NPB team summary data with Streamlit"""
 
-from datetime import datetime
 import streamlit as st
 import pages.helper as hp
 
