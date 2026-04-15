@@ -20,8 +20,11 @@ from playwright.sync_api import sync_playwright
 # TODO: declutter main() by putting most scraping/org functions in a separate function + redoing get_user_input()
 # TODO: need more robust error checking surrounding scrape and org functions
 # TODO: split into multiple class files for organization
+# TODO: make one encompassing "format stat" function
+# TODO: split tablepress/streamlit_src file outputs so raw numbers are recorded in streamlit csv
+# TODO: implement @st.cache_data for streamlit page functions that do expensive transformations
 # TODO: update github docs
-# TODO: see about importing csvs to streamlit server instead of reloading from dropbox everytime
+# TODO: see about importing csvs to streamlit server instead of reloading from dropbox everytime (update: semi covered by caching)
 # TODO: add streamlit career page description on home page
 # TODO: implement streamlit ttl and max entries in @st.cache_data(ttl=21600, show_spinner=False)?
 # TODO: put read in check before every google sheet raw to better avoid errors
@@ -125,6 +128,10 @@ def main():
         # Scrape regular season batting and pitching URLs
         get_stats(input_dir, year_dir, "BR", scrape_year)
         get_stats(input_dir, year_dir, "PR", scrape_year)
+        get_gsheets_data(input_dir, year_dir, "BR", scrape_year, "player")
+        get_gsheets_data(input_dir, year_dir, "PR", scrape_year, "player")
+        get_gsheets_data(input_dir, year_dir, "BR", scrape_year, "team")
+        get_gsheets_data(input_dir, year_dir, "PR", scrape_year, "team")
         get_standings(year_dir, "C_npb", scrape_year)
         get_standings(year_dir, "P_npb", scrape_year)
         get_fielding(year_dir, "R", scrape_year)
@@ -548,7 +555,10 @@ class Stats:
         """Adds GB%, Chase%, Z-Con%, SwStr%, CSW%, FB Velo, HR/FB, Sec% for NPB pitchers"""
         # Read in raw Google Sheet file
         gsheet_df = pd.read_csv(
-            os.path.join(self.stats_dir, year) + "/raw/" + year + "GSheetsRawPR.csv"
+            os.path.join(self.stats_dir, year)
+            + "/raw/"
+            + year
+            + "GSheetsRawPR_player.csv"
         )
         # Standardize column names
         gsheet_df = gsheet_df.rename(
@@ -609,7 +619,10 @@ class Stats:
         """Adds PullAIR%, Chase%, Z-Con%, Swing%, SwStr%, HR/FB, sSeager for NPB batters"""
         # Read in raw Google Sheet file
         gsheet_df = pd.read_csv(
-            os.path.join(self.stats_dir, year) + "/raw/" + year + "GSheetsRawBR.csv"
+            os.path.join(self.stats_dir, year)
+            + "/raw/"
+            + year
+            + "GSheetsRawBR_player.csv"
         )
         # Standardize team and batter column names
         gsheet_df = gsheet_df.rename(
@@ -677,7 +690,7 @@ class Stats:
         display in the final output files.
 
         The following columns are rescaled:
-        - PullAIR%, Chase%, Z-Con%, Swing%, SwStr%, GB%, CSW%, HR/FB, sSeager, Sec%
+        - PullAIR%, Chase%, Z-Con%, Swing%, SwStr%, GB%, CSW%, HR/FB, Sec%
         """
         new_pct_stats = [
             "PullAIR%",
@@ -692,6 +705,7 @@ class Stats:
         ]
 
         for x in new_pct_stats:
+            # TODO: add condition to not convert percentiles if there arent entries over 1.0
             if x in self.df.columns.to_list():
                 self.df[x] = self.df[x] / 100
 
@@ -1468,7 +1482,7 @@ class TeamData(Stats):
         batting/pitching stats"""
         super().__init__(stats_dir, year_dir, suffix, year)
         self.player_df = player_df.copy()
-        # Initialize df for teams stats
+        # Organize player df for team stats
         if self.suffix in ("BF", "BR", "BP"):
             self.org_team_bat()
         elif self.suffix in ("PF", "PR", "PP"):
@@ -1572,6 +1586,7 @@ class TeamData(Stats):
                 + temp_stat_df["HP"].sum()
                 + temp_stat_df["SF"].sum()
             )
+            new_team_stat.append(total_obp)
             total_slg = (
                 (
                     temp_stat_df["H"].sum()
@@ -1583,11 +1598,10 @@ class TeamData(Stats):
                 + (3 * temp_stat_df["3B"].sum())
                 + (4 * temp_stat_df["HR"].sum())
             ) / temp_stat_df["AB"].sum()
-            # Append calculated stats
-            new_team_stat.append(total_obp)
             new_team_stat.append(total_slg)
             # OPS
             new_team_stat.append(total_slg + total_obp)
+
             # Append as a new team row in team_bat_list
             team_bat_list.append(new_team_stat)
 
@@ -1670,6 +1684,51 @@ class TeamData(Stats):
         wsb_c = team_single + self.df["BB"] + self.df["HP"] - self.df["IBB"]
         self.df["wSB"] = wsb_a - wsb_b * wsb_c
 
+        # Add Google Sheet data to NPB data if possible
+        gsheets_added = False
+        gsheets_path = os.path.join(
+            self.year_dir, "raw", (self.year + "GSheetsRawBR_team.csv")
+        )
+        if os.path.exists(gsheets_path) and self.suffix == "BR":
+            gsheets_df = pd.read_csv(gsheets_path)
+            # Convert GSheets abbreviated names to merge with full team names in our df
+            team_dict = {
+                "Hanshin": "Hanshin Tigers",
+                "Hiroshima": "Hiroshima Carp",
+                "DeNA": "DeNA BayStars",
+                "Yomiuri": "Yomiuri Giants",
+                "Yakult": "Yakult Swallows",
+                "Chunichi": "Chunichi Dragons",
+                "ORIX": "ORIX Buffaloes",
+                "Lotte": "Lotte Marines",
+                "SoftBank": "SoftBank Hawks",
+                "Rakuten": "Rakuten Eagles",
+                "Seibu": "Seibu Lions",
+                "Nipponham": "Nipponham Fighters",
+                "Oisix": "Oisix Albirex",
+                "HAYATE": "HAYATE Ventures",
+            }
+            gsheets_df["Team"] = gsheets_df["Team"].map(team_dict)
+            gsheets_df = gsheets_df.rename(columns={"Pull AIR%": "PullAIR%"})
+
+            self.df = self.df.merge(
+                gsheets_df[
+                    [
+                        "Team",
+                        "Swing%",
+                        "Chase%",
+                        "Z-Con%",
+                        "SwStr%",
+                        "sSeager",
+                        "PullAIR%",
+                        "HR/FB",
+                    ]
+                ],
+                on="Team",
+                how="left",
+            )
+            gsheets_added = True
+
         # Create "League Average" row after all stats have been calculated
         league_avg = self.df.mean(numeric_only=True)
         league_avg["Team"] = "League Average"
@@ -1690,10 +1749,20 @@ class TeamData(Stats):
         league_avg["K%"] = self.df["SO"].sum() / self.df["PA"].sum()
         league_avg["BB%"] = self.df["BB"].sum() / self.df["PA"].sum()
         league_avg["BB/K"] = self.df["BB"].sum() / self.df["SO"].sum()
+        # Calculate Google Sheet data league weighted averages
+        if self.suffix == "BR" and gsheets_added is True:
+            league_avg["Z-Con%"] = wavg_ignore_missing(self.df, "Z-Con%", "PA")
+            league_avg["SwStr%"] = wavg_ignore_missing(self.df, "SwStr%", "PA")
+            league_avg["PullAIR%"] = wavg_ignore_missing(self.df, "PullAIR%", "PA")
+            league_avg["Chase%"] = wavg_ignore_missing(self.df, "Chase%", "PA")
+            league_avg["sSeager"] = wavg_ignore_missing(self.df, "sSeager", "PA")
+            league_avg["HR/FB"] = wavg_ignore_missing(self.df, "HR/FB", "PA")
+            league_avg["Swing%"] = wavg_ignore_missing(self.df, "Swing%", "PA")
         self.df.loc[len(self.df)] = league_avg
 
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
+        self.rescale_gsheet_pct_stats()
         # Number formatting
         format_maps = {
             "BB%": "{:.1%}",
@@ -1726,21 +1795,49 @@ class TeamData(Stats):
             "TTO%": "{:.1%}",
             "BABIP": "{:.3f}",
             "wSB": "{:.1f}",
+            "PullAIR%": "{:.1%}",
+            "Chase%": "{:.1%}",
+            "Z-Con%": "{:.1%}",
+            "Swing%": "{:.1%}",
+            "sSeager": "{:.1f}",
+            "HR/FB": "{:.1%}",
+            "SwStr%": "{:.1%}",
         }
         for key, value in format_maps.items():
-            self.df[key] = self.df[key].apply(value.format)
+            if key in self.df.columns.to_list():
+                self.df[key] = self.df[key].apply(value.format)
 
         # Reorder columns
-        col_order_arr = col_init_arr + [
-            "OPS+",
-            "ISO",
-            "BABIP",
-            "TTO%",
-            "K%",
-            "BB%",
-            "BB/K",
-            "wSB",
-        ]
+        if gsheets_added is True:
+            col_order_arr = col_init_arr + [
+                "OPS+",
+                "ISO",
+                "BABIP",
+                "K%",
+                "BB%",
+                "BB/K",
+                "wSB",
+                "HR/FB",
+                "PullAIR%",
+                "Chase%",
+                "Z-Con%",
+                "Swing%",
+                "SwStr%",
+                "sSeager",
+                "TTO%",
+            ]
+        else:
+            col_order_arr = col_init_arr + [
+                "OPS+",
+                "ISO",
+                "BABIP",
+                "TTO%",
+                "K%",
+                "BB%",
+                "BB/K",
+                "wSB",
+            ]
+
         self.df = self.df[col_order_arr]
         # Add "League" column
         self.df = select_league(self.df, self.suffix, self.year)
@@ -1802,7 +1899,7 @@ class TeamData(Stats):
             "R",
             "ER",
         ]
-        # All other pitching stats have HLD column
+        # All NPB pitching stats have HLD column
         if self.suffix == "PR":
             col_init_arr.insert(4, "HLD")
         self.df = pd.DataFrame(team_pitch_list, columns=col_init_arr)
@@ -1849,6 +1946,51 @@ class TeamData(Stats):
         self.df["HR%"] = self.df["HR"] / self.df["BF"]
         self.df["kwERA-"] = 100 * (self.df["kwERA"] / total_kwera)
 
+        # Add Google Sheet data to NPB data if possible
+        gsheets_added = False
+        gsheets_path = os.path.join(
+            self.year_dir, "raw", (self.year + "GSheetsRawPR_team.csv")
+        )
+        if os.path.exists(gsheets_path) and self.suffix == "PR":
+            gsheets_df = pd.read_csv(gsheets_path)
+            # Convert GSheets abbreviated names to merge with full team names in our df
+            team_dict = {
+                "Hanshin": "Hanshin Tigers",
+                "Hiroshima": "Hiroshima Carp",
+                "DeNA": "DeNA BayStars",
+                "Yomiuri": "Yomiuri Giants",
+                "Yakult": "Yakult Swallows",
+                "Chunichi": "Chunichi Dragons",
+                "ORIX": "ORIX Buffaloes",
+                "Lotte": "Lotte Marines",
+                "SoftBank": "SoftBank Hawks",
+                "Rakuten": "Rakuten Eagles",
+                "Seibu": "Seibu Lions",
+                "Nipponham": "Nipponham Fighters",
+                "Oisix": "Oisix Albirex",
+                "HAYATE": "HAYATE Ventures",
+            }
+            gsheets_df["Team"] = gsheets_df["Team"].map(team_dict)
+
+            self.df = self.df.merge(
+                gsheets_df[
+                    [
+                        "Team",
+                        "GB%",
+                        "Chase%",
+                        "Z-Con%",
+                        "SwStr%",
+                        "CSW%",
+                        "Sec%",
+                        "FB Velo",
+                        "HR/FB",
+                    ]
+                ],
+                on="Team",
+                how="left",
+            )
+            gsheets_added = True
+
         # Calculate league averages
         league_avg = self.df.mean(numeric_only=True)
         league_avg["Team"] = "League Average"
@@ -1863,10 +2005,20 @@ class TeamData(Stats):
         league_avg["K-BB%"] = (self.df["SO"].sum() / self.df["BF"].sum()) - (
             self.df["BB"].sum() / self.df["BF"].sum()
         )
+        # Calculate Google Sheet data league weighted averages
+        if self.suffix == "PR" and gsheets_added is True:
+            league_avg["GB%"] = wavg_ignore_missing(self.df, "GB%", "IP")
+            league_avg["Chase%"] = wavg_ignore_missing(self.df, "Chase%", "IP")
+            league_avg["Z-Con%"] = wavg_ignore_missing(self.df, "Z-Con%", "IP")
+            league_avg["SwStr%"] = wavg_ignore_missing(self.df, "SwStr%", "IP")
+            league_avg["CSW%"] = wavg_ignore_missing(self.df, "CSW%", "IP")
+            league_avg["HR/FB"] = wavg_ignore_missing(self.df, "HR/FB", "IP")
+            league_avg["Sec%"] = wavg_ignore_missing(self.df, "Sec%", "IP")
         self.df.loc[len(self.df)] = league_avg
 
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
+        self.rescale_gsheet_pct_stats()
         # Number formatting
         format_maps = {
             "BB%": "{:.1%}",
@@ -1896,28 +2048,59 @@ class TeamData(Stats):
             "WP": "{:.0f}",
             "R": "{:.0f}",
             "ER": "{:.0f}",
+            "GB%": "{:.1%}",
+            "Chase%": "{:.1%}",
+            "Z-Con%": "{:.1%}",
+            "HR/FB": "{:.1%}",
+            "Sec%": "{:.1%}",
+            "SwStr%": "{:.1%}",
+            "CSW%": "{:.1%}",
+            "HLD": "{:.0f}",
+            "FB Velo": "{:.1f}",
         }
-        # Readd HLD formatting if regular season
-        if self.suffix == "PR":
-            format_maps["HLD"] = "{:.0f}"
         for key, value in format_maps.items():
-            self.df[key] = self.df[key].apply(value.format)
+            if key in self.df.columns.to_list():
+                self.df[key] = self.df[key].apply(value.format)
 
         # Reorder columns
-        col_order_arr = col_init_arr + [
-            "ERA",
-            "FIP",
-            "kwERA",
-            "WHIP",
-            "ERA+",
-            "FIP-",
-            "kwERA-",
-            "Diff",
-            "HR%",
-            "K%",
-            "BB%",
-            "K-BB%",
-        ]
+        if gsheets_added is True:
+            col_order_arr = col_init_arr + [
+                "ERA",
+                "FIP",
+                "kwERA",
+                "WHIP",
+                "ERA+",
+                "FIP-",
+                "kwERA-",
+                "Diff",
+                "HR%",
+                "K%",
+                "BB%",
+                "K-BB%",
+                "HR/FB",
+                "GB%",
+                "Chase%",
+                "Z-Con%",
+                "SwStr%",
+                "CSW%",
+                "Sec%",
+                "FB Velo",
+            ]
+        else:
+            col_order_arr = col_init_arr + [
+                "ERA",
+                "FIP",
+                "kwERA",
+                "WHIP",
+                "ERA+",
+                "FIP-",
+                "kwERA-",
+                "Diff",
+                "HR%",
+                "K%",
+                "BB%",
+                "K-BB%",
+            ]
         self.df = self.df[col_order_arr]
         # Changing .33 to .1 and .66 to .2 in the IP column
         self.df["IP"] = convert_ip_column_out(self.df, "IP")
@@ -3346,7 +3529,6 @@ def get_stats(input_dir, year_dir, suffix, year):
     url_arr, version = get_stat_urls(suffix, year)
     # Create header row
     if suffix == "BR":
-        get_gsheets_data(input_dir, year_dir, suffix, year)
         output_file.write(
             "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
         )
@@ -3355,12 +3537,10 @@ def get_stats(input_dir, year_dir, suffix, year):
             "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
         )
     elif suffix == "PR" and version == "v1":
-        get_gsheets_data(input_dir, year_dir, suffix, year)
         output_file.write(
             "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
         )
     elif suffix == "PR" and version == "v2":
-        get_gsheets_data(input_dir, year_dir, suffix, year)
         output_file.write(
             "Pitcher,G,W,L,SV,HLD,HP,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
         )
@@ -3675,7 +3855,7 @@ def revise_stats(df, rel_dir, year):
     return df
 
 
-def get_gsheets_data(input_dir, year_dir, suffix, year):
+def get_gsheets_data(input_dir, year_dir, suffix, year, stat_type):
     """Scrapes a Google Sheet to provide additional NPB batting/pitching data.
 
     Parameters:
@@ -3693,29 +3873,43 @@ def get_gsheets_data(input_dir, year_dir, suffix, year):
 
     gsheet_df = pd.read_csv(os.path.join(input_dir, "google_sheet_urls.csv"))
 
-    # Drop all rows that are not the df's year or suffix then scrape
+    # Drop all rows that are not the df's year, type, or suffix then scrape
     gsheet_df = gsheet_df.drop(gsheet_df[gsheet_df.Year.astype(str) != year].index)
+    gsheet_df = gsheet_df.drop(gsheet_df[gsheet_df.Stat_Type != stat_type].index)
     gsheet_df = gsheet_df.drop(gsheet_df[gsheet_df.Suffix != suffix[0]].index)
     gsheet_url = gsheet_df["Link"].iloc[0]
+
     print("Connecting to: " + gsheet_url)
+    sleep(randint(1, 3))
+
     df = pd.read_csv(gsheet_url)
 
     # Save file
-    new_csv_name = year + "GSheetsRaw" + suffix + ".csv"
+    new_csv_name = year + "GSheetsRaw" + suffix + "_" + stat_type + ".csv"
     raw_dir = os.path.join(year_dir, "raw")
     if not os.path.exists(raw_dir):
         os.mkdir(raw_dir)
     raw_gsheet_name = store_dataframe(df, raw_dir, new_csv_name, "csv")
 
     # Output to user
-    if suffix == "PR":
+    if suffix == "PR" and stat_type == "player":
         print(
-            "Raw NPB Pitching statistics from Google Sheets will be stored in: "
+            "Raw NPB player pitching statistics from Google Sheets will be stored in: "
             + raw_gsheet_name
         )
-    if suffix == "BR":
+    elif suffix == "BR" and stat_type == "player":
         print(
-            "Raw NPB Batting statistics from Google Sheets will be stored in: "
+            "Raw NPB player batting statistics from Google Sheets will be stored in: "
+            + raw_gsheet_name
+        )
+    elif suffix == "BR" and stat_type == "team":
+        print(
+            "Raw NPB team batting statistics from Google Sheets will be stored in: "
+            + raw_gsheet_name
+        )
+    elif suffix == "PR" and stat_type == "team":
+        print(
+            "Raw NPB team pitching statistics from Google Sheets will be stored in: "
             + raw_gsheet_name
         )
 
@@ -4437,6 +4631,7 @@ def get_roster_data(year_dir, suffix, year):
 
 
 # TODO: fuzzy translate remaining untranslated players with no rosters (oisix and hayate)?
+# TODO: make it so unique entries are not overwritten (I.E. we can add original roster_data.csv rows and it doesn't get overwritten)
 def org_roster_data(year_dir, rel_dir, year):
     """Organizes and merges raw roster data files into a cumulative roster_data.csv.
 
@@ -4971,6 +5166,26 @@ def calculate_npb_age(birthdate, year):
     return npb_age
 
 
+def wavg_ignore_missing(df, value_col, weight_col):
+    """Calculate weighted average while ignoring missing values.
+
+    Args:
+        df (pandas.DataFrame): The DataFrame containing the data.
+        value_col (str): The name of the column containing values to average.
+        weight_col (str): The name of the column containing weights.
+
+    Returns:
+        float: The weighted average of the valid values, or np.nan if no
+            valid rows exist.
+    """
+    valid_rows = df[value_col].notna() & df[weight_col].notna() & (df[weight_col] > 0)
+    if not valid_rows.any():
+        return np.nan
+    return np.average(
+        df.loc[valid_rows, value_col], weights=df.loc[valid_rows, weight_col]
+    )
+
+
 def convert_ip_column_out(df, inn_col="IP"):
     """In baseball, innings are traditionally represented using .1 (single
     inning pitched), .2 (2 innings pitched), and whole numbers. This function
@@ -4994,9 +5209,10 @@ def convert_ip_column_out(df, inn_col="IP"):
     # Convert IP decimals to thirds and re-add them to the whole numbers
     ip_decimals = (ip_decimals / 0.3333333333) / 10
     df[inn_col] = temp_df[inn_col] + ip_decimals
-    # Entries with .3 are invalid: add 1 and remove the decimals
     x = temp_df[inn_col] + ip_decimals
-    condlist = [((x % 1) < 0.29), ((x % 1) >= 0.29)]
+    # If x (the decimal) is less than .25 (I.E. doesn't round to .3), leave alone
+    # Else, add 1 and remove the decimals
+    condlist = [((x % 1) < 0.25), ((x % 1) >= 0.25)]
     choicelist = [x, (x - (x % 1)) + 1]
     temp_df[inn_col] = np.select(condlist, choicelist)
     temp_df[inn_col] = temp_df[inn_col].apply(lambda x: f"{x:.1f}")
