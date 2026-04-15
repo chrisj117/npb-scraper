@@ -48,9 +48,25 @@ def main():
     ).reset_index(drop=True)
     display_df.index += 1
 
+    # Declare columns to be colored percentiles
+    pct_cols = [
+        "TZR",
+        "TZR/143",
+        "RngR",
+        "ARM",
+        "DPR",
+        "ErrR",
+        "Pos Adj",
+        "Framing",
+        "Blocking",
+    ]
+    invert_pct_cols = []
+
     # Display dataframe
     st.dataframe(
-        display_df[user_cols].style.apply(hp.color_by_team, axis=0),
+        display_df[user_cols]
+        .style.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
+        .apply(hp.color_by_team, axis=0),
         width="stretch",
         row_height=25,
         hide_index=False,

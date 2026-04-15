@@ -454,11 +454,14 @@ def create_sort_filter(cols, mode):
             "League": None,
         }
         # Set index of default sort column for individual stat pages
-        if "Player" in cols:
-            default_sort_col_index = cols.index("PA")
-        # Set index of default sort column for team stat pages
-        else:
-            default_sort_col_index = cols.index("OPS+")
+        try:
+            if "Player" in cols:
+                default_sort_col_index = cols.index("PA")
+            # Set index of default sort column for team stat pages
+            else:
+                default_sort_col_index = cols.index("OPS+")
+        except:
+            default_sort_col_index = 0
     elif mode == "pitch":
         default_sort = {
             "Pitcher": None,
@@ -504,12 +507,15 @@ def create_sort_filter(cols, mode):
             "Team": None,
             "League": None,
         }
-        # Set index of default sort column for individual stat pages
-        if "Pitcher" in cols:
-            default_sort_col_index = cols.index("IP")
-        # Set index of default sort column for team stat pages
-        else:
-            default_sort_col_index = cols.index("ERA+")
+        try:
+            # Set index of default sort column for individual stat pages
+            if "Pitcher" in cols:
+                default_sort_col_index = cols.index("IP")
+            # Set index of default sort column for team stat pages
+            else:
+                default_sort_col_index = cols.index("ERA+")
+        except:
+            default_sort_col_index = 0
     elif mode == "field":
         default_sort = {
             # Fielding
@@ -529,12 +535,15 @@ def create_sort_filter(cols, mode):
             "Team": None,
             "League": None,
         }
-        # Set index of default sort column for individual stat pages
-        if "Inn" in cols:
-            default_sort_col_index = cols.index("Inn")
-        # Set index of default sort column for team stat pages
-        else:
-            default_sort_col_index = cols.index("TZR")
+        try:
+            # Set index of default sort column for individual stat pages
+            if "Inn" in cols:
+                default_sort_col_index = cols.index("Inn")
+            # Set index of default sort column for team stat pages
+            else:
+                default_sort_col_index = cols.index("TZR")
+        except:
+            default_sort_col_index = 0
     elif mode == "team_summary":
         default_sort = {
             "W": "desc",
@@ -551,12 +560,15 @@ def create_sort_filter(cols, mode):
             "PCT": "desc",
             "Team": None,
         }
-        # Set index of default sort column for individual stat pages
-        if "Inn" in cols:
-            default_sort_col_index = cols.index("Inn")
-        # Set index of default sort column for team stat pages
-        else:
-            default_sort_col_index = cols.index("TZR")
+        try:
+            # Set index of default sort column for individual stat pages
+            if "Inn" in cols:
+                default_sort_col_index = cols.index("Inn")
+            # Set index of default sort column for team stat pages
+            else:
+                default_sort_col_index = cols.index("TZR")
+        except:
+            default_sort_col_index = 0
     else:
         default_sort = {
             "Team": None,
@@ -1261,7 +1273,7 @@ def color_by_team(col):
         "Hanshin": "#ffe200",
         "DeNA": "#9b8cf2",
         "Yakult": "#4dba84",
-        "League Average": "#ffffff"
+        "League Average": "#ffffff",
     }
 
     colors = []
@@ -1295,12 +1307,8 @@ def get_column_config(suffix=None):
     """
     if suffix in ("P", "PR", "PF"):
         column_config = {
-            "#": st.column_config.NumberColumn(
-                width=20,
-                alignment="left",
-            ),
             "Team": st.column_config.TextColumn(
-                width=90,
+                width=140,
                 alignment="left",
             ),
             "Year": st.column_config.TextColumn(
@@ -1501,12 +1509,8 @@ def get_column_config(suffix=None):
         }
     elif suffix in ("B", "BR", "BF"):
         column_config = {
-            "#": st.column_config.NumberColumn(
-                width=20,
-                alignment="left",
-            ),
             "Team": st.column_config.TextColumn(
-                width=90,
+                width=140,
                 alignment="left",
             ),
             "Year": st.column_config.TextColumn(
