@@ -307,7 +307,7 @@ def main():
                     "K-BB%",
                     "GB%",
                     "Chase%",
-                    "Con%",
+                    "Z-Con%",
                     "SwStr%",
                     "CSW%",
                     "FB Velo",
@@ -401,6 +401,16 @@ def highlight_totals_row(row):
     return [""] * len(row)
 
 
+def apply_zebra_rows(row):
+    """TODO docs"""
+    # row.name is the row index position for styler
+    if row.name != "Total" and int(row.name) % 2:
+        bg = "#f8f9fb"
+    else:
+        bg = "white"
+    return [f"background-color: {bg}"] * len(row)
+
+
 def calculate_npb_age(birthdate, year):
     """Calculates the age of a player based on their birthdate according to the standard
     for NPB (June 30th)
@@ -419,22 +429,15 @@ def calculate_npb_age(birthdate, year):
     return npb_age
 
 
-def apply_zebra_rows(row):
-    # row.name is the row index position for styler
-    if row.name != "Total" and int(row.name) % 2:
-        bg = "#f8f9fb"
-    else:
-        bg = "white"
-    return [f"background-color: {bg}"] * len(row)
-
-
 def wavg_ignore_missing(df, value_col, weight_col):
     """TODO: docstring"""
     # keep only rows where BOTH value and weight exist (and weight > 0)
-    m = df[value_col].notna() & df[weight_col].notna() & (df[weight_col] > 0)
-    if not m.any():
+    valid_rows = df[value_col].notna() & df[weight_col].notna() & (df[weight_col] > 0)
+    if not valid_rows.any():
         return np.nan
-    return np.average(df.loc[m, value_col], weights=df.loc[m, weight_col])
+    return np.average(
+        df.loc[valid_rows, value_col], weights=df.loc[valid_rows, weight_col]
+    )
 
 
 def recalculate_pitch_totals(selected_df, original_df):
@@ -482,7 +485,7 @@ def recalculate_pitch_totals(selected_df, original_df):
     totals["FIP"] = wavg_ignore_missing(selected_df, "FIP", "BF")
     totals["FIP-"] = wavg_ignore_missing(selected_df, "FIP-", "BF")
     totals["Chase%"] = wavg_ignore_missing(selected_df, "Chase%", "BF")
-    totals["Con%"] = wavg_ignore_missing(selected_df, "Con%", "BF")
+    totals["Z-Con%"] = wavg_ignore_missing(selected_df, "Z-Con%", "BF")
     totals["CSW%"] = wavg_ignore_missing(selected_df, "CSW%", "BF")
     totals["FB Velo"] = wavg_ignore_missing(selected_df, "FB Velo", "BF")
     totals["GB%"] = wavg_ignore_missing(selected_df, "GB%", "BF")
