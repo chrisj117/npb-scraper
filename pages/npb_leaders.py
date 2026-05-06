@@ -72,7 +72,6 @@ def main():
         i = i + 1
 
 
-@st.cache_data
 def build_leader_tables(user_year, user_bat_pitch, user_league):
     """
     Build ranked leader tables for selected batting and pitching statistics.

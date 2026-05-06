@@ -705,9 +705,11 @@ class Stats:
         ]
 
         for x in new_pct_stats:
-            # TODO: add condition to not convert percentiles if there arent entries over 1.0
             if x in self.df.columns.to_list():
-                self.df[x] = self.df[x] / 100
+                # If there are entries over 1.0, then we need to rescale to decimal format
+                col_max = self.df[x].max()
+                if pd.notna(col_max) and col_max > 1.0:
+                    self.df[x] = self.df[x] / 100
 
 
 class PlayerData(Stats):
