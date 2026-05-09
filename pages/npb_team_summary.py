@@ -1,6 +1,7 @@
 """Displays NPB team summary data with Streamlit"""
 
 import streamlit as st
+import altair as alt
 import pages.helper as hp
 
 
@@ -54,6 +55,97 @@ def main():
         hide_index=True,
         row_height=25,
         column_config=hp.get_column_config("team_summary"),
+    )
+
+    # Convert abbreviated names to full team names
+    abbr_dict = {
+        "Hanshin Tigers": "T",
+        "Hiroshima Carp": "C",
+        "DeNA BayStars": "DB",
+        "Yomiuri Giants": "G",
+        "Yakult Swallows": "S",
+        "Chunichi Dragons": "D",
+        "ORIX Buffaloes": "B",
+        "Lotte Marines": "M",
+        "SoftBank Hawks": "H",
+        "Rakuten Eagles": "E",
+        "Seibu Lions": "L",
+        "Nipponham Fighters": "F",
+        "Oisix Albirex": "A",
+        "HAYATE Ventures": "V",
+    }
+    display_df["short_Team"] = (
+        display_df["Team"]
+        .map(abbr_dict)
+        .infer_objects()
+        .fillna(display_df["Team"])
+        .astype(str)
+    )
+
+    team_colors = {
+        "E": "#b63a52",
+        "F": "#4f8cb2",
+        "B": "#bbaa31",
+        "H": "#fcc800",
+        "L": "#6b7fcf",
+        "M": "#9a9a9a",
+        "C": "#f9271a",
+        "D": "#4a68c2",
+        "G": "#f69822",
+        "T": "#ffe200",
+        "DB": "#9b8cf2",
+        "S": "#4dba84",
+    }
+
+    # Create scatter plot with colored points and team name labels
+    points = (
+        alt.Chart(display_df)
+        .mark_point(size=250, opacity=0.8, filled=True)
+        .encode(
+             x=alt.X(
+                 "ERA+:Q",
+                 title="ERA+",
+                 scale=alt.Scale(type="linear", domain=[65, 135]),
+                 axis=alt.Axis(values=[100]),
+             ),
+             y=alt.Y(
+                 "OPS+:Q",
+                 title="OPS+",
+                 scale=alt.Scale(type="linear", domain=[65, 135]),
+                 axis=alt.Axis(values=[100]),
+             ),
+            color=alt.Color("short_Team:N", legend=None).scale(
+                domain=list(team_colors.keys()), range=list(team_colors.values())
+            ),
+            tooltip=alt.value(None),
+        )
+    )
+
+    text = (
+        alt.Chart(display_df)
+        .mark_text(size=10)
+        .encode(
+            x=alt.X("ERA+:Q"),
+            y=alt.Y("OPS+:Q"),
+            text="short_Team",
+            tooltip=["Team", "ERA+", "OPS+"],
+        )
+    )
+
+    title_params = alt.TitleParams(
+        text=user_year + " NPB - Team ERA+ vs OPS+",
+        subtitle="@YakyuCosmo",
+        subtitleColor="grey",
+        subtitleFontSize=13.5,
+    )
+    chart = (points + text).properties(title=title_params)
+
+    st.altair_chart(
+        chart,
+        width="content",
+        height="content",
+        on_select="ignore",
+        selection_mode=None,
     )
 
 

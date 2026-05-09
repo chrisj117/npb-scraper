@@ -1,6 +1,7 @@
 """Displays NPB pitching data with Streamlit"""
 
 import streamlit as st
+import altair as alt
 import pages.helper as hp
 
 
@@ -96,6 +97,104 @@ def main():
         row_height=25,
         column_order=user_cols,
         column_config=hp.get_column_config("PR"),
+    )
+
+
+    league_k = (player_pitch_df["SO"].sum() / player_pitch_df["BF"].sum()) * 100
+    league_bb = (player_pitch_df["BB"].sum() / player_pitch_df["BF"].sum()) * 100
+    
+    team_colors = {
+        "Hanshin Tigers": "#ffe200",
+        "Hiroshima Carp": "#f9271a",
+        "DeNA BayStars": "#9b8cf2",
+        "Yomiuri Giants": "#f69822",
+        "Yakult Swallows": "#4dba84",
+        "Chunichi Dragons": "#4a68c2",
+        "ORIX Buffaloes": "#bbaa31",
+        "Lotte Marines": "#9a9a9a",
+        "SoftBank Hawks": "#fcc800",
+        "Rakuten Eagles": "#b63a52",
+        "Seibu Lions": "#6b7fcf",
+        "Nipponham Fighters": "#4f8cb2",
+    }
+
+    # Create scatter plot with colored points and team name labels
+    points = (
+        alt.Chart(display_df)
+        .mark_point(size=100, opacity=0.8, filled=True)
+        .encode(
+            x=alt.X(
+                "BB%:Q",
+                title="BB%",
+                scale=alt.Scale(
+                    type="linear",
+                    nice=True,
+                    domain=[display_df["BB%"].min(), display_df["BB%"].max()],
+                ),
+                axis=alt.Axis(values=[league_bb]),
+            ),
+            y=alt.Y(
+                "K%:Q",
+                title="K%",
+                scale=alt.Scale(
+                    type="linear",
+                    nice=True,
+                    domain=[display_df["K%"].min(), display_df["K%"].max()],
+                ),
+                axis=alt.Axis(values=[league_k]),
+            ),
+            color=alt.Color("Team:N", legend=None)
+            .scale(
+                domain=list(team_colors.keys()),
+                range=list(team_colors.values())
+            ),
+            tooltip=["Pitcher", "K%", "BB%", "K-BB%", "Team"],
+        )
+    )
+
+    text = (
+        alt.Chart(display_df)
+        .mark_text(size=10, dy=-10)
+        .encode(
+            x=alt.X(
+                "BB%:Q",
+                title="BB%",
+                scale=alt.Scale(
+                    type="linear",
+                    nice=True,
+                    domain=[display_df["BB%"].min(), display_df["BB%"].max()],
+                ),
+                axis=alt.Axis(values=[league_bb], format=".1f"),
+            ),
+            y=alt.Y(
+                "K%:Q",
+                title="K%",
+                scale=alt.Scale(
+                    type="linear",
+                    nice=True,
+                    domain=[display_df["K%"].min(), display_df["K%"].max()],
+                ),
+                axis=alt.Axis(values=[league_k], format=".1f"),
+            ),
+            text="Pitcher",
+            tooltip=alt.value(None),
+        )
+    )
+    title_params = alt.TitleParams(
+        text=user_year + " NPB - Pitching BB% vs K%",
+        subtitle="@YakyuCosmo",
+        subtitleColor="grey",
+        subtitleFontSize=13.5,
+    )
+    chart = (text + points).properties(title=title_params)
+
+    st.badge("Adjust sample size using the Min. IP filter above", icon="💡", color="orange")
+    st.altair_chart(
+        chart,
+        width="stretch",
+        height=750,
+        on_select="ignore",
+        selection_mode=None,
     )
 
 

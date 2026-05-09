@@ -1,6 +1,7 @@
 """Displays NPB batting data with Streamlit"""
 
 import streamlit as st
+import altair as alt
 import pages.helper as hp
 
 
@@ -97,6 +98,116 @@ def main():
         row_height=25,
         column_order=user_cols,
         column_config=hp.get_column_config("BR"),
+    )
+
+    league_obp = (
+        player_bat_df["H"].sum() + player_bat_df["BB"].sum() + player_bat_df["HP"].sum()
+    ) / (
+        player_bat_df["AB"].sum()
+        + player_bat_df["BB"].sum()
+        + player_bat_df["HP"].sum()
+        + player_bat_df["SF"].sum()
+    )
+    league_slg = (
+        (
+            player_bat_df["H"].sum()
+            - player_bat_df["2B"].sum()
+            - player_bat_df["3B"].sum()
+            - player_bat_df["HR"].sum()
+        )
+        + (2 * player_bat_df["2B"].sum())
+        + (3 * player_bat_df["3B"].sum())
+        + (4 * player_bat_df["HR"].sum())
+    ) / player_bat_df["AB"].sum()
+
+    team_colors = {
+        "Hanshin Tigers": "#ffe200",
+        "Hiroshima Carp": "#f9271a",
+        "DeNA BayStars": "#9b8cf2",
+        "Yomiuri Giants": "#f69822",
+        "Yakult Swallows": "#4dba84",
+        "Chunichi Dragons": "#4a68c2",
+        "ORIX Buffaloes": "#bbaa31",
+        "Lotte Marines": "#9a9a9a",
+        "SoftBank Hawks": "#fcc800",
+        "Rakuten Eagles": "#b63a52",
+        "Seibu Lions": "#6b7fcf",
+        "Nipponham Fighters": "#4f8cb2",
+    }
+
+    # Create scatter plot with colored points and team name labels
+    points = (
+        alt.Chart(display_df)
+        .mark_point(size=100, filled=True)
+        .encode(
+            x=alt.X(
+                "OBP:Q",
+                title="OBP",
+                scale=alt.Scale(
+                    type="linear",
+                    domain=[display_df["OBP"].min(), display_df["OBP"].max()],
+                ),
+                axis=alt.Axis(values=[league_obp]),
+            ),
+            y=alt.Y(
+                "SLG:Q",
+                title="SLG",
+                scale=alt.Scale(
+                    type="linear",
+                    domain=[display_df["SLG"].min(), display_df["SLG"].max()],
+                ),
+                axis=alt.Axis(values=[league_slg]),
+            ),
+            color=alt.Color("Team:N", legend=None).scale(
+                domain=list(team_colors.keys()), range=list(team_colors.values())
+            ),
+            tooltip=["Player", "OBP", "SLG", "OPS", "Team"],
+        )
+    )
+
+    text = (
+        alt.Chart(display_df)
+        .mark_text(size=10, dy=-10)
+        .encode(
+            x=alt.X(
+                "OBP:Q",
+                title="OBP",
+                scale=alt.Scale(
+                    type="linear",
+                    domain=[display_df["OBP"].min(), display_df["OBP"].max()],
+                ),
+                axis=alt.Axis(values=[league_obp], format=".3f"),
+            ),
+            y=alt.Y(
+                "SLG:Q",
+                title="SLG",
+                scale=alt.Scale(
+                    type="linear",
+                    domain=[display_df["SLG"].min(), display_df["SLG"].max()],
+                ),
+                axis=alt.Axis(values=[league_slg], format=".3f"),
+            ),
+            text="Player",
+            tooltip=alt.value(None),
+        )
+    )
+    title_params = alt.TitleParams(
+        text=user_year + " NPB - Batting SLG vs OBP",
+        subtitle="@YakyuCosmo",
+        subtitleColor="grey",
+        subtitleFontSize=13.5,
+    )
+    chart = (text + points).properties(title=title_params)
+
+    st.badge(
+        "Adjust sample size using the Min. PA filter above", icon="💡", color="orange"
+    )
+    st.altair_chart(
+        chart,
+        width="stretch",
+        height=750,
+        on_select="ignore",
+        selection_mode=None,
     )
 
 
