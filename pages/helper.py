@@ -1162,6 +1162,28 @@ def create_player_filter(df, player_col, key=None):
     return player
 
 
+def wavg_ignore_missing(df, value_col, weight_col):
+    """Calculate weighted average while ignoring missing values.
+
+    Args:
+        df (pandas.DataFrame): The DataFrame containing the data.
+        value_col (str): The name of the column containing values to average.
+        weight_col (str): The name of the column containing weights.
+
+    Returns:
+        float: The weighted average of the valid values, or np.nan if no
+            valid rows exist.
+    """
+    # Keep only rows where BOTH value and weight exist (and weight > 0)
+    valid_rows = df[value_col].notna() & df[weight_col].notna() & (df[weight_col] > 0)
+    if not valid_rows.any():
+        return np.nan
+    return np.average(
+        df.loc[valid_rows, value_col], weights=df.loc[valid_rows, weight_col]
+    )
+    
+
+
 def hex_to_rgb(hex_color):
     """
     Converts a hexadecimal color string to an RGB tuple.

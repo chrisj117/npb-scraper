@@ -429,17 +429,6 @@ def calculate_npb_age(birthdate, year):
     return npb_age
 
 
-def wavg_ignore_missing(df, value_col, weight_col):
-    """TODO: docstring"""
-    # keep only rows where BOTH value and weight exist (and weight > 0)
-    valid_rows = df[value_col].notna() & df[weight_col].notna() & (df[weight_col] > 0)
-    if not valid_rows.any():
-        return np.nan
-    return np.average(
-        df.loc[valid_rows, value_col], weights=df.loc[valid_rows, weight_col]
-    )
-
-
 def recalculate_pitch_totals(selected_df, original_df):
     """Recalculate pitch totals based on selected rows only."""
     totals = {}
@@ -480,16 +469,16 @@ def recalculate_pitch_totals(selected_df, original_df):
         totals["kwERA"] = np.nan
 
     # Weighted averages for advanced stats
-    totals["ERA+"] = wavg_ignore_missing(selected_df, "ERA+", "BF")
-    totals["kwERA-"] = wavg_ignore_missing(selected_df, "kwERA-", "BF")
-    totals["FIP"] = wavg_ignore_missing(selected_df, "FIP", "BF")
-    totals["FIP-"] = wavg_ignore_missing(selected_df, "FIP-", "BF")
-    totals["Chase%"] = wavg_ignore_missing(selected_df, "Chase%", "BF")
-    totals["Z-Con%"] = wavg_ignore_missing(selected_df, "Z-Con%", "BF")
-    totals["CSW%"] = wavg_ignore_missing(selected_df, "CSW%", "BF")
-    totals["FB Velo"] = wavg_ignore_missing(selected_df, "FB Velo", "BF")
-    totals["GB%"] = wavg_ignore_missing(selected_df, "GB%", "BF")
-    totals["SwStr%"] = wavg_ignore_missing(selected_df, "SwStr%", "BF")
+    totals["ERA+"] = hp.wavg_ignore_missing(selected_df, "ERA+", "BF")
+    totals["kwERA-"] = hp.wavg_ignore_missing(selected_df, "kwERA-", "BF")
+    totals["FIP"] = hp.wavg_ignore_missing(selected_df, "FIP", "BF")
+    totals["FIP-"] = hp.wavg_ignore_missing(selected_df, "FIP-", "BF")
+    totals["Chase%"] = hp.wavg_ignore_missing(selected_df, "Chase%", "BF")
+    totals["Z-Con%"] = hp.wavg_ignore_missing(selected_df, "Z-Con%", "BF")
+    totals["CSW%"] = hp.wavg_ignore_missing(selected_df, "CSW%", "BF")
+    totals["FB Velo"] = hp.wavg_ignore_missing(selected_df, "FB Velo", "BF")
+    totals["GB%"] = hp.wavg_ignore_missing(selected_df, "GB%", "BF")
+    totals["SwStr%"] = hp.wavg_ignore_missing(selected_df, "SwStr%", "BF")
 
     # Calculate Diff (ERA - FIP)
     if "FIP" in totals and "ERA" in totals:
@@ -563,12 +552,12 @@ def recalculate_bat_totals(selected_df, original_df):
         totals["BABIP"] = np.nan
 
     # Weighted averages for advanced stats
-    totals["OPS+"] = wavg_ignore_missing(selected_df, "OPS+", "PA")
-    totals["PullAIR%"] = wavg_ignore_missing(selected_df, "PullAIR%", "PA")
-    totals["Chase%"] = wavg_ignore_missing(selected_df, "Chase%", "PA")
-    totals["Z-Con%"] = wavg_ignore_missing(selected_df, "Z-Con%", "PA")
-    totals["Swing%"] = wavg_ignore_missing(selected_df, "Swing%", "PA")
-    totals["SwStr%"] = wavg_ignore_missing(selected_df, "SwStr%", "PA")
+    totals["OPS+"] = hp.wavg_ignore_missing(selected_df, "OPS+", "PA")
+    totals["PullAIR%"] = hp.wavg_ignore_missing(selected_df, "PullAIR%", "PA")
+    totals["Chase%"] = hp.wavg_ignore_missing(selected_df, "Chase%", "PA")
+    totals["Z-Con%"] = hp.wavg_ignore_missing(selected_df, "Z-Con%", "PA")
+    totals["Swing%"] = hp.wavg_ignore_missing(selected_df, "Swing%", "PA")
+    totals["SwStr%"] = hp.wavg_ignore_missing(selected_df, "SwStr%", "PA")
 
     return totals
 

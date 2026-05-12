@@ -99,26 +99,49 @@ def main():
         column_order=user_cols,
         column_config=hp.get_column_config("BR"),
     )
+    generate_player_batting_plots(player_bat_df, display_df, user_year)
 
+    
+
+def generate_player_batting_plots(original_df, display_df, user_year):
+    """TODO docs"""
+    if display_df.empty:
+        st.error("Error: No players to graph - check your filters above.", icon="🚨")
+        return
+
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["SLG vs OBP", "BB% vs. K%", "ISO vs. Chase%", "PullAIR% vs. sSeager"]
+    )
+
+    # Convert cols to best matched type and get weighted league average approximations
+    converted_src_df = hp.convert_pct_cols_to_float(original_df)
+    converted_src_df = converted_src_df.convert_dtypes()
     league_obp = (
-        player_bat_df["H"].sum() + player_bat_df["BB"].sum() + player_bat_df["HP"].sum()
+        converted_src_df["H"].sum() + converted_src_df["BB"].sum() + converted_src_df["HP"].sum()
     ) / (
-        player_bat_df["AB"].sum()
-        + player_bat_df["BB"].sum()
-        + player_bat_df["HP"].sum()
-        + player_bat_df["SF"].sum()
+        converted_src_df["AB"].sum()
+        + converted_src_df["BB"].sum()
+        + converted_src_df["HP"].sum()
+        + converted_src_df["SF"].sum()
     )
     league_slg = (
         (
-            player_bat_df["H"].sum()
-            - player_bat_df["2B"].sum()
-            - player_bat_df["3B"].sum()
-            - player_bat_df["HR"].sum()
+            converted_src_df["H"].sum()
+            - converted_src_df["2B"].sum()
+            - converted_src_df["3B"].sum()
+            - converted_src_df["HR"].sum()
         )
-        + (2 * player_bat_df["2B"].sum())
-        + (3 * player_bat_df["3B"].sum())
-        + (4 * player_bat_df["HR"].sum())
-    ) / player_bat_df["AB"].sum()
+        + (2 * converted_src_df["2B"].sum())
+        + (3 * converted_src_df["3B"].sum())
+        + (4 * converted_src_df["HR"].sum())
+    ) / converted_src_df["AB"].sum()
+    league_chase = hp.wavg_ignore_missing(converted_src_df, "Chase%", "PA")
+    league_pullair = hp.wavg_ignore_missing(converted_src_df, "PullAIR%", "PA")
+    league_sseager = hp.wavg_ignore_missing(converted_src_df, "sSeager", "PA")
+    league_avg = converted_src_df["H"].sum() / converted_src_df["AB"].sum()
+    league_iso = league_slg - league_avg
+    league_k = (converted_src_df["SO"].sum() / converted_src_df["PA"].sum()) * 100
+    league_bb = (converted_src_df["BB"].sum() / converted_src_df["PA"].sum()) * 100
 
     team_colors = {
         "Hanshin Tigers": "#ffe200",
@@ -135,81 +158,301 @@ def main():
         "Nipponham Fighters": "#4f8cb2",
     }
 
-    # Create scatter plot with colored points and team name labels
-    points = (
-        alt.Chart(display_df)
-        .mark_point(size=100, filled=True)
-        .encode(
-            x=alt.X(
-                "OBP:Q",
-                title="OBP",
-                scale=alt.Scale(
-                    type="linear",
-                    domain=[display_df["OBP"].min(), display_df["OBP"].max()],
+    with tab1:
+        # Create scatter plot with colored points and team name labels
+        points = (
+            alt.Chart(display_df)
+            .mark_point(size=100, filled=True)
+            .encode(
+                x=alt.X(
+                    "OBP:Q",
+                    title="OBP",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["OBP"].min(), display_df["OBP"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_obp]),
                 ),
-                axis=alt.Axis(values=[league_obp]),
-            ),
-            y=alt.Y(
-                "SLG:Q",
-                title="SLG",
-                scale=alt.Scale(
-                    type="linear",
-                    domain=[display_df["SLG"].min(), display_df["SLG"].max()],
+                y=alt.Y(
+                    "SLG:Q",
+                    title="SLG",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["SLG"].min(), display_df["SLG"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_slg]),
                 ),
-                axis=alt.Axis(values=[league_slg]),
-            ),
-            color=alt.Color("Team:N", legend=None).scale(
-                domain=list(team_colors.keys()), range=list(team_colors.values())
-            ),
-            tooltip=["Player", "OBP", "SLG", "OPS", "Team"],
+                color=alt.Color("Team:N", legend=None).scale(
+                    domain=list(team_colors.keys()), range=list(team_colors.values())
+                ),
+                tooltip=["Player", "OBP", "SLG", "OPS", "Team"],
+            )
         )
-    )
 
-    text = (
-        alt.Chart(display_df)
-        .mark_text(size=10, dy=-10)
-        .encode(
-            x=alt.X(
-                "OBP:Q",
-                title="OBP",
-                scale=alt.Scale(
-                    type="linear",
-                    domain=[display_df["OBP"].min(), display_df["OBP"].max()],
+        text = (
+            alt.Chart(display_df)
+            .mark_text(size=10, dy=-10)
+            .encode(
+                x=alt.X(
+                    "OBP:Q",
+                    title="OBP",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["OBP"].min(), display_df["OBP"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_obp], format=".3f"),
                 ),
-                axis=alt.Axis(values=[league_obp], format=".3f"),
-            ),
-            y=alt.Y(
-                "SLG:Q",
-                title="SLG",
-                scale=alt.Scale(
-                    type="linear",
-                    domain=[display_df["SLG"].min(), display_df["SLG"].max()],
+                y=alt.Y(
+                    "SLG:Q",
+                    title="SLG",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["SLG"].min(), display_df["SLG"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_slg], format=".3f"),
                 ),
-                axis=alt.Axis(values=[league_slg], format=".3f"),
-            ),
-            text="Player",
-            tooltip=alt.value(None),
+                text="Player",
+                tooltip=alt.value(None),
+            )
         )
-    )
-    title_params = alt.TitleParams(
-        text=user_year + " NPB - Batting SLG vs OBP",
-        subtitle="@YakyuCosmo",
-        subtitleColor="grey",
-        subtitleFontSize=13.5,
-    )
-    chart = (text + points).properties(title=title_params)
+        title_params = alt.TitleParams(
+            text=user_year + " NPB - Batting SLG vs OBP",
+            subtitle="@YakyuCosmo",
+            subtitleColor="grey",
+            subtitleFontSize=13.5,
+        )
+        chart = (text + points).properties(title=title_params).interactive()
 
-    st.badge(
-        "Adjust sample size using the Min. PA filter above", icon="💡", color="orange"
-    )
-    st.altair_chart(
-        chart,
-        width="stretch",
-        height=750,
-        on_select="ignore",
-        selection_mode=None,
-    )
+        st.info("Adjust graph using the filters above", icon="ℹ️")
+        st.altair_chart(
+            chart,
+            width="stretch",
+            height=750,
+            on_select="ignore",
+            selection_mode=None,
+        )
 
+    with tab2:
+        # Create scatter plot with colored points and team name labels
+        points = (
+            alt.Chart(display_df)
+            .mark_point(size=100, filled=True)
+            .encode(
+                x=alt.X(
+                    "BB%:Q",
+                    title="BB%",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["BB%"].min(), display_df["BB%"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_bb], format=".1f"),
+                ),
+                y=alt.Y(
+                    "K%:Q",
+                    title="K%",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["K%"].min(), display_df["K%"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_k], format=".1f"),
+                ),
+                color=alt.Color("Team:N", legend=None).scale(
+                    domain=list(team_colors.keys()), range=list(team_colors.values())
+                ),
+                tooltip=["Player", "BB%", "K%", "BB/K", "Team"],
+            )
+        )
+
+        text = (
+            alt.Chart(display_df)
+            .mark_text(size=10, dy=-10)
+            .encode(
+                x=alt.X(
+                    "BB%:Q",
+                    title="BB%",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["BB%"].min(), display_df["BB%"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_bb]),
+                ),
+                y=alt.Y(
+                    "K%:Q",
+                    title="K%",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["K%"].min(), display_df["K%"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_k]),
+                ),
+                text="Player",
+                tooltip=alt.value(None),
+            )
+        )
+        title_params = alt.TitleParams(
+            text=user_year + " NPB - Batting BB% vs K%",
+            subtitle="@YakyuCosmo",
+            subtitleColor="grey",
+            subtitleFontSize=13.5,
+        )
+        chart = (text + points).properties(title=title_params).interactive()
+
+        st.info("Adjust graph using the filters above", icon="ℹ️")
+        st.altair_chart(
+            chart,
+            width="stretch",
+            height=750,
+            on_select="ignore",
+            selection_mode=None,
+        )
+
+    with tab3:
+        # Create scatter plot with colored points and team name labels
+        points = (
+            alt.Chart(display_df)
+            .mark_point(size=100, filled=True)
+            .encode(
+                x=alt.X(
+                    "ISO:Q",
+                    title="ISO",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["ISO"].min(), display_df["ISO"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_iso], format=".1f"),
+                ),
+                y=alt.Y(
+                    "Chase%:Q",
+                    title="Chase%",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["Chase%"].min(), display_df["Chase%"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_chase], format=".3f"),
+                ),
+                color=alt.Color("Team:N", legend=None).scale(
+                    domain=list(team_colors.keys()), range=list(team_colors.values())
+                ),
+                tooltip=["Player", "ISO", "Chase%", "OPS+", "Team"],
+            )
+        )
+
+        text = (
+            alt.Chart(display_df)
+            .mark_text(size=10, dy=-10)
+            .encode(
+                x=alt.X(
+                    "ISO:Q",
+                    title="ISO",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["ISO"].min(), display_df["ISO"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_iso], format=".3f"),
+                ),
+                y=alt.Y(
+                    "Chase%:Q",
+                    title="Chase%",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["Chase%"].min(), display_df["Chase%"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_chase], format=".1f"),
+                ),
+                text="Player",
+                tooltip=alt.value(None),
+            )
+        )
+        title_params = alt.TitleParams(
+            text=user_year + " NPB - Batting ISO vs Chase%",
+            subtitle="@YakyuCosmo",
+            subtitleColor="grey",
+            subtitleFontSize=13.5,
+        )
+        chart = (text + points).properties(title=title_params).interactive()
+
+        st.info("Adjust graph using the filters above", icon="ℹ️")
+        st.altair_chart(
+            chart,
+            width="stretch",
+            height=750,
+            on_select="ignore",
+            selection_mode=None,
+        )
+
+    with tab4:
+        # Create scatter plot with colored points and team name labels
+        points = (
+            alt.Chart(display_df)
+            .mark_point(size=100, filled=True)
+            .encode(
+                x=alt.X(
+                    "PullAIR%:Q",
+                    title="PullAIR%",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["PullAIR%"].min(), display_df["PullAIR%"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_pullair], format=".1f"),
+                ),
+                y=alt.Y(
+                    "sSeager:Q",
+                    title="sSeager",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["sSeager"].min(), display_df["sSeager"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_sseager], format=".1f"),
+                ),
+                color=alt.Color("Team:N", legend=None).scale(
+                    domain=list(team_colors.keys()), range=list(team_colors.values())
+                ),
+                tooltip=["Player", "PullAIR%", "sSeager", "OPS+", "Team"],
+            )
+        )
+
+        text = (
+            alt.Chart(display_df)
+            .mark_text(size=10, dy=-10)
+            .encode(
+                x=alt.X(
+                    "PullAIR%:Q",
+                    title="PullAIR%",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["PullAIR%"].min(), display_df["PullAIR%"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_pullair], format=".1f"),
+                ),
+                y=alt.Y(
+                    "sSeager:Q",
+                    title="sSeager",
+                    scale=alt.Scale(
+                        type="linear",
+                        domain=[display_df["sSeager"].min(), display_df["sSeager"].max()],
+                    ),
+                    axis=alt.Axis(values=[league_sseager], format=".1f"),
+                ),
+                text="Player",
+                tooltip=alt.value(None),
+            )
+        )
+        title_params = alt.TitleParams(
+            text=user_year + " NPB - Batting PullAIR% vs sSeager",
+            subtitle="@YakyuCosmo",
+            subtitleColor="grey",
+            subtitleFontSize=13.5,
+        )
+        chart = (text + points).properties(title=title_params).interactive()
+
+        st.info("Adjust graph using the filters above", icon="ℹ️")
+        st.altair_chart(
+            chart,
+            width="stretch",
+            height=750,
+            on_select="ignore",
+            selection_mode=None,
+        )
 
 if __name__ == "__main__":
     main()
