@@ -43,10 +43,10 @@ def main():
         bat_df = bat_df.dropna(subset=["Pos"])
         # Drop pitchers
         bat_df = bat_df.drop(bat_df[bat_df.Pos == "1"].index)
-        user_player = hp.create_player_filter(bat_df, "Player")
+        user_player, user_team = hp.create_team_plus_player_filter(bat_df, "Player")
 
         # Def Value stat calculation
-        temp_df = field_df["Player"].drop_duplicates()
+        temp_df = field_df[["Player", "Team"]].drop_duplicates()
         # Each TZR in fielding must have Pos Adj applied to it
         field_df["TZR"] = field_df["TZR"].apply(pd.to_numeric, errors="coerce")
         field_df["TZR"] = field_df["TZR"].fillna(0)
@@ -55,53 +55,63 @@ def main():
         # Combine all TZRs and Inn per player
         temp_df = pd.merge(
             temp_df,
-            field_df.groupby("Player", as_index=False)["TZR"].sum(),
-            on="Player",
+            field_df.groupby(["Player", "Team"], as_index=False)["TZR"].sum(),
+            on=["Player", "Team"],
         )
         temp_df = pd.merge(
             temp_df,
-            field_df.groupby("Player", as_index=False)["Inn"].sum(),
-            on="Player",
+            field_df.groupby(["Player", "Team"], as_index=False)["Inn"].sum(),
+            on=["Player", "Team"],
         )
         # Drop players with no recorded stat (NaNs), then sum + merge
         temp_df = pd.merge(
             temp_df,
-            field_df.dropna(subset="RngR").groupby("Player", as_index=False)["RngR"].sum(),
-            on="Player",
+            field_df.dropna(subset="RngR")
+            .groupby(["Player", "Team"], as_index=False)["RngR"]
+            .sum(),
+            on=["Player", "Team"],
             how="left",
         )
         temp_df = pd.merge(
             temp_df,
-            field_df.dropna(subset="ARM").groupby("Player", as_index=False)["ARM"].sum(),
-            on="Player",
+            field_df.dropna(subset="ARM")
+            .groupby(["Player", "Team"], as_index=False)["ARM"]
+            .sum(),
+            on=["Player", "Team"],
             how="left",
         )
         temp_df = pd.merge(
             temp_df,
-            field_df.dropna(subset="DPR").groupby("Player", as_index=False)["DPR"].sum(),
-            on="Player",
+            field_df.dropna(subset="DPR")
+            .groupby(["Player", "Team"], as_index=False)["DPR"]
+            .sum(),
+            on=["Player", "Team"],
             how="left",
         )
         temp_df = pd.merge(
             temp_df,
             field_df.dropna(subset="Framing")
-            .groupby("Player", as_index=False)["Framing"]
+            .groupby(["Player", "Team"], as_index=False)["Framing"]
             .sum(),
-            on="Player",
+            on=["Player", "Team"],
             how="left",
         )
         # Calculate Def Value (similar to TZR/143) and prep for plotting
         temp_df["Def Value"] = (temp_df["TZR"] / temp_df["Inn"]) * 1287
         cumulative_df = pd.merge(
             bat_df,
-            temp_df[["Player", "Def Value", "RngR", "ARM", "DPR", "Framing", "Inn"]],
-            on="Player",
+            temp_df[
+                ["Player", "Def Value", "RngR", "ARM", "DPR", "Framing", "Inn", "Team"]
+            ],
+            on=["Player", "Team"],
             how="inner",
         )
         cumulative_df["Range"] = (cumulative_df["RngR"] / cumulative_df["Inn"]) * 1287
         cumulative_df["Arm"] = (cumulative_df["ARM"] / cumulative_df["Inn"]) * 1287
         cumulative_df["DPR"] = (cumulative_df["DPR"] / cumulative_df["Inn"]) * 1287
-        cumulative_df["Framing"] = (cumulative_df["Framing"] / cumulative_df["Inn"]) * 1287
+        cumulative_df["Framing"] = (
+            cumulative_df["Framing"] / cumulative_df["Inn"]
+        ) * 1287
 
         # Number formatting
         format_maps = {
@@ -116,7 +126,9 @@ def main():
         for key, value in format_maps.items():
             cumulative_df[key] = cumulative_df[key].apply(value.format)
 
-        hp.display_player_percentile(cumulative_df, user_player, user_year, "BR")
+        hp.display_player_percentile(
+            cumulative_df, user_player, user_team, user_year, "BR"
+        )
     else:
         st.write("The sample size minimum has not been met yet. Please come back soon.")
 

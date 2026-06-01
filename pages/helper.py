@@ -1,5 +1,6 @@
 """Helper functions for Streamlit pages"""
 
+import re
 from io import StringIO
 import altair as alt
 import streamlit as st
@@ -84,16 +85,18 @@ def convert_ip_column_out(df, inn_col="IP"):
     return temp_df[inn_col]
 
 
-def display_player_percentile(df, name, year, suffix):
+def display_player_percentile(df, name, team, year, suffix):
     """
     Displays a percentile bar chart and raw statistics for a selected player.
 
     Parameters:
         df (pandas.DataFrame): DataFrame containing player statistics.
         name (str): The name of the player to display.
+        team (str): The team name of the player for data filtering.
         year (str): The season year for labeling the chart.
-        suffix (str): Indicates stat type and determines which columns to plot
-        (e.g., 'PR', 'PF', 'BR', 'BF').
+        suffix (str): Stat type indicator determining which columns to plot
+            and chart formatting. Options: 'PR' (Pitcher Regular),
+            'PF' (Pitcher Farm), 'BR' (Batter Regular), 'BF' (Batter Farm).
 
     Functionality:
         - Selects relevant statistics and inverts percentile ranks for metrics
@@ -101,9 +104,8 @@ def display_player_percentile(df, name, year, suffix):
         - Calculates percentiles for each stat and prepares data for
         visualization.
         - Generates an Altair horizontal bar chart showing the player's
-        percentile ranks.
-        - Displays the player's raw statistics in a Streamlit dataframe
-        below the chart.
+        percentile ranks with team emoji, stat values, and context subtitles.
+        - Displays the chart in the Streamlit app.
 
     Returns:
         None
@@ -164,10 +166,10 @@ def display_player_percentile(df, name, year, suffix):
             "PA",
         ]
         # Position specific stats
-        if df[df[name_col] == name]["Pos"].values[0] == "C":
+        if df[(df[name_col] == name) & (df["Team"] == team)]["Pos"].values[0] == "C":
             plot_cols.insert(0, "Framing")
             plot_cols.insert(0, "Arm")
-        elif df[df[name_col] == name]["Pos"].values[0] in (
+        elif df[(df[name_col] == name) & (df["Team"] == team)]["Pos"].values[0] in (
             "1B",
             "2B",
             "3B",
@@ -176,16 +178,19 @@ def display_player_percentile(df, name, year, suffix):
         ):
             plot_cols.insert(0, "Range")
             plot_cols.insert(0, "DPR")
-        elif df[df[name_col] == name]["Pos"].values[0] in ("LF", "CF", "RF"):
+        elif df[(df[name_col] == name) & (df["Team"] == team)]["Pos"].values[0] in (
+            "LF",
+            "CF",
+            "RF",
+        ):
             plot_cols.insert(0, "Range")
             plot_cols.insert(0, "Arm")
         invert_cols = ["K%", "SwStr%", "Chase%"]
 
-    # Get player's team, age
-    team = df[df[name_col] == name]["Team"]
-    age = df[df[name_col] == name]["Age"].astype(str)
+    # Get player's age
+    age = df[(df[name_col] == name) & (df["Team"] == team)]["Age"].astype(str)
     # Save raw numbers
-    raw_data = df[df[name_col] == name][plot_cols].T
+    raw_data = df[(df[name_col] == name) & (df["Team"] == team)][plot_cols].T
     raw_data = raw_data.reset_index()
     raw_data.columns = ["Stat", "Value"]
     raw_data = raw_data.iloc[::-1]
@@ -216,7 +221,7 @@ def display_player_percentile(df, name, year, suffix):
         df[col] = df[col].astype("int")
 
     # Generate percentile graphs for desired player
-    chart_data = df[df[name_col] == name][plot_cols].T
+    chart_data = df[(df[name_col] == name) & (df["Team"] == team)][plot_cols].T
     chart_data = chart_data.reset_index()
     chart_data.columns = ["Stats", "Percentile Rank"]
 
@@ -249,7 +254,7 @@ def display_player_percentile(df, name, year, suffix):
         "Yakult Swallows": "🐧",
         "Hanshin Tigers": "🐯",
     }
-    title = name + " " + emoji_dict[team.values[0]]
+    title = name + " " + emoji_dict[team]
     if suffix in ("BR", "PR"):
         subtitle_str1 = team + " · " + year + " NPB"
     elif suffix in ("BF", "PF"):
@@ -258,24 +263,24 @@ def display_player_percentile(df, name, year, suffix):
         subtitle_str1 = team + " · " + year
     if suffix in ("BF", "BR"):
         subtitle_str2 = (
-            df[df[name_col] == name]["PA"].astype(str)
+            df[(df[name_col] == name) & (df["Team"] == team)]["PA"].astype(str)
             + " PA"
             + " · "
-            + df[df[name_col] == name]["Pos"].astype(str)
+            + df[(df[name_col] == name) & (df["Team"] == team)]["Pos"].astype(str)
             + " · Age "
             + age
             + " · Bats "
-            + df[df[name_col] == name]["B"].astype(str)
+            + df[(df[name_col] == name) & (df["Team"] == team)]["B"].astype(str)
         )
     elif suffix in ("PF", "PR"):
         subtitle_str2 = (
-            df[df[name_col] == name]["IP"].astype(str)
+            df[(df[name_col] == name) & (df["Team"] == team)]["IP"].astype(str)
             + " IP"
             + " · "
             + "Age "
             + age
             + " · Throws "
-            + df[df[name_col] == name]["T"].astype(str)
+            + df[(df[name_col] == name) & (df["Team"] == team)]["T"].astype(str)
         )
     else:
         subtitle_str2 = "Age " + age
@@ -284,7 +289,7 @@ def display_player_percentile(df, name, year, suffix):
     title_params = alt.TitleParams(
         text=title,
         subtitle=[
-            subtitle_str1.values[0],
+            subtitle_str1,
             subtitle_str2.values[0],
             "@YakyuCosmo",
         ],
@@ -863,14 +868,14 @@ def create_team_filter(mode=None, team_col=None, key=None):
         "Chunichi": "Chunichi Dragons",
         "DeNA": "DeNA BayStars",
         "Hiroshima": "Hiroshima Carp",
+        "Yakult": "Yakult Swallows",
+        "Yomiuri": "Yomiuri Giants",
         "Lotte": "Lotte Marines",
         "Nipponham": "Nipponham Fighters",
         "ORIX": "ORIX Buffaloes",
         "Rakuten": "Rakuten Eagles",
         "Seibu": "Seibu Lions",
         "SoftBank": "SoftBank Hawks",
-        "Yakult": "Yakult Swallows",
-        "Yomiuri": "Yomiuri Giants",
     }
     if mode == "farm":
         team_dict.update(
@@ -1154,12 +1159,45 @@ def create_player_filter(df, player_col, key=None):
         - Sorts name columns for consistent display across pages.
 
     Returns:
-        string: The user's chosen year.
+        string: The user's chosen player.
     """
     df = df.sort_values(player_col)
     player_list = df[player_col]
     player = st.selectbox(player_col, player_list, key=key)
     return player
+
+
+def create_team_plus_player_filter(df, player_col, key=None):
+    """
+    Creates a Streamlit select box filter for selecting players with team names.
+
+    Parameters:
+        df (pandas.DataFrame): DataFrame with a player column and a "Team" column.
+        player_col (string): The column containing player names.
+        key (string, optional): Streamlit widget key for state management.
+
+    Functionality:
+        - Sorts the DataFrame by player name for consistent display.
+        - Appends team names in parentheses to player names for disambiguation.
+        - Displays a select box with combined "Player (Team)" options.
+        - Extracts and returns both the selected player name and team name.
+
+    Returns:
+        tuple: (player, team) where:
+            - player (string): The selected player name without the team suffix.
+            - team (string): The extracted team name from the selection.
+    """
+    df = df.sort_values(player_col)
+    df[player_col] = df[player_col] + " (" + df["Team"] + ")"
+    player_list = df[player_col]
+    player_team = st.selectbox(player_col, player_list, key=key)
+    # Remove team and parentheses from player name
+    player = player_team.replace(
+        " (" + re.search("\\(([^)]+)", player_team).group(1) + ")", ""
+    )
+    # Extract team name between parentheses
+    team = re.search("\\(([^)]+)", player_team).group(1)
+    return player, team
 
 
 def wavg_ignore_missing(df, value_col, weight_col):
@@ -1181,7 +1219,6 @@ def wavg_ignore_missing(df, value_col, weight_col):
     return np.average(
         df.loc[valid_rows, value_col], weights=df.loc[valid_rows, weight_col]
     )
-    
 
 
 def hex_to_rgb(hex_color):

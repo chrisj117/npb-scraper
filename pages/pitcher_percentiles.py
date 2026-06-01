@@ -37,8 +37,8 @@ def main():
     if disable_percentiles is False:
         # Drop players below IP threshold
         pitch_df = pitch_df.drop(pitch_df[pitch_df.IP < drop_ip].index)
-        user_pitcher = hp.create_player_filter(pitch_df, "Pitcher")
-        hp.display_player_percentile(pitch_df, user_pitcher, user_year, "PR")
+        user_pitcher, user_team = hp.create_team_plus_player_filter(pitch_df, "Pitcher")
+        hp.display_player_percentile(pitch_df, user_pitcher, user_team, user_year, "PR")
     else:
         st.write("The sample size minimum has not been met yet. Please come back soon.")
 
