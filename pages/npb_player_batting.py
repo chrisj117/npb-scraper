@@ -23,7 +23,7 @@ def main():
     # Split filters away from dataframe
     with st.container(border=True):
         # Smaller filters split by cols, larger filters receive exclusive cols
-        r1c1, r1c2, r1c3 = st.columns([2, 1, 6], vertical_alignment="center")
+        r1c1, r1c2, r1c3 = st.columns([2, 1, 6])
 
         with r1c1:
             user_year = hp.create_year_filter()
@@ -43,10 +43,9 @@ def main():
             user_batting_hand = hp.create_hand_filter("player_bat")
         with r1c3:
             user_pos = hp.create_pos_filter(display_df, mode="player_bat")
+            user_team = hp.create_team_filter(mode="npb")
 
-        user_team = hp.create_team_filter(mode="npb")
         user_cols = hp.create_stat_cols_filter(display_df, mode="player_bat")
-
         # Sorting options
         user_sort_col, user_sort_asc = hp.create_sort_filter(user_cols, mode="bat")
 

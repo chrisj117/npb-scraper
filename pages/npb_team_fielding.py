@@ -21,7 +21,7 @@ def main():
     # Split filters away from dataframe
     with st.container(border=True):
         # Smaller filters split by cols, larger filters receive exclusive cols
-        r1c1, r1c2 = st.columns([1, 9], vertical_alignment="center")
+        r1c1, r1c2 = st.columns([1, 9])
 
         with r1c1:
             user_year = hp.create_year_filter()

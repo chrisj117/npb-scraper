@@ -1366,6 +1366,7 @@ def get_column_config(suffix=None):
     """
     if suffix in ("P", "PR", "PF"):
         column_config = {
+            "Pitcher": st.column_config.TextColumn(pinned=True),
             "Team": st.column_config.TextColumn(
                 width=140,
                 alignment="left",
@@ -1568,6 +1569,7 @@ def get_column_config(suffix=None):
         }
     elif suffix in ("B", "BR", "BF"):
         column_config = {
+            "Player": st.column_config.TextColumn(pinned=True),
             "Team": st.column_config.TextColumn(
                 width=140,
                 alignment="left",
@@ -1797,6 +1799,7 @@ def get_column_config(suffix=None):
         }
     elif suffix in ("fielding"):
         column_config = {
+            "Player": st.column_config.TextColumn(pinned=True),
             "ARM": st.column_config.NumberColumn(
                 format="%.1f",
                 help="Arm Runs: Defensive runs through throwing. For outfielders, this includes throwing out and preventing runners from advancing bases. For catchers, this includes preventing stolen bases.",
