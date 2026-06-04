@@ -101,10 +101,28 @@ def main():
     )
     generate_player_batting_plots(player_bat_df, display_df, user_year)
 
-    
 
 def generate_player_batting_plots(original_df, display_df, user_year):
-    """TODO docs"""
+    """
+    Generates interactive scatter plots for NPB batting statistics using Altair.
+
+    Creates four tabs with comparative visualizations:
+    - SLG vs OBP with league average reference lines
+    - BB% vs K% with league average reference lines
+    - ISO vs Chase% with league average reference lines
+    - PullAIR% vs sSeager with league average reference lines
+
+    Each plot displays player data points colored by team with player name labels
+    and interactive tooltips showing relevant statistics.
+
+    Args:
+        original_df (pandas.DataFrame): Unfiltered batting statistics dataframe
+        display_df (pandas.DataFrame): Filtered batting statistics dataframe based on user selections
+        user_year (str): The selected NPB season year for chart titles
+
+    Returns:
+        None: Displays plots directly in Streamlit interface
+    """
     if display_df.empty:
         st.error("Error: No players to graph - check your filters above.", icon="🚨")
         return
@@ -117,7 +135,9 @@ def generate_player_batting_plots(original_df, display_df, user_year):
     converted_src_df = hp.convert_pct_cols_to_float(original_df)
     converted_src_df = converted_src_df.convert_dtypes()
     league_obp = (
-        converted_src_df["H"].sum() + converted_src_df["BB"].sum() + converted_src_df["HP"].sum()
+        converted_src_df["H"].sum()
+        + converted_src_df["BB"].sum()
+        + converted_src_df["HP"].sum()
     ) / (
         converted_src_df["AB"].sum()
         + converted_src_df["BB"].sum()
@@ -391,7 +411,10 @@ def generate_player_batting_plots(original_df, display_df, user_year):
                     title="PullAIR%",
                     scale=alt.Scale(
                         type="linear",
-                        domain=[display_df["PullAIR%"].min(), display_df["PullAIR%"].max()],
+                        domain=[
+                            display_df["PullAIR%"].min(),
+                            display_df["PullAIR%"].max(),
+                        ],
                     ),
                     axis=alt.Axis(values=[league_pullair], format=".1f"),
                 ),
@@ -400,7 +423,10 @@ def generate_player_batting_plots(original_df, display_df, user_year):
                     title="sSeager",
                     scale=alt.Scale(
                         type="linear",
-                        domain=[display_df["sSeager"].min(), display_df["sSeager"].max()],
+                        domain=[
+                            display_df["sSeager"].min(),
+                            display_df["sSeager"].max(),
+                        ],
                     ),
                     axis=alt.Axis(values=[league_sseager], format=".1f"),
                 ),
@@ -420,7 +446,10 @@ def generate_player_batting_plots(original_df, display_df, user_year):
                     title="PullAIR%",
                     scale=alt.Scale(
                         type="linear",
-                        domain=[display_df["PullAIR%"].min(), display_df["PullAIR%"].max()],
+                        domain=[
+                            display_df["PullAIR%"].min(),
+                            display_df["PullAIR%"].max(),
+                        ],
                     ),
                     axis=alt.Axis(values=[league_pullair], format=".1f"),
                 ),
@@ -429,7 +458,10 @@ def generate_player_batting_plots(original_df, display_df, user_year):
                     title="sSeager",
                     scale=alt.Scale(
                         type="linear",
-                        domain=[display_df["sSeager"].min(), display_df["sSeager"].max()],
+                        domain=[
+                            display_df["sSeager"].min(),
+                            display_df["sSeager"].max(),
+                        ],
                     ),
                     axis=alt.Axis(values=[league_sseager], format=".1f"),
                 ),
@@ -453,6 +485,7 @@ def generate_player_batting_plots(original_df, display_df, user_year):
             on_select="ignore",
             selection_mode=None,
         )
+
 
 if __name__ == "__main__":
     main()

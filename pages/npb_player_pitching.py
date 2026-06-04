@@ -102,7 +102,26 @@ def main():
 
 
 def generate_player_pitching_plots(original_df, display_df, user_year):
-    """TODO docs"""
+    """
+    Generates interactive scatter plots for NPB pitching statistics using Altair.
+
+    Creates four tabs with comparative visualizations:
+    - BB% vs K% with league average reference lines
+    - CSW% vs GB% with league average reference lines
+    - SwStr% vs Chase% with league average reference lines
+    - FB Velo vs Sec% with league average reference lines
+
+    Each plot displays player data points colored by team with player name labels
+    and interactive tooltips showing relevant statistics.
+
+    Args:
+        original_df (pandas.DataFrame): Unfiltered pitching statistics dataframe
+        display_df (pandas.DataFrame): Filtered pitching statistics dataframe based on user selections
+        user_year (str): The selected NPB season year for chart titles
+
+    Returns:
+        None: Displays plots directly in Streamlit interface
+    """
     if display_df.empty:
         st.error("Error: No players to graph - check your filters above.", icon="🚨")
         return
