@@ -69,6 +69,9 @@ def main():
     ]
     invert_pct_cols = []
 
+    # Shorten team names before displaying
+    hp.convert_team_names(display_df, "Team", "short")
+
     # Display dataframe
     st.dataframe(
         display_df[user_cols]

@@ -962,6 +962,54 @@ def create_team_filter(mode=None, team_col=None, key=None):
         team = [team_dict[k] for k in team]
     return team
 
+def convert_team_names(df, team_col, mode):
+    """
+    Converts team names between abbreviated and full formats in a DataFrame.
+
+    Parameters:
+        df (pandas.DataFrame): DataFrame containing a column with team names.
+        team_col (str): The name of the column containing team names to convert.
+        mode (str): Conversion direction. Options: "long" (abbreviated to full
+            name) or "short" (full name to abbreviated).
+
+    Functionality:
+        - Maps NPB team abbreviations to their full official names.
+        - Includes legacy and farm team names in the conversion dictionary.
+        - Modifies the specified column in place based on the mode.
+
+    Returns:
+        None
+    """
+    team_dict = {
+        "Hanshin": "Hanshin Tigers",
+        "Chunichi": "Chunichi Dragons",
+        "DeNA": "DeNA BayStars",
+        "Yokohama": "Yokohama BayStars",
+        "Hiroshima": "Hiroshima Carp",
+        "Yakult": "Yakult Swallows",
+        "Yomiuri": "Yomiuri Giants",
+        "Lotte": "Lotte Marines",
+        "Nipponham": "Nipponham Fighters",
+        "ORIX": "ORIX Buffaloes",
+        "Rakuten": "Rakuten Eagles",
+        "Seibu": "Seibu Lions",
+        "SoftBank": "SoftBank Hawks",
+        "HAYATE": "HAYATE Ventures",
+        "Oisix": "Oisix Albirex",
+        "Kintetsu": "Kintetsu Buffaloes",
+        "Daiei": "Daiei Hawks",
+        "Taiyo": "Taiyo Whales",
+        "Hankyu": "Hankyu Braves",
+        "BlueWave": "ORIX BlueWave",
+        }
+
+    # Shorten/abbreviate teams
+    if mode == "long":
+        df[team_col] = df[team_col].replace(team_dict)
+    # Lengthen teams
+    elif mode == "short":
+        df[team_col] = df[team_col].replace({v: k for k, v in team_dict.items()})
+
 
 def create_pa_filter(df, mode=None):
     """
@@ -1432,7 +1480,7 @@ def get_column_config(suffix=None):
         column_config = {
             "Pitcher": st.column_config.TextColumn(pinned=True),
             "Team": st.column_config.TextColumn(
-                width=140,
+                width=85,
                 alignment="left",
             ),
             "Year": st.column_config.TextColumn(
@@ -1635,7 +1683,7 @@ def get_column_config(suffix=None):
         column_config = {
             "Player": st.column_config.TextColumn(pinned=True),
             "Team": st.column_config.TextColumn(
-                width=140,
+                width=85,
                 alignment="left",
             ),
             "Year": st.column_config.TextColumn(

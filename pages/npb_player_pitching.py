@@ -88,6 +88,9 @@ def main():
         "Z-Con%",
     ]
 
+    # Shorten team names before displaying
+    hp.convert_team_names(display_df, "Team", "short")
+
     # Display stats
     st.dataframe(
         display_df[user_cols]
