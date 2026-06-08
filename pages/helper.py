@@ -263,10 +263,7 @@ def display_player_percentile(df, name, team, year, suffix):
         subtitle_str1 = team + " · " + year
     if suffix in ("BF", "BR"):
         subtitle_str2 = (
-            df[(df[name_col] == name) & (df["Team"] == team)]["PA"].astype(str)
-            + " PA"
-            + " · "
-            + df[(df[name_col] == name) & (df["Team"] == team)]["Pos"].astype(str)
+            df[(df[name_col] == name) & (df["Team"] == team)]["Pos"].astype(str)
             + " · Age "
             + age
             + " · Bats "
@@ -274,10 +271,7 @@ def display_player_percentile(df, name, team, year, suffix):
         )
     elif suffix in ("PF", "PR"):
         subtitle_str2 = (
-            df[(df[name_col] == name) & (df["Team"] == team)]["IP"].astype(str)
-            + " IP"
-            + " · "
-            + "Age "
+            "Age "
             + age
             + " · Throws "
             + df[(df[name_col] == name) & (df["Team"] == team)]["T"].astype(str)
@@ -296,6 +290,7 @@ def display_player_percentile(df, name, team, year, suffix):
         subtitleColor="grey",
         subtitleFontSize=13.5,
     )
+
     # Create base bar graph that charts the data
     chart = (
         alt.Chart(chart_data)
@@ -369,7 +364,7 @@ def display_player_percentile(df, name, team, year, suffix):
         )
     )
 
-    # Combine all layers
+    # Combine base layers
     chart = alt.layer(chart, circle_layer, percentile_layer, raw_stat_layer)
 
     # Configure the chart
@@ -385,6 +380,75 @@ def display_player_percentile(df, name, team, year, suffix):
         on_select="ignore",
         selection_mode=None,
     )
+
+    # Add metrics below chart
+    if suffix in ("BR", "BF"):
+        value_text_df = pd.DataFrame(
+            {
+                "PA": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["PA"].values[0]
+                ],
+                "HR": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["HR"].values[0]
+                ],
+                "RBI": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["RBI"].values[0]
+                ],
+                "AVG": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["AVG"].values[0]
+                ],
+                "OBP": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["OBP"].values[0]
+                ],
+                "SLG": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["SLG"].values[0]
+                ],
+                "OPS": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["OPS"].values[0]
+                ],
+            }
+        )
+        # Set trailing zeroes for select stats
+        value_text_df = value_text_df.style.format(
+            {
+                "AVG": "{:.3f}",
+                "OBP": "{:.3f}",
+                "SLG": "{:.3f}",
+                "OPS": "{:.3f}",
+            }
+        )
+        st.table(value_text_df, border="horizontal")
+    elif suffix in ("PR", "PF"):
+        value_text_df = pd.DataFrame(
+            {
+                "G": [df[(df[name_col] == name) & (df["Team"] == team)]["G"].values[0]],
+                "IP": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["IP"].values[0]
+                ],
+                "SO": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["SO"].values[0]
+                ],
+                "ERA": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["ERA"].values[0]
+                ],
+                "W": [df[(df[name_col] == name) & (df["Team"] == team)]["W"].values[0]],
+                "L": [df[(df[name_col] == name) & (df["Team"] == team)]["L"].values[0]],
+                "SV": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["SV"].values[0]
+                ],
+                "HLD": [
+                    df[(df[name_col] == name) & (df["Team"] == team)]["HLD"].values[0]
+                ],
+            }
+        )
+        # Set trailing zeroes for select stats
+        value_text_df = value_text_df.style.format(
+            {
+                "IP": "{:.1f}",
+                "ERA": "{:.2f}",
+            }
+        )
+        st.table(value_text_df, border="horizontal")
 
 
 def create_sort_filter(cols, mode):
