@@ -178,6 +178,18 @@ def generate_player_batting_plots(original_df, display_df, user_year):
         "Rakuten Eagles": "#b63a52",
         "Seibu Lions": "#6b7fcf",
         "Nipponham Fighters": "#4f8cb2",
+        "Hanshin": "#ffe200",
+        "Hiroshima": "#f9271a",
+        "DeNA": "#9b8cf2",
+        "Yomiuri": "#f69822",
+        "Yakult": "#4dba84",
+        "Chunichi": "#4a68c2",
+        "ORIX": "#bbaa31",
+        "Lotte": "#9a9a9a",
+        "SoftBank": "#fcc800",
+        "Rakuten": "#b63a52",
+        "Seibu": "#6b7fcf",
+        "Nipponham": "#4f8cb2",
     }
 
     with tab1:
