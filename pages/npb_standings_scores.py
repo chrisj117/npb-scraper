@@ -21,8 +21,14 @@ def main():
     central_df = hp.load_csv(
         st.secrets[str(datetime.now().year) + "StandingsFinalC_npb_link"]
     )
+    styler_central = central_df.style
+    styler_central.apply(hp.color_by_team, axis=0)
+    styler_central = styler_central.set_properties(
+        subset=["Team"],
+        **{"font-weight": "bold"}
+    )
     st.dataframe(
-        central_df.style.apply(hp.color_by_team, axis=0),
+        styler_central,
         width="stretch",
         hide_index=True,
         row_height=25,
@@ -33,8 +39,14 @@ def main():
     pacific_df = hp.load_csv(
         st.secrets[str(datetime.now().year) + "StandingsFinalP_npb_link"]
     )
+    styler_pacific = pacific_df.style
+    styler_pacific.apply(hp.color_by_team, axis=0)
+    styler_pacific = styler_pacific.set_properties(
+        subset=["Team"],
+        **{"font-weight": "bold"}
+    )
     st.dataframe(
-        pacific_df.style.apply(hp.color_by_team, axis=0),
+        styler_pacific,
         width="stretch",
         hide_index=True,
         row_height=25,

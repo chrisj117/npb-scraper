@@ -47,10 +47,15 @@ def main():
         "TZR",
     ]
     invert_pct_cols = ["L", "FIP-"]
+    styler = display_df.style
+    styler.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
+    styler.apply(hp.color_by_team, axis=0)
+    styler = styler.set_properties(
+        subset=["Team"],
+        **{"font-weight": "bold"}
+    )
     st.dataframe(
-        display_df.style.apply(
-            hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols)
-        ).apply(hp.color_by_team, axis=0),
+        styler,
         width="stretch",
         hide_index=True,
         row_height=25,

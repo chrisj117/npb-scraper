@@ -61,8 +61,18 @@ def main():
             else:
                 config = ""
 
+            styler = table.style
+            styler.apply(hp.color_by_team, axis=0)
+            if "Player" in table.columns:
+                bolded=["Player", "Team"]
+            else:
+                bolded=["Pitcher", "Team"]
+            styler = styler.set_properties(
+                subset=bolded,
+                **{"font-weight": "bold"}
+            )
             chosen_col.dataframe(
-                table.style.apply(hp.color_by_team, axis=0),
+                styler,
                 width="stretch",
                 hide_index=False,
                 row_height=25,

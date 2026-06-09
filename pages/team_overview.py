@@ -153,10 +153,14 @@ def create_lineup(team, user_year, advanced_view):
 
     # Display data
     st.write("Lineup")
+    styler = lineup_df.style
+    styler.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
+    styler = styler.set_properties(
+        subset=["Player"],
+        **{"font-weight": "bold"}
+    )
     st.dataframe(
-        lineup_df.style.apply(
-            hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols)
-        ),
+        styler,
         width="stretch",
         hide_index=True,
         row_height=25,
@@ -269,10 +273,14 @@ def create_rotation_bullpen(team, user_year, advanced_view):
     invert_pct_cols = ["ERA", "FIP-", "BB%"]
 
     st.write("Rotation")
+    styler_sp = sp_df.style
+    styler_sp.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
+    styler_sp = styler_sp.set_properties(
+        subset=["Pitcher"],
+        **{"font-weight": "bold"}
+    )
     st.dataframe(
-        sp_df.style.apply(
-            hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols)
-        ),
+        styler_sp,
         width="stretch",
         hide_index=True,
         row_height=25,
@@ -280,10 +288,14 @@ def create_rotation_bullpen(team, user_year, advanced_view):
     )
 
     st.write("Bullpen")
+    styler_bp = bp_df.style
+    styler_bp.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
+    styler_bp = styler_bp.set_properties(
+        subset=["Pitcher"],
+        **{"font-weight": "bold"}
+    )
     st.dataframe(
-        bp_df.style.apply(
-            hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols)
-        ),
+        styler_bp,
         width="stretch",
         hide_index=True,
         row_height=25,

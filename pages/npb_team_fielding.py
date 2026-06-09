@@ -63,10 +63,15 @@ def main():
     invert_pct_cols = []
 
     # Display dataframe
+    styler = display_df[user_cols].style
+    styler.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
+    styler.apply(hp.color_by_team, axis=0)
+    styler = styler.set_properties(
+        subset=["Team"],
+        **{"font-weight": "bold"}
+    )
     st.dataframe(
-        display_df[user_cols]
-        .style.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
-        .apply(hp.color_by_team, axis=0),
+        styler,
         width="stretch",
         row_height=25,
         hide_index=False,
