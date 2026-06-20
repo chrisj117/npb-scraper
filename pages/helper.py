@@ -125,8 +125,8 @@ def display_player_percentile(df, name, team, year, suffix):
             "K-BB%",
             "BB%",
             "K%",
-            "HR/FB",
             "HR%",
+            "HR/FB",
             "WHIP",
             "FIP-",
             "ERA+",
@@ -190,7 +190,14 @@ def display_player_percentile(df, name, team, year, suffix):
     # Get player's age
     age = df[(df[name_col] == name) & (df["Team"] == team)]["Age"].astype(str)
     # Save raw numbers
-    raw_data = df[(df[name_col] == name) & (df["Team"] == team)][plot_cols].T
+    raw_data = convert_pct_cols_to_float(
+        df[(df[name_col] == name) & (df["Team"] == team)][plot_cols]
+    )
+    if suffix == "P":
+        raw_data = format_cols_as_strs(raw_data, "player_pitch")
+    else:
+        raw_data = format_cols_as_strs(raw_data)
+    raw_data = raw_data.T
     raw_data = raw_data.reset_index()
     raw_data.columns = ["Stat", "Value"]
     raw_data = raw_data.iloc[::-1]
@@ -220,7 +227,7 @@ def display_player_percentile(df, name, team, year, suffix):
         # Convert to whole numbers for display on bar
         df[col] = df[col].astype("int")
 
-    # Generate percentile graphs for desired player
+    # Generate percentile df for desired player
     chart_data = df[(df[name_col] == name) & (df["Team"] == team)][plot_cols].T
     chart_data = chart_data.reset_index()
     chart_data.columns = ["Stats", "Percentile Rank"]
@@ -629,15 +636,7 @@ def create_sort_filter(cols, mode):
             "PCT": "desc",
             "Team": None,
         }
-        try:
-            # Set index of default sort column for individual stat pages
-            if "Inn" in cols:
-                default_sort_col_index = cols.index("Inn")
-            # Set index of default sort column for team stat pages
-            else:
-                default_sort_col_index = cols.index("TZR")
-        except:
-            default_sort_col_index = 0
+        default_sort_col_index = cols.index("PCT")
     else:
         default_sort = {
             "Team": None,
@@ -962,6 +961,7 @@ def create_team_filter(mode=None, team_col=None, key=None):
         team = [team_dict[k] for k in team]
     return team
 
+
 def convert_team_names(df, team_col, mode):
     """
     Converts team names between abbreviated and full formats in a DataFrame.
@@ -1001,7 +1001,7 @@ def convert_team_names(df, team_col, mode):
         "Taiyo": "Taiyo Whales",
         "Hankyu": "Hankyu Braves",
         "BlueWave": "ORIX BlueWave",
-        }
+    }
 
     # Shorten/abbreviate teams
     if mode == "long":
@@ -1239,6 +1239,154 @@ def convert_pct_cols_to_float(df):
         if df[col].astype(str).str.contains("%").any():
             df[col] = df[col].str.rstrip("%").astype("float")
     return df
+
+
+def format_cols_as_strs(df, mode=None):
+    """
+    Formats DataFrame columns as strings with appropriate display formatting.
+    This is mainly for Altair chart text displaying raw stats. Use after running
+    calculations using the numeric representation.
+
+    Parameters:
+        df (pandas.DataFrame): DataFrame with columns to format.
+        mode (str, optional): Determines what format to use with stats that share
+            names. Options: "player_pitch", "team_pitch", "standings", or None.
+
+    Functionality:
+        - Applies custom format strings to statistic columns based on type.
+        - Handles both regular stats and percentage stats (rescaling percentages).
+        - For specific modes, adds additional format mappings (e.g., "Diff", "kwERA-").
+
+    Returns:
+        pandas.DataFrame: The DataFrame with formatted string values.
+    """
+    # This dict and the updates below should contain stats that require specific formats
+    format_maps = {
+        "OBP": "{:.3f}",
+        "PA": "{:.0f}",
+        "AB": "{:.0f}",
+        "2B": "{:.0f}",
+        "3B": "{:.0f}",
+        "TB": "{:.0f}",
+        "RBI": "{:.0f}",
+        "SB": "{:.0f}",
+        "CS": "{:.0f}",
+        "SH": "{:.0f}",
+        "SF": "{:.0f}",
+        "HP": "{:.0f}",
+        "GDP": "{:.0f}",
+        "HR": "{:.0f}",
+        "BB": "{:.0f}",
+        "IBB": "{:.0f}",
+        "R": "{:.0f}",
+        "W": "{:.0f}",
+        "L": "{:.0f}",
+        "SV": "{:.0f}",
+        "CG": "{:.0f}",
+        "SHO": "{:.0f}",
+        "BF": "{:.0f}",
+        "H": "{:.0f}",
+        "SO": "{:.0f}",
+        "HB": "{:.0f}",
+        "WP": "{:.0f}",
+        "ER": "{:.0f}",
+        "GB%": "{:.1%}",
+        "HLD": "{:.0f}",
+        "FB Velo": "{:.1f}",
+        "XPCT": "{:.3f}",
+        "RS": "{:.0f}",
+        "RA": "{:.0f}",
+        "TZR": "{:.1f}",
+        "TZR/143": "{:.1f}",
+        "RngR": "{:.1f}",
+        "ARM": "{:.1f}",
+        "Arm": "{:.1f}",
+        "DPR": "{:.1f}",
+        "ErrR": "{:.1f}",
+        "Framing": "{:.1f}",
+        "Blocking": "{:.1f}",
+        "PCT": "{:.3f}",
+        "OPS+": "{:.0f}",
+        "AVG": "{:.3f}",
+        "SLG": "{:.3f}",
+        "OPS": "{:.3f}",
+        "ISO": "{:.3f}",
+        "BABIP": "{:.3f}",
+        "BB/K": "{:.2f}",
+        "PullAIR%": "{:.1%}",
+        "Chase%": "{:.1%}",
+        "Swing%": "{:.1%}",
+        "sSeager": "{:.1f}",
+        "HR/FB": "{:.1%}",
+        "TTO%": "{:.1%}",
+        "wSB": "{:.1f}",
+        "BB%": "{:.1%}",
+        "K%": "{:.1%}",
+        "K-BB%": "{:.1%}",
+        "HR%": "{:.1%}",
+        "FIP": "{:.2f}",
+        "WHIP": "{:.2f}",
+        "kwERA": "{:.2f}",
+        "ERA": "{:.2f}",
+        "ERA+": "{:.0f}",
+        "FIP-": "{:.0f}",
+        "Z-Con%": "{:.1%}",
+        "Sec%": "{:.1%}",
+        "SwStr%": "{:.1%}",
+        "CSW%": "{:.1%}",
+        "Total Zone Runs": "{:.1f}",
+        "Steal Tendency": "{:.1f}",
+        "Bunt Tendency": "{:.1f}",
+        "Def Value": "{:.1f}",
+        "Range": "{:.1f}",
+    }
+    if mode == "player_pitch":
+        new_format_maps = {
+            "kwERA-": "{:.0f}",
+            "Diff": "{:.2f}",
+        }
+        format_maps.update(new_format_maps)
+    elif mode == "team_pitch":
+        new_format_maps = {
+            "kwERA-": "{:.1f}",
+            "Diff": "{:.2f}",
+        }
+        format_maps.update(new_format_maps)
+    elif mode == "standings":
+        new_format_maps = {
+            "Diff": "{:.0f}",
+        }
+        format_maps.update(new_format_maps)
+
+    for key, value in format_maps.items():
+        if key in df.columns.to_list():
+            df[key] = pd.to_numeric(df[key], errors="coerce")
+            # Rescale percentage stats
+            if "%" in key or key == "HR/FB":
+                df[key] = df[key] / 100
+            df[key] = df[key].apply(value.format)
+    return df
+
+
+def ordinal(n):
+    """
+    Converts an integer to its ordinal string representation.
+
+    Applies standard English ordinal suffixes (st, nd, rd, th) to the input
+    integer, with special handling for the teen numbers 11-13 which always
+    use the 'th' suffix.
+
+    Parameters:
+        n (int): The integer to convert to an ordinal string.
+
+    Returns:
+        str: The ordinal string representation of the input integer
+            (e.g., 1 -> '1st', 2 -> '2nd', 11 -> '11th').
+    """
+    if 10 <= n % 100 <= 20:
+        return f"{n}th"
+    suffixes = {1: "st", 2: "nd", 3: "rd"}
+    return f"{n}{suffixes.get(n % 10, 'th')}"
 
 
 def create_year_filter():

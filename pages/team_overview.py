@@ -1,9 +1,9 @@
 """Displays top players, lineup, rotation, and bullpen data with Streamlit"""
 
+import altair as alt
 import streamlit as st
 import pandas as pd
 import pages.helper as hp
-
 
 def main():
     """
@@ -14,12 +14,14 @@ def main():
     reserve batters, starting rotation, bullpen, and team statistics.
 
     Functions called:
-        - create_top_pos_players(cumulative_df, pos_map): Shows the team's top 5 position players by WAR.
-        - create_lineup(cumulative_df, pos_map, advanced_view): Shows the team's starting lineup and reserve batters.
-        - create_top_pitchers(pitch_df): Shows the team's top 5 pitchers by WAR.
+        - create_top_pos_players(cumulative_df): Shows the team's top 10 position players by IMPACT metric.
+        - create_lineup(cumulative_df, advanced_view): Shows the team's starting lineup and reserve batters.
+        - create_bench(cumulative_df, advanced_view): Shows the team's bench/reserve batters.
+        - create_top_pitchers(pitch_df): Shows the team's top 10 pitchers by IMPACT metric.
         - create_rotation(pitch_df, advanced_view): Shows the team's starting rotation.
         - create_bullpen(pitch_df, advanced_view): Shows the team's bullpen.
-        - create_team_stats(team, year): Shows team batting and pitching stats compared to League Average.
+        - create_team_bat_stats(team_bat_df, team_field_df, user_team, user_year): Shows team batting stats compared to League Average.
+        - create_team_pitch_stats(team_pitch_df, user_team, user_year): Shows team pitching stats compared to League Average.
 
     Returns:
         None
@@ -29,20 +31,26 @@ def main():
     # User selections
     user_year = hp.create_year_filter()
     user_team = hp.create_team_filter(mode="overview")
-    advanced_view = st.toggle("Advanced Stats")
+    advanced_view = st.toggle("Player Table Advanced Stats")
 
     bat_df = hp.load_csv(st.secrets[user_year + "StatsFinalBR_link"])
     field_df = hp.load_csv(st.secrets[user_year + "FieldingFinalR_link"])
     pitch_df = hp.load_csv(st.secrets[user_year + "StatsFinalPR_link"])
     team_bat_df = hp.load_csv(st.secrets[user_year + "TeamBR_link"])
+    team_field_df = hp.load_csv(st.secrets[user_year + "TeamFieldingFinalR_link"])
     team_pitch_df = hp.load_csv(st.secrets[user_year + "TeamPR_link"])
+    if int(user_year) >= 2026:
+        central_df = hp.load_csv(st.secrets[user_year + "StandingsFinalC_npb_link"])
+        pacific_df = hp.load_csv(st.secrets[user_year + "StandingsFinalP_npb_link"])
+    else:
+        central_df = hp.load_csv(st.secrets[user_year + "StandingsFinalC_link"])
+        pacific_df = hp.load_csv(st.secrets[user_year + "StandingsFinalP_link"])
 
     # Check min league avg PA and IP for appropriate sample sizes before continuing
     if (
         team_bat_df.loc[team_bat_df["Team"] == "League Average", "PA"].iloc[0] < 900
     ) or (
-        team_pitch_df.loc[team_pitch_df["Team"] == "League Average", "IP"].iloc[0]
-        < 225
+        team_pitch_df.loc[team_pitch_df["Team"] == "League Average", "IP"].iloc[0] < 225
     ):
         st.warning(
             "League average minimum IP or PA is not met. This year's team overview "
@@ -50,6 +58,8 @@ def main():
             "check back later!"
         )
         st.stop()
+
+    create_team_header(central_df, pacific_df, user_team)
 
     # Aggregate all of a player's fielding into 1 row
     field_df = field_df.groupby(["Player", "Team"], as_index=False).agg(
@@ -82,6 +92,10 @@ def main():
     )
     pitch_df = pitch_df.drop(pitch_df[pitch_df.Team != user_team].index)
     cumulative_df = hp.convert_pct_cols_to_float(cumulative_df)
+    pitch_df = hp.convert_pct_cols_to_float(pitch_df)
+    team_field_df = hp.convert_pct_cols_to_float(team_field_df)
+    team_bat_df = hp.convert_pct_cols_to_float(team_bat_df)
+    team_pitch_df = hp.convert_pct_cols_to_float(team_pitch_df)
 
     # Convert Tablepress number position representation to abbreviations
     pos_map = {
@@ -105,23 +119,22 @@ def main():
     with c1:
         create_top_pos_players(cumulative_df)
         create_lineup(cumulative_df, advanced_view)
+        create_bench(cumulative_df, advanced_view)
+        create_team_bat_stats(team_bat_df, team_field_df, user_team, user_year)
     with c2:
         create_top_pitchers(pitch_df)
         create_rotation(pitch_df, advanced_view)
         create_bullpen(pitch_df, advanced_view)
-    create_team_stats(team_bat_df, team_pitch_df, user_team)
+        create_team_pitch_stats(team_pitch_df, user_team, user_year)
 
 
 def create_lineup(cumulative_df, advanced_view):
     """
-    Displays the projected starting lineup and reserve batters for the selected
-    team.
+    Displays the projected starting lineup for the selected team.
 
     Uses the cumulative batting and fielding dataframe to identify the highest-inning
-    player at each position, excluding UTL and DH for CL teams. Selects the four
-    highest-PA players not already in the starting lineup as reserves. Formats
-    the lineup and reserve tables for display, optionally including advanced
-    statistics.
+    player at each position, excluding UTL and DH for CL teams. Formats the lineup
+    table for display, optionally including advanced statistics.
 
     Parameters:
         cumulative_df (DataFrame): Merged batting and fielding data for the selected team.
@@ -134,22 +147,13 @@ def create_lineup(cumulative_df, advanced_view):
     # Find top players in each position (minus UTL and 1)
     if "CL" in cumulative_df["League"].values:
         # CL league does not have DH players
-        filter_pos_rows = ["UTL", "RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
+        filter_pos_rows = ["RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
     else:
-        filter_pos_rows = ["UTL", "DH", "RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
+        filter_pos_rows = ["DH", "RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
     for pos in filter_pos_rows:
         pos_df = cumulative_df.drop(cumulative_df[cumulative_df.Pos != pos].index)
         starter = pos_df[pos_df["Inn"] == pos_df["Inn"].max()]
         lineup_df = pd.concat([starter, lineup_df])
-
-    # Reserves = top 4 guys with most PA but not in top 9
-    starter_list = lineup_df["Player"].tolist()
-    reserve = (
-        cumulative_df[~cumulative_df["Player"].isin(starter_list)]
-        .sort_values("PA", ascending=False)
-        .head(4)
-    )
-    lineup_df = pd.concat([lineup_df, reserve])
 
     # Column reordering
     chosen_lineup_cols = [
@@ -180,7 +184,6 @@ def create_lineup(cumulative_df, advanced_view):
             "AVG",
         ]
     lineup_df = lineup_df[chosen_lineup_cols]
-    lineup_df = hp.convert_pct_cols_to_float(lineup_df)
 
     # Declare columns to be colored percentiles
     pct_cols = [
@@ -196,8 +199,103 @@ def create_lineup(cumulative_df, advanced_view):
     invert_pct_cols = ["K%"]
 
     # Display data
-    st.write("Lineup")
+    st.write("***Lineup***")
     styler = lineup_df.style
+    styler.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
+    styler = styler.set_properties(subset=["Player"], **{"font-weight": "bold"})
+    st.dataframe(
+        styler,
+        width="stretch",
+        hide_index=True,
+        row_height=25,
+        column_config=hp.get_column_config("BR"),
+    )
+
+
+def create_bench(cumulative_df, advanced_view):
+    """
+    Displays the bench/reserve batters for the selected team.
+
+    Identifies the highest-inning player at each position to determine the starting
+    lineup, then selects the top reserve players by PA not already in the starting
+    lineup. Adjusts the number of reserves based on league (6 for CL, 5 for others)
+    due to DH rules. Formats and displays the bench table in Streamlit.
+
+    Parameters:
+        cumulative_df (DataFrame): Merged batting and fielding data for the selected team.
+        advanced_view (bool): Whether to display advanced statistics columns.
+
+    Returns:
+        None
+    """
+    lineup_df = pd.DataFrame()
+    # Find top players in each position (minus UTL and 1)
+    if "CL" in cumulative_df["League"].values:
+        # CL league does not have DH players
+        filter_pos_rows = ["RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
+        bench_num = 6
+    else:
+        filter_pos_rows = ["DH", "RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
+        bench_num = 5
+    for pos in filter_pos_rows:
+        pos_df = cumulative_df.drop(cumulative_df[cumulative_df.Pos != pos].index)
+        starter = pos_df[pos_df["Inn"] == pos_df["Inn"].max()]
+        lineup_df = pd.concat([starter, lineup_df])
+
+    # Reserves = top 4 guys with most PA but not in top 9
+    starter_list = lineup_df["Player"].tolist()
+    bench_df = (
+        cumulative_df[~cumulative_df["Player"].isin(starter_list)]
+        .sort_values("PA", ascending=False)
+        .head(bench_num)
+    )
+
+    # Column reordering
+    chosen_bench_cols = [
+        "Pos",
+        "Player",
+        "Age",
+        "B",
+        "PA",
+    ]
+    if advanced_view:
+        chosen_bench_cols = chosen_bench_cols + [
+            "OBP",
+            "SLG",
+            "ISO",
+            "K%",
+            "BB%",
+            "sSeager",
+            "OPS+",
+        ]
+    else:
+        chosen_bench_cols = chosen_bench_cols + [
+            "H",
+            "HR",
+            "RBI",
+            "SB",
+            "SO",
+            "BB",
+            "AVG",
+        ]
+    bench_df = bench_df[chosen_bench_cols]
+
+    # Declare columns to be colored percentiles
+    pct_cols = [
+        "OBP",
+        "SLG",
+        "ISO",
+        "BB%",
+        "sSeager",
+        "OPS+",
+        "AVG",
+        "PA",
+    ]
+    invert_pct_cols = ["K%"]
+
+    # Display data
+    st.write("***Bench***")
+    styler = bench_df.style
     styler.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
     styler = styler.set_properties(subset=["Player"], **{"font-weight": "bold"})
     st.dataframe(
@@ -211,11 +309,11 @@ def create_lineup(cumulative_df, advanced_view):
 
 def create_top_pos_players(cumulative_df):
     """
-    Displays the top 5 position players by an approximation of WAR for the selected team.
+    Displays the top 10 position players by an approximation of WAR for the selected team.
 
     Calculates a WAR metric based on OPS+, wSB, defensive metrics (TZR, Pos Adj,
     Framing, Blocking), and playing time (PA). Sorts players by WAR, ranks the
-    top five, assigns player archetypes from offensive, baserunning, and defensive
+    top ten, assigns player archetypes from offensive, baserunning, and defensive
     thresholds, and displays the results in a Streamlit table.
 
     Parameters:
@@ -274,8 +372,10 @@ def create_top_pos_players(cumulative_df):
     # Declare visible columns in top pos player table
     top_pos_player_df = top_pos_player_df[["Player", "Pos", "Age", "Archetype"]]
 
-    with st.expander("Top Position Players"):
-        st.write("Players are ranked using a simplified value metric that measures impact through park-adjusted offensive production, base stealing efficiency, defense, positional difficulty, catcher framing and blocking, and playing time, with a small multiplier that rewards strong batting performance.")
+    with st.expander("***Top Position Players***"):
+        st.write(
+            "Players are ranked using a simplified value metric that measures impact through park-adjusted offensive production, base stealing efficiency, defense, positional difficulty, catcher framing and blocking, and playing time, with a small multiplier that rewards strong batting performance."
+        )
         st.write(":yellow-badge[All-Rounder ⭐]")
         st.write(
             "A star position player with an OPS+ above 130, a K% below 20.0%, and a TZR/143 above 5.0."
@@ -311,10 +411,10 @@ def create_top_pos_players(cumulative_df):
 
 def create_top_pitchers(pitch_df):
     """
-    Displays the top 5 pitchers by an approximation of WAR for the selected team.
+    Displays the top 10 pitchers by an approximation of WAR for the selected team.
 
     Calculates a WAR metric based on innings pitched and earned runs, sorts
-    pitchers by WAR, and ranks the top five. Converts inning totals to display
+    pitchers by WAR, and ranks the top ten. Converts inning totals to display
     format, derives pitcher position labels, assigns player archetypes from
     performance and role thresholds, and displays the results in a Streamlit
     table.
@@ -331,7 +431,6 @@ def create_top_pitchers(pitch_df):
         1 + ((100 - pitch_df["kwERA-"]) / 100)
     )
     top_pitcher_df = pitch_df.sort_values(by="IMPACT", ascending=False).head(10)
-    top_pitcher_df = hp.convert_pct_cols_to_float(top_pitcher_df)
     top_pitcher_df["Pos"] = top_pitcher_df["T"] + "HP"
 
     # Create archetypes for players
@@ -371,8 +470,10 @@ def create_top_pitchers(pitch_df):
         ]
     ]
 
-    with st.expander("Top Pitchers"):
-        st.write("Pitchers are ranked using a simplified value metric that measures impact through innings pitched and earned-run prevention, with a small multiplier that rewards strong strikeout-to-walk ratios.")
+    with st.expander("***Top Pitchers***"):
+        st.write(
+            "Pitchers are ranked using a simplified value metric that measures impact through innings pitched and earned-run prevention, with a small multiplier that rewards strong strikeout-to-walk ratios."
+        )
         st.write(":yellow-badge[Ace ♠️]")
         st.write(
             "A frontline starter with an ERA+ above 120, a K-BB% above 15.0%, and more than 6.0 innings per game."
@@ -423,7 +524,9 @@ def create_rotation(pitch_df, advanced_view):
     # Rotation (starting pitchers)
     pitch_df["HLDSV"] = pitch_df["HLD"] + pitch_df["SV"]
     sp_df = pitch_df.drop(pitch_df[pitch_df.HLDSV >= 7].index)
+    pitch_df["IP"] = hp.convert_ip_column_in(pitch_df, "IP")
     sp_df["GIP"] = sp_df["G"] / sp_df["IP"]
+    pitch_df["IP"] = hp.convert_ip_column_out(pitch_df, "IP")
     sp_df = sp_df.drop(sp_df[sp_df.GIP > 0.66].index)
     sp_df = sp_df.sort_values("IP", ascending=False).head(7)
 
@@ -456,13 +559,12 @@ def create_rotation(pitch_df, advanced_view):
     else:
         chosen_sp_cols = chosen_sp_cols + ["W", "CG", "HR", "SO", "BB", "WHIP", "ERA"]
     sp_df = sp_df[chosen_sp_cols]
-    sp_df = hp.convert_pct_cols_to_float(sp_df)
 
     # Declare columns to be colored percentiles
     pct_cols = ["IP", "FB Velo", "CSW%", "GB%", "K%", "FIP-", "ERA+"]
     invert_pct_cols = ["ERA", "FIP-", "BB%"]
 
-    st.write("Rotation")
+    st.write("***Rotation***")
     styler_sp = sp_df.style
     styler_sp.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
     styler_sp = styler_sp.set_properties(subset=["Pitcher"], **{"font-weight": "bold"})
@@ -527,13 +629,12 @@ def create_bullpen(pitch_df, advanced_view):
     else:
         chosen_bp_cols = chosen_bp_cols + ["SV", "HLD", "HR", "SO", "BB", "WHIP", "ERA"]
     bp_df = bp_df[chosen_bp_cols]
-    bp_df = hp.convert_pct_cols_to_float(bp_df)
 
     # Declare columns to be colored percentiles
     pct_cols = ["IP", "FB Velo", "CSW%", "GB%", "K%", "FIP-", "ERA+"]
     invert_pct_cols = ["ERA", "FIP-", "BB%"]
 
-    st.write("Bullpen")
+    st.write("***Bullpen***")
     styler_bp = bp_df.style
     styler_bp.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
     styler_bp = styler_bp.set_properties(subset=["Pitcher"], **{"font-weight": "bold"})
@@ -546,59 +647,321 @@ def create_bullpen(pitch_df, advanced_view):
     )
 
 
-def create_team_stats(team_bat_df, team_pitch_df, team):
+def create_team_bat_stats(team_bat_df, team_field_df, team, year):
     """
-    Displays team batting and pitching stats compared to League Average.
+    Displays team batting stats compared to League Average.
 
-    Filters for the specified team and League Average rows from the team-level
-    batting and pitching dataframes, then displays both sets of stats in Streamlit
-    dataframes for comparison.
+    Filters for the specified team from the team-level batting dataframe, calculates
+    ranks for various batting metrics, and displays them in an Altair bar chart with
+    raw statistics shown as text labels. Higher ranks (closer to 1) indicate better
+    performance, shown with blue bars; lower ranks shown with red bars.
 
     Parameters:
         team_bat_df (DataFrame): Team batting stats data for all teams.
-        team_pitch_df (DataFrame): Team pitching stats data for all teams.
+        team_field_df (DataFrame): Team fielding stats data for all teams.
         team (str): The name of the team to display stats for.
+        year (str): The year of the season data.
 
     Returns:
         None
     """
-    # Get only filtered team + League Average
-    team_bat = team_bat_df.drop(team_bat_df[team_bat_df.Team != team].index)
-    lg_avg: pd.DataFrame = team_bat_df.drop(
-        team_bat_df[team_bat_df.Team != "League Average"].index
+    # Drop league averages before calculating ranks/normalizing
+    team_bat_df = team_bat_df.drop(
+        team_bat_df[team_bat_df.Team == "League Average"].index
     )
-    bat_final_df = pd.concat([team_bat, lg_avg]).reset_index(drop=True)
-    # Filter batting stats
-    bat_final_df = bat_final_df[["Team", "HR", "SB", "K%", "BB%", "AVG", "ISO", "OPS+"]]
-    bat_final_df = hp.convert_pct_cols_to_float(bat_final_df)
-    bat_final_df = bat_final_df.astype(str)
+    team_field_df = team_field_df.drop(
+        team_field_df[team_field_df.Team == "League Average"].index
+    )
 
-    team_pitch = team_pitch_df.drop(team_pitch_df[team_pitch_df.Team != team].index)
-    lg_avg = team_pitch_df.drop(
-        team_pitch_df[team_pitch_df.Team != "League Average"].index
+    # Calculate 1B and use it to normalize batting stats
+    team_bat_df["1B"] = (
+        team_bat_df["H"] - team_bat_df["HR"] - team_bat_df["3B"] - team_bat_df["2B"]
     )
-    pitch_final_df = pd.concat([team_pitch, lg_avg]).reset_index(drop=True)
-    # Filter pitch stats
-    pitch_final_df = pitch_final_df[
-        ["Team", "W", "CG", "K%", "BB%", "ERA", "FIP-", "ERA+"]
+    team_bat_df["Bunt Tendency"] = (
+        team_bat_df["SH"]
+        / (team_bat_df["1B"] + team_bat_df["BB"] + team_bat_df["HP"])
+        * 100
+    )
+    team_bat_df["Steal Tendency"] = (
+        (team_bat_df["SB"] + team_bat_df["CS"])
+        / (team_bat_df["1B"] + team_bat_df["BB"] + team_bat_df["HP"])
+        * 100
+    )
+
+    team_cumulative_df = pd.merge(team_bat_df, team_field_df, on=["Team", "League"])
+    team_cumulative_df["Total Zone Runs"] = team_cumulative_df["TZR"]
+
+    # Determine type of stats to rank and order (top to bottom) in chart
+    rank_cols = [
+        "OPS+",
+        "ISO",
+        "HR",
+        "SB",
+        "K%",
+        "BB%",
+        "BB/K",
+        "Chase%",
+        "Swing%",
+        "SwStr%",
+        "Steal Tendency",
+        "Bunt Tendency",
+        "Total Zone Runs",
+        "Framing",
     ]
-    pitch_final_df = hp.convert_pct_cols_to_float(pitch_final_df)
-    pitch_final_df = pitch_final_df.astype(str)
+    invert_rank_col = ["K%", "Chase%", "SwStr%"]
+    rank_df = pd.DataFrame(team_cumulative_df["Team"])
+    for col in rank_cols:
+        if col in invert_rank_col:
+            rank_df[col] = team_cumulative_df[col].rank(method="max", ascending=False)
+        else:
+            rank_df[col] = team_cumulative_df[col].rank(method="max", ascending=True)
 
-    st.write("Team Statistics")
-    st.dataframe(
-        bat_final_df,
-        width="stretch",
-        hide_index=True,
-        row_height=25,
-        column_config=hp.get_column_config("BR"),
+    # Get only filtered team in raw stat and rank chart
+    team_cumulative_df = team_cumulative_df.drop(
+        team_cumulative_df[team_cumulative_df.Team != team].index
     )
-    st.dataframe(
-        pitch_final_df,
-        width="stretch",
-        hide_index=True,
-        row_height=25,
-        column_config=hp.get_column_config("PR"),
+    rank_df = rank_df.drop(rank_df[rank_df.Team != team].index)
+    team_cumulative_df = hp.format_cols_as_strs(team_cumulative_df)
+
+    # Melt ranks and raw stats, then merge them
+    rank_melted = rank_df.melt(id_vars=["Team"], value_name="Rank", var_name="Stat")
+    raw_stat_melted = team_cumulative_df.melt(
+        id_vars=["Team"], value_name="Raw_Stat", var_name="Stat"
+    )
+    rank_melted = rank_melted.merge(
+        raw_stat_melted[["Team", "Stat", "Raw_Stat"]], on=["Team", "Stat"]
+    )
+
+    # Chart settings
+    title_params = alt.TitleParams(
+        text=team + " - Team Batting & Fielding",
+        subtitle=[year + " NPB", "@YakyuCosmo"],
+        subtitleColor="grey",
+        subtitleFontSize=13.5,
+    )
+
+    chart = (
+        alt.Chart(rank_melted)
+        .mark_bar()
+        .encode(
+            x=alt.X(
+                "Rank:Q",
+                title="NPB Rank",
+                scale=alt.Scale(domain=[0, 12]),
+                axis=alt.Axis(values=list(range(1, 13)), labelExpr="13 - datum.value"),
+            ),
+            y=alt.Y("Stat:N", sort=rank_cols, title=None),
+            tooltip=alt.value(None),
+            color=alt.Color("Rank")
+            .scale(domain=[0, 12], range=["#3366cc", "#b3b3b3", "#e60000"])
+            .legend(None),
+        )
+        .properties(
+            height=alt.Step(25),
+            title=title_params,
+        )
+    )
+
+    # Create a text layer with original values along right edge of chart
+    raw_stat_layer = (
+        alt.Chart(rank_melted)
+        .mark_text(
+            align="left",
+            baseline="middle",
+            dx=5,
+            fontSize=14,
+            color="grey",
+        )
+        .encode(
+            x=alt.datum(12.5),
+            y=alt.Y("Stat:N", sort=rank_cols, title=None),
+            text="Raw_Stat:N",
+            tooltip=alt.value(None),
+        )
+    )
+
+    # Combine base layers
+    chart = alt.layer(chart, raw_stat_layer)
+    # Configure the chart
+    chart = chart.configure_title(fontSize=20, subtitleFontSize=14)
+    chart = chart.configure_axis(labelFontSize=14)
+
+    st.altair_chart(chart)
+
+
+def create_team_pitch_stats(team_pitch_df, team, year):
+    """
+    Displays team pitching stats compared to League Average.
+
+    Filters for the specified team from the team-level pitching dataframe, calculates
+    ranks for various pitching metrics, and displays them in an Altair bar chart with
+    raw statistics shown as text labels. Higher ranks (closer to 1) indicate better
+    performance, shown with blue bars; lower ranks shown with red bars.
+
+    Parameters:
+        team_pitch_df (DataFrame): Team pitching stats data for all teams.
+        team (str): The name of the team to display stats for.
+        year (str): The year of the season data.
+
+    Returns:
+        None
+    """
+    # Drop league average before calculating ranks
+    team_pitch_df = team_pitch_df.drop(
+        team_pitch_df[team_pitch_df.Team == "League Average"].index
+    )
+
+    rank_cols = [
+        "ERA+",
+        "FIP-",
+        "WHIP",
+        "HR/FB",
+        "HR%",
+        "K%",
+        "BB%",
+        "K-BB%",
+        "GB%",
+        "Chase%",
+        "SwStr%",
+        "CSW%",
+        "Sec%",
+        "FB Velo",
+    ]
+    invert_rank_col = ["FIP-", "WHIP", "BB%", "HR%", "HR/FB"]
+    rank_df = pd.DataFrame(team_pitch_df["Team"])
+    for col in rank_cols:
+        if col in invert_rank_col:
+            rank_df[col] = team_pitch_df[col].rank(method="max", ascending=False)
+        else:
+            rank_df[col] = team_pitch_df[col].rank(method="max", ascending=True)
+
+    # Get only filtered team in raw stat and rank chart
+    pitch_final_df = team_pitch_df.drop(team_pitch_df[team_pitch_df.Team != team].index)
+    rank_df = rank_df.drop(rank_df[rank_df.Team != team].index)
+    pitch_final_df = hp.format_cols_as_strs(pitch_final_df, "team_pitch")
+
+    # Melt ranks and raw stats, then merge them
+    rank_melted = rank_df.melt(id_vars=["Team"], value_name="Rank", var_name="Stat")
+    raw_stat_melted = pitch_final_df.melt(
+        id_vars=["Team"], value_name="Raw_Stat", var_name="Stat"
+    )
+    rank_melted = rank_melted.merge(
+        raw_stat_melted[["Team", "Stat", "Raw_Stat"]], on=["Team", "Stat"]
+    )
+
+    # Chart settings
+    title_params = alt.TitleParams(
+        text=team + " - Team Pitching",
+        subtitle=[year + " NPB", "@YakyuCosmo"],
+        subtitleColor="grey",
+        subtitleFontSize=13.5,
+    )
+
+    chart = (
+        alt.Chart(rank_melted)
+        .mark_bar()
+        .encode(
+            x=alt.X(
+                "Rank:Q",
+                title="NPB Rank",
+                scale=alt.Scale(domain=[0, 12]),
+                axis=alt.Axis(values=list(range(1, 13)), labelExpr="13 - datum.value"),
+            ),
+            y=alt.Y("Stat:N", sort=rank_cols, title=None),
+            tooltip=alt.value(None),
+            color=alt.Color("Rank")
+            .scale(domain=[0, 12], range=["#3366cc", "#b3b3b3", "#e60000"])
+            .legend(None),
+        )
+        .properties(
+            height=alt.Step(25),
+            title=title_params,
+        )
+    )
+
+    # Create a text layer with original values along right edge of chart
+    raw_stat_layer = (
+        alt.Chart(rank_melted)
+        .mark_text(
+            align="left",
+            baseline="middle",
+            dx=5,
+            fontSize=14,
+            color="grey",
+        )
+        .encode(
+            x=alt.datum(12.5),
+            y=alt.Y("Stat:N", sort=rank_cols, title=None),
+            text="Raw_Stat:N",
+            tooltip=alt.value(None),
+        )
+    )
+
+    # Combine base layers
+    chart = alt.layer(chart, raw_stat_layer)
+    # Configure the chart
+    chart = chart.configure_title(fontSize=20, subtitleFontSize=14)
+    chart = chart.configure_axis(labelFontSize=14)
+
+    st.altair_chart(chart)
+
+
+def create_team_header(central_df: pd.DataFrame, pacific_df: pd.DataFrame, team):
+    """
+    Displays a team header with record, run differential, league, and standings placement.
+
+    Concatenates Central and Pacific league standings to determine the selected
+    team's rank within its league, then displays a formatted subheader showing
+    the team's win-loss-tie record, winning percentage, run differential, league
+    affiliation, and ordinal league placement.
+
+    Parameters:
+        central_df (DataFrame): Central league standings data.
+        pacific_df (DataFrame): Pacific league standings data.
+        team (str): The name of the team to display the header for.
+
+    Returns:
+        None
+    """
+    all_standings_df = pd.concat([central_df, pacific_df])
+    # Preserve index team is at before reindexing (index contains placement in their league)
+    all_standings_df.index += 1
+    league_rank = all_standings_df[all_standings_df.Team == team].index
+    all_standings_df = all_standings_df.reset_index(drop=True)
+
+    # Look at only 1 team
+    all_standings_df = all_standings_df.drop(
+        all_standings_df[all_standings_df.Team != team].index
+    )
+
+    if team in central_df["Team"].values:
+        league = "Central"
+    elif team in pacific_df["Team"].values:
+        league = "Pacific"
+    else:
+        league = "Unknown"
+
+    # Display W, L, T, PCT, Diff from standings
+    st.subheader(
+        team
+        + " · "
+        + all_standings_df["W"].astype(str).values[0]
+        + "-"
+        + all_standings_df["L"].astype(str).values[0]
+        + "-"
+        + all_standings_df["T"].astype(str).values[0]
+        + " ("
+        + f"{all_standings_df["PCT"].values[0]:.3f}"
+        + ")"
+        + " · Run Diff: "
+        + all_standings_df["Diff"].astype(str).values[0]
+        + " · "
+        + league
+        + " League: "
+        + hp.ordinal(league_rank.astype(int).values[0])
+        + " Place",
+        anchor=False,
+        divider="grey",
     )
 
 
