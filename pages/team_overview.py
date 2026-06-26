@@ -5,6 +5,7 @@ import streamlit as st
 import pandas as pd
 import pages.helper as hp
 
+
 def main():
     """
     Main entry point for the Streamlit NPB team overview.
@@ -62,7 +63,7 @@ def main():
     create_team_header(central_df, pacific_df, user_team)
 
     # Aggregate all of a player's fielding into 1 row
-    field_df = field_df.groupby(["Player", "Team"], as_index=False).agg(
+    agg_field_df = field_df.groupby(["Player", "Team"], as_index=False).agg(
         {
             "Inn": "sum",
             "TZR": "sum",
@@ -72,12 +73,12 @@ def main():
         }
     )
     # Recalculate [key_stat]/143 after aggregating players into 1 row in fielding
-    field_df["TZR/143"] = (field_df["TZR"] / field_df["Inn"]) * 1287
-    field_df["Framing/143"] = (field_df["Framing"] / field_df["Inn"]) * 1287
+    agg_field_df["TZR/143"] = (agg_field_df["TZR"] / agg_field_df["Inn"]) * 1287
+    agg_field_df["Framing/143"] = (agg_field_df["Framing"] / agg_field_df["Inn"]) * 1287
     # Drop all sub-10 PA players to help alleviate merging errors
     bat_df = bat_df.drop(bat_df[bat_df.PA < 10].index)
     try:
-        cumulative_df = pd.merge(bat_df, field_df, how="left")
+        cumulative_df = pd.merge(bat_df, agg_field_df, how="left")
     except ValueError:
         st.error(
             "Error: Batting and fielding dataframes failed to merge. "
@@ -91,6 +92,7 @@ def main():
         cumulative_df[cumulative_df.Team != user_team].index
     )
     pitch_df = pitch_df.drop(pitch_df[pitch_df.Team != user_team].index)
+    field_df = field_df.drop(field_df[field_df.Team != user_team].index)
     cumulative_df = hp.convert_pct_cols_to_float(cumulative_df)
     pitch_df = hp.convert_pct_cols_to_float(pitch_df)
     team_field_df = hp.convert_pct_cols_to_float(team_field_df)
@@ -112,14 +114,15 @@ def main():
     }
     # Remap from Tablepress number representation
     cumulative_df["Pos"] = cumulative_df["Pos"].map(pos_map)
+    field_df["Pos"] = field_df["Pos"].map(pos_map)
 
     c1, c2 = st.columns(2)
 
     # Streamlit dataframe displays
     with c1:
         create_top_pos_players(cumulative_df)
-        create_lineup(cumulative_df, advanced_view)
-        create_bench(cumulative_df, advanced_view)
+        create_lineup(cumulative_df, field_df, advanced_view)
+        create_bench(cumulative_df, field_df, advanced_view)
         create_team_bat_stats(team_bat_df, team_field_df, user_team, user_year)
     with c2:
         create_top_pitchers(pitch_df)
@@ -128,7 +131,7 @@ def main():
         create_team_pitch_stats(team_pitch_df, user_team, user_year)
 
 
-def create_lineup(cumulative_df, advanced_view):
+def create_lineup(cumulative_df, field_df, advanced_view):
     """
     Displays the projected starting lineup for the selected team.
 
@@ -138,6 +141,7 @@ def create_lineup(cumulative_df, advanced_view):
 
     Parameters:
         cumulative_df (DataFrame): Merged batting and fielding data for the selected team.
+        field_df (DataFrame): Fielding data for the selected team.
         advanced_view (bool): Whether to display advanced statistics columns.
 
     Returns:
@@ -151,9 +155,16 @@ def create_lineup(cumulative_df, advanced_view):
     else:
         filter_pos_rows = ["DH", "RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
     for pos in filter_pos_rows:
-        pos_df = cumulative_df.drop(cumulative_df[cumulative_df.Pos != pos].index)
-        starter = pos_df[pos_df["Inn"] == pos_df["Inn"].max()]
-        lineup_df = pd.concat([starter, lineup_df])
+        all_stats_pos_df = cumulative_df.drop(
+            cumulative_df[cumulative_df["Pos"] != pos].index
+        )
+        field_pos_df = field_df.drop(field_df[field_df["Pos"] != pos].index)
+        # Use field_df to get whoever has most innings at that position (cumulative_df has innings aggregated across all positions)
+        starter_field = field_pos_df[field_pos_df["Inn"] == field_pos_df["Inn"].max()]
+        starter_all_stats = all_stats_pos_df[
+            all_stats_pos_df["Player"] == starter_field["Player"].iloc[0]
+        ]
+        lineup_df = pd.concat([starter_all_stats, lineup_df])
 
     # Column reordering
     chosen_lineup_cols = [
@@ -212,7 +223,7 @@ def create_lineup(cumulative_df, advanced_view):
     )
 
 
-def create_bench(cumulative_df, advanced_view):
+def create_bench(cumulative_df, field_df, advanced_view):
     """
     Displays the bench/reserve batters for the selected team.
 
@@ -223,6 +234,7 @@ def create_bench(cumulative_df, advanced_view):
 
     Parameters:
         cumulative_df (DataFrame): Merged batting and fielding data for the selected team.
+        field_df (DataFrame): Fielding data for the selected team.
         advanced_view (bool): Whether to display advanced statistics columns.
 
     Returns:
@@ -238,9 +250,16 @@ def create_bench(cumulative_df, advanced_view):
         filter_pos_rows = ["DH", "RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
         bench_num = 5
     for pos in filter_pos_rows:
-        pos_df = cumulative_df.drop(cumulative_df[cumulative_df.Pos != pos].index)
-        starter = pos_df[pos_df["Inn"] == pos_df["Inn"].max()]
-        lineup_df = pd.concat([starter, lineup_df])
+        all_stats_pos_df = cumulative_df.drop(
+            cumulative_df[cumulative_df["Pos"] != pos].index
+        )
+        field_pos_df = field_df.drop(field_df[field_df["Pos"] != pos].index)
+        # Use field_df to get whoever has most innings at that position (cumulative_df has innings aggregated across all positions)
+        starter_field = field_pos_df[field_pos_df["Inn"] == field_pos_df["Inn"].max()]
+        starter_all_stats = all_stats_pos_df[
+            all_stats_pos_df["Player"] == starter_field["Player"].iloc[0]
+        ]
+        lineup_df = pd.concat([starter_all_stats, lineup_df])
 
     # Reserves = top 4 guys with most PA but not in top 9
     starter_list = lineup_df["Player"].tolist()
@@ -689,7 +708,11 @@ def create_team_bat_stats(team_bat_df, team_field_df, team, year):
     )
 
     team_cumulative_df = pd.merge(team_bat_df, team_field_df, on=["Team", "League"])
-    team_cumulative_df["Total Zone Runs"] = team_cumulative_df["TZR"]
+    team_cumulative_df = team_cumulative_df.rename(
+        columns={
+            "TZR": "Total Zone Runs",
+        }
+    )
 
     # Determine type of stats to rank and order (top to bottom) in chart
     rank_cols = [
