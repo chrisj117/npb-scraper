@@ -1353,7 +1353,7 @@ def prepare_streamlit_col_order(df, mode=None):
         pandas.DataFrame: The prepared DataFrame with cleaned and ordered columns.
     """
     # These are columns that should never appear on any Streamlit page
-    bad_cols = ["#", "ParkF", "keys"]
+    bad_cols = ["#", "ParkF", "keys", "NBBG", "HP"]
     df = df.drop(columns=bad_cols, errors="ignore")
 
     # Rename, drop extraneous columns, set order
