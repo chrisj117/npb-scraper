@@ -1978,6 +1978,8 @@ class TeamData(Stats):
             for col in new_gsheet_cols:
                 if col != "Team":
                     league_avg[col] = wavg_ignore_missing(self.df, col, "IP")
+            league_avg["YpERA-"] = 100
+            league_avg["YpERA Grade"] = 50
         self.df.loc[len(self.df)] = league_avg
 
         # Add "League" column
