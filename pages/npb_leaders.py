@@ -157,7 +157,7 @@ def build_leader_tables(user_year, user_bat_pitch, user_league):
             # Filter by league
             display_df = value[value["League"].isin(user_league)].copy()
             # Convert to correct notation for Streamlit
-            display_df = hp.convert_pct_cols_to_float(display_df)
+            display_df = hp.prepare_streamlit_types(display_df)
 
             # Sort by given column and use index as rank
             if key in flip_rank_stats:

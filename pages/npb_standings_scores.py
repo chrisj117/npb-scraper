@@ -21,6 +21,8 @@ def main():
     central_df = hp.load_csv(
         st.secrets[str(datetime.now().year) + "StandingsFinalC_npb_link"]
     )
+    # Drop unwanted columns and reorder (must be before sort filters are made)
+    central_df = hp.prepare_streamlit_col_order(central_df)
     styler_central = central_df.style
     styler_central.apply(hp.color_by_team, axis=0)
     styler_central = styler_central.set_properties(
@@ -39,6 +41,8 @@ def main():
     pacific_df = hp.load_csv(
         st.secrets[str(datetime.now().year) + "StandingsFinalP_npb_link"]
     )
+    # Drop unwanted columns and reorder (must be before sort filters are made)
+    pacific_df = hp.prepare_streamlit_col_order(pacific_df)
     styler_pacific = pacific_df.style
     styler_pacific.apply(hp.color_by_team, axis=0)
     styler_pacific = styler_pacific.set_properties(

@@ -93,11 +93,11 @@ def main():
     )
     pitch_df = pitch_df.drop(pitch_df[pitch_df.Team != user_team].index)
     field_df = field_df.drop(field_df[field_df.Team != user_team].index)
-    cumulative_df = hp.convert_pct_cols_to_float(cumulative_df)
-    pitch_df = hp.convert_pct_cols_to_float(pitch_df)
-    team_field_df = hp.convert_pct_cols_to_float(team_field_df)
-    team_bat_df = hp.convert_pct_cols_to_float(team_bat_df)
-    team_pitch_df = hp.convert_pct_cols_to_float(team_pitch_df)
+    cumulative_df = hp.prepare_streamlit_types(cumulative_df)
+    pitch_df = hp.prepare_streamlit_types(pitch_df)
+    team_field_df = hp.prepare_streamlit_types(team_field_df)
+    team_bat_df = hp.prepare_streamlit_types(team_bat_df)
+    team_pitch_df = hp.prepare_streamlit_types(team_pitch_df)
 
     # Convert Tablepress number position representation to abbreviations
     pos_map = {

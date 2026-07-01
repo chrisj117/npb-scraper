@@ -386,7 +386,7 @@ def main():
 
 def normalize_pct_cols(convert_df):
     """TODO docs"""
-    # Convert to best matched type and use column_config for trailing zeroes
+    # Convert to desired types and use column_config for trailing zeroes
     for col in convert_df.columns.tolist():
         if "%" in col:
             # Convert to numeric first, coercing errors to NaN

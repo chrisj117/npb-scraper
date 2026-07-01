@@ -190,7 +190,7 @@ def display_player_percentile(df, name, team, year, suffix):
     # Get player's age
     age = df[(df[name_col] == name) & (df["Team"] == team)]["Age"].astype(str)
     # Save raw numbers
-    raw_data = convert_pct_cols_to_float(
+    raw_data = prepare_streamlit_types(
         df[(df[name_col] == name) & (df["Team"] == team)][plot_cols]
     )
     if suffix == "P":
@@ -211,7 +211,7 @@ def display_player_percentile(df, name, team, year, suffix):
         plot_cols.remove("IP")
 
     # Ensure chosen percentile cols have correct types before creating percentiles
-    df = convert_pct_cols_to_float(df)
+    df = prepare_streamlit_types(df)
     df[plot_cols] = df[plot_cols].apply(pd.to_numeric, errors="coerce")
 
     # Generate percentiles for given cols
@@ -223,7 +223,7 @@ def display_player_percentile(df, name, team, year, suffix):
         if col in invert_cols:
             df[col] = 1.0 - df[col]
         df[col] = df[col] * 100
-        df[col] = df[col].fillna("0")
+        df[col] = df[col].fillna(0)
         # Convert to whole numbers for display on bar
         df[col] = df[col].astype("int")
 
@@ -464,7 +464,8 @@ def create_sort_filter(cols, mode):
 
     Parameters:
         cols (list): List of column names available for sorting.
-        mode (str): Mode determining which default sort order to use.
+        mode (str): Mode determining which default sort order to use. If no mode is
+                    explicitly set, the sort will be descending.
                     Options: "bat" (batting stats), "pitch" (pitching stats),
                     "field" (fielding stats), or other (generic).
 
@@ -524,6 +525,12 @@ def create_sort_filter(cols, mode):
             "SwStr%": "asc",
             "sSeager": "desc",
             "TTO%": "desc",
+            "K-BB%": "asc",
+            "Whiff%": "asc",
+            "CSW%": "asc",
+            "sHPT": "asc",
+            "GB%": "asc",
+            "IFFB%": "asc",
             "B": None,
             "Pos": None,
             "Team": None,
@@ -576,10 +583,24 @@ def create_sort_filter(cols, mode):
             "SwStr%": "desc",
             "Chase%": "desc",
             "GB%": "desc",
-            "LD%": "desc",
+            "LD%": "asc",
             "FB Velo": "desc",
             "HR/FB": "asc",
             "Sec%": "desc",
+            "Z-Swing%": "asc",
+            "Z-O Swing%": "asc",
+            "Swing%": "asc",
+            "O-Con%": "asc",
+            "Contact%": "asc",
+            "sSeager": "asc",
+            "Ball%": "asc",
+            "FB%": "asc",
+            "OFFB%": "asc",
+            "AIR%": "asc",
+            "PullAIR%": "asc",
+            "MM%": "asc",
+            "Behind%": "asc",
+            "pERA-": "asc",
             "Team": None,
             "League": None,
         }
@@ -645,7 +666,7 @@ def create_sort_filter(cols, mode):
         default_sort_col_index = 0
 
     user_sort_col = st.selectbox("Sort by", cols, index=default_sort_col_index)
-    if default_sort[user_sort_col] == "desc":
+    if user_sort_col not in default_sort or default_sort[user_sort_col] == "desc":
         user_sort_asc = st.toggle("Ascending", value=False)
     else:
         user_sort_asc = st.toggle("Ascending", value=True)
@@ -737,6 +758,11 @@ def create_stat_cols_filter(df, mode=None, key=None):
             "ISO",
             "K%",
             "BB%",
+            "Chase%",
+            "SwStr%",
+            "AIR%",
+            "R",
+            "BB/K",
             "Team",
         ]
     elif mode == "player_pitch":
@@ -754,6 +780,8 @@ def create_stat_cols_filter(df, mode=None, key=None):
             "K%",
             "BB%",
             "K-BB%",
+            "kwERA-",
+            "pERA-",
             "Team",
             "GB%",
             "CSW%",
@@ -789,6 +817,11 @@ def create_stat_cols_filter(df, mode=None, key=None):
             "OPS",
             "OPS+",
             "ISO",
+            "Chase%",
+            "SwStr%",
+            "AIR%",
+            "R",
+            "BB/K",
             "K%",
             "BB%",
         ]
@@ -807,7 +840,12 @@ def create_stat_cols_filter(df, mode=None, key=None):
             "FIP-",
             "K%",
             "BB%",
+            "kwERA-",
+            "pERA-",
             "K-BB%",
+            "CSW%",
+            "GB%",
+            "FB Velo",
         ]
     elif mode == "team_field":
         filter_default = [
@@ -864,6 +902,11 @@ def create_stat_cols_filter(df, mode=None, key=None):
         ]
     else:
         filter_default = df.columns.tolist()
+
+    # Check all default cols are in dataframe
+    for col in filter_default[:]:
+        if col not in df.columns:
+            filter_default.remove(col)
 
     # Add "select all" and "select none" columns option
     filter_container = st.container()
@@ -1215,29 +1258,403 @@ def create_league_filter(mode=None):
     return league
 
 
-def convert_pct_cols_to_float(df):
+def prepare_streamlit_types(df):
     """
-    Converts columns containing percentage values (with '%' sign) in a
-    DataFrame to float type.
+    Converts DataFrame columns to appropriate numeric types for Streamlit
+    display and downstream calculations.
 
     Parameters:
         df (pandas.DataFrame): DataFrame with columns that may contain
-            percentage strings.
+            percentage strings or incorrect numeric types.
 
     Functionality:
-        - Identifies columns with percentage values.
-        - Removes the '%' sign and converts the values to float type.
-        - Ensures proper numeric sorting and calculations in downstream usage.
+        - Calls convert_dtypes() to infer better dtypes.
+        - Strips '%' signs from string-based percentage columns and converts
+          them to float for proper sorting and calculations.
+        - Removes instances of "inf" (except in Player, League, and Team).  
+        - Converts known count/rate columns to integer type where appropriate.
 
     Returns:
-        pandas.DataFrame: The DataFrame with percentage columns converted to
-        float.
+        pandas.DataFrame: The DataFrame with cleaned numeric types.
     """
-    # Format data that has percent format since it breaks sorting
-    df = df.copy()
+    # Format data that may cause invalid cast warnings on Streamlit
     for col in df.columns.tolist():
+        # Remove percent signs
         if df[col].astype(str).str.contains("%").any():
-            df[col] = df[col].str.rstrip("%").astype("float")
+            df[col] = df[col].str.rstrip("%").astype(float)
+        # If "inf" values appear, make them NA (appears as None on Streamlit)
+        if df[col].astype(str).str.contains("inf").any() and col not in ["Player", "Team", "League"]:
+            df[col] = df[col].astype(str).replace("inf", "")
+    
+    df = df.convert_dtypes()
+
+    # Check and convert columns that should be whole numbers
+    int_cols = [
+        "AB",
+        "R",
+        "H",
+        "2B",
+        "3B",
+        "HR",
+        "BB",
+        "SO",
+        "PA",
+        "TB",
+        "RBI",
+        "SB",
+        "CS",
+        "SH",
+        "SF",
+        "SO",
+        "BB",
+        "IBB",
+        "HP",
+        "GDP",
+        "W",
+        "L",
+        "SV",
+        "HLD",
+        "CG",
+        "SHO",
+        "BF",
+        "HB",
+        "WP",
+        "ER",
+    ]
+    for col in int_cols:
+        if col in df.columns.to_list() and df[col].dtype != int:
+            df[col] = df[col].astype(int)
+
+    return df
+
+
+def prepare_streamlit_col_order(df, mode=None):
+    """
+    Prepares a DataFrame for display in Streamlit by dropping unwanted columns,
+    renaming columns for consistency, and reordering columns according to the
+    specified mode.
+
+    Parameters:
+        df (pandas.DataFrame): DataFrame containing statistic data to prepare.
+        mode (str, optional): Determines column drop and ordering rules.
+            Options: "team_bat", "player_bat", "team_pitch", "player_pitch",
+            or None (no specific ordering applied).
+
+    Functionality:
+        - Drops internal/extraneous columns not meant for display ("#", "ParkF",
+          "keys").
+        - Renames columns to standardized names (e.g., "Pull AIR%" -> "PullAIR%",
+          "YpERA-" -> "pERA-").
+        - Optionally drops mode-specific columns not relevant to the view.
+        - Reorders columns based on a predefined display order for the given
+          mode, with any remaining columns appended at the end.
+
+    Returns:
+        pandas.DataFrame: The prepared DataFrame with cleaned and ordered columns.
+    """
+    # These are columns that should never appear on any Streamlit page
+    bad_cols = ["#", "ParkF", "keys"]
+    df = df.drop(columns=bad_cols, errors="ignore")
+
+    # Rename, drop extraneous columns, set order
+    df = df.rename(
+        columns={
+            "Pull AIR%": "PullAIR%",
+            "PAR%": "Putaway%",
+            "YpERA Grade": "Grade",
+            "YpERA-": "pERA-",
+        },
+        errors="ignore",
+    )
+    if mode == "team_bat":
+        df = df.drop(columns="PLUS%", errors="ignore")
+        col_order = [
+            "Team",
+            "G",
+            "PA",
+            "AB",
+            "R",
+            "H",
+            "2B",
+            "3B",
+            "HR",
+            "TB",
+            "RBI",
+            "SB",
+            "CS",
+            "SH",
+            "SF",
+            "SO",
+            "BB",
+            "IBB",
+            "HP",
+            "GDP",
+            "AVG",
+            "OBP",
+            "SLG",
+            "OPS",
+            "OPS+",
+            "ISO",
+            "BABIP",
+            "K%",
+            "BB%",
+            "K-BB%",
+            "BB/K",
+            "wSB",
+            "Z-Swing%",
+            "Chase%",
+            "Z-O Swing%",
+            "Swing%",
+            "Z-Con%",
+            "O-Con%",
+            "Contact%",
+            "Whiff%",
+            "SwStr%",
+            "CSW%",
+            "sHPT",
+            "sST",
+            "sSeager",
+            "TTO%",
+            "HR%",
+            "HR/FB",
+            "GB%",
+            "LD%",
+            "FB%",
+            "OFFB%",
+            "IFFB%",
+            "AIR%",
+            "PullAIR%",
+            "Pull%",
+            "Cent%",
+            "Oppo%",
+            "League",
+        ]
+    elif mode == "player_bat":
+        df = df.drop(columns="PLUS%", errors="ignore")
+        col_order = [
+            "Player",
+            "G",
+            "PA",
+            "AB",
+            "R",
+            "H",
+            "2B",
+            "3B",
+            "HR",
+            "TB",
+            "RBI",
+            "SB",
+            "CS",
+            "SH",
+            "SF",
+            "SO",
+            "BB",
+            "IBB",
+            "HP",
+            "GDP",
+            "AVG",
+            "OBP",
+            "SLG",
+            "OPS",
+            "OPS+",
+            "ISO",
+            "BABIP",
+            "K%",
+            "BB%",
+            "BB/K",
+            "wSB",
+            "Z-Swing%",
+            "Chase%",
+            "Z-O Swing%",
+            "Swing%",
+            "Z-Con%",
+            "O-Con%",
+            "Contact%",
+            "Whiff%",
+            "SwStr%",
+            "CSW%",
+            "sHPT",
+            "sST",
+            "sSeager",
+            "TTO%",
+            "HR%",
+            "HR/FB",
+            "GB%",
+            "LD%",
+            "FB%",
+            "OFFB%",
+            "IFFB%",
+            "AIR%",
+            "PullAIR%",
+            "Pull%",
+            "Cent%",
+            "Oppo%",
+            "Age",
+            "Pos",
+            "B",
+            "Team",
+            "League",
+        ]
+    elif mode == "team_pitch":
+        df = df.drop(columns=["sST", "sHPT", "TBF"], errors="ignore")
+        col_order = [
+            "Team",
+            "G",
+            "W",
+            "L",
+            "SV",
+            "HLD",
+            "CG",
+            "SHO",
+            "BF",
+            "IP",
+            "H",
+            "HR",
+            "SO",
+            "BB",
+            "IBB",
+            "HB",
+            "WP",
+            "R",
+            "ER",
+            "ERA",
+            "FIP",
+            "kwERA",
+            "WHIP",
+            "ERA+",
+            "FIP-",
+            "kwERA-",
+            "pERA-",
+            "Diff",
+            "HR%",
+            "K%",
+            "BB%",
+            "K-BB%",
+            "Z-Swing%",
+            "Chase%",
+            "Z-O Swing%",
+            "Swing%",
+            "Z-Con%",
+            "O-Con%",
+            "Contact%",
+            "Whiff%",
+            "SwStr%",
+            "CSW%",
+            "sSeager",
+            "Strike%",
+            "Ball%",
+            "F-Str%",
+            "Putaway%",
+            "PLUS%",
+            "HR/FB",
+            "GB%",
+            "LD%",
+            "FB%",
+            "OFFB%",
+            "IFFB%",
+            "AIR%",
+            "PullAIR%",
+            "Pull%",
+            "Cent%",
+            "Oppo%",
+            "Zone%",
+            "Arm%",
+            "Glove%",
+            "High%",
+            "Low%",
+            "MM%",
+            "Behind%",
+            "Sec%",
+            "FB Velo",
+            "Grade",
+            "League",
+        ]
+    elif mode == "player_pitch":
+        df = df.drop(columns=["sST", "sHPT", "TBF", "PCT", "BK"], errors="ignore")
+        col_order = [
+            "Pitcher",
+            "G",
+            "W",
+            "L",
+            "SV",
+            "HLD",
+            "CG",
+            "SHO",
+            "BF",
+            "IP",
+            "H",
+            "HR",
+            "SO",
+            "BB",
+            "IBB",
+            "HB",
+            "WP",
+            "R",
+            "ER",
+            "ERA",
+            "FIP",
+            "kwERA",
+            "WHIP",
+            "ERA+",
+            "FIP-",
+            "kwERA-",
+            "pERA-",
+            "Diff",
+            "HR%",
+            "K%",
+            "BB%",
+            "K-BB%",
+            "Z-Swing%",
+            "Chase%",
+            "Z-O Swing%",
+            "Swing%",
+            "Z-Con%",
+            "O-Con%",
+            "Contact%",
+            "Whiff%",
+            "SwStr%",
+            "CSW%",
+            "sSeager",
+            "Strike%",
+            "Ball%",
+            "F-Str%",
+            "Putaway%",
+            "PLUS%",
+            "HR/FB",
+            "GB%",
+            "LD%",
+            "FB%",
+            "OFFB%",
+            "IFFB%",
+            "AIR%",
+            "PullAIR%",
+            "Pull%",
+            "Cent%",
+            "Oppo%",
+            "Zone%",
+            "Arm%",
+            "Glove%",
+            "High%",
+            "Low%",
+            "MM%",
+            "Behind%",
+            "Sec%",
+            "FB Velo",
+            "Grade",
+            "Age",
+            "T",
+            "Team",
+            "League",
+        ]
+    else:
+        col_order = []
+
+    # Reorder columns so any not in col_order go at the end
+    df = df[
+        [c for c in col_order if c in df.columns]
+        + [c for c in df.columns if c not in col_order]
+    ]
+
     return df
 
 
@@ -1650,6 +2067,155 @@ def get_column_config(suffix=None):
                 help="Secondary Pitch Rate: The percentage of a pitcher's pitches that are NOT fastballs (4-Seam, Sinker, Cutter).",
                 alignment="left",
             ),
+            "Z-O Swing%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Zone-minus-Chase Swing Rate: The difference between a pitcher's in-zone swing rate and chase rate. It shows how much more often batters swing at the pitcher's strikes than pitches outside the zone.",
+                alignment="left",
+            ),
+            "Z-Swing%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="In-Zone Swing Rate: The percentage of pitches inside the strike zone that batters swing at.",
+                alignment="left",
+            ),
+            "Swing%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Swing Rate: The percentage of total pitches that batters swing at.",
+                alignment="left",
+            ),
+            "O-Con%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Out-of-Zone Contact Rate: The percentage of swings against a pitcher on pitches outside the strike zone that result in contact.",
+                alignment="left",
+            ),
+            "Contact%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Contact Rate: The percentage of swings against a pitcher that result in contact, including both fair and foul balls.",
+                alignment="left",
+            ),
+            "Whiff%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Whiff Rate: The percentage of swings against a pitcher that result in swinging strikes.",
+                alignment="left",
+            ),
+            "sSeager": st.column_config.NumberColumn(
+                format="%.1f",
+                help="Simple Seager: A simplified version of SEAGER that measures swing choices against a pitcher using zone vs. out-of-zone pitches instead of more complex pitch-level models. For pitchers, it rewards getting hitters to take strikes and swing at balls, and it can be calculated as C/(A+C) - B/(B+D) using four pitch-decision buckets.",
+                alignment="left",
+            ),
+            "Strike%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Strike Rate: The percentage of total pitches that are recorded as strikes, including called strikes, swinging strikes, foul balls, and balls put in play.",
+                alignment="left",
+            ),
+            "Ball%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Ball Rate: The percentage of total pitches that are recorded as balls.",
+                alignment="left",
+            ),
+            "F-Str%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="First-Pitch Strike Rate: The percentage of plate appearances that begin with a first-pitch strike.",
+                alignment="left",
+            ),
+            "Putaway%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Putaway Rate: The percentage of two-strike pitches that result in a strikeout. It measures how often a pitcher finishes off hitters once they are in a putaway count.",
+                alignment="left",
+            ),
+            "PLUS%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Plus Rate: The percentage of pitches that result in a positive outcome for the pitcher, including called strikes, swinging strikes, foul balls, and batted-ball outs.",
+                alignment="left",
+            ),
+            "LD%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Line Drive Rate: The percentage of batted balls allowed by a pitcher that are line drives.",
+                alignment="left",
+            ),
+            "FB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Fly Ball Rate: The percentage of batted balls allowed by a pitcher that are fly balls.",
+                alignment="left",
+            ),
+            "OFFB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Outfield Fly Ball Rate: The percentage of batted balls allowed by a pitcher that are hit as outfield fly balls.",
+                alignment="left",
+            ),
+            "IFFB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Infield Fly Ball Rate: The percentage of fly balls allowed by a pitcher that are hit as infield pop-ups.",
+                alignment="left",
+            ),
+            "AIR%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Air Ball Rate: The percentage of batted balls allowed by a pitcher that are not hit on the ground, including line drives, fly balls, and pop-ups.",
+                alignment="left",
+            ),
+            "PullAIR%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Pulled Air Ball Rate: The percentage of air balls allowed by a pitcher that are hit to the batter's pull side. Lower is generally better because pulled air balls tend to produce more damage.",
+                alignment="left",
+            ),
+            "Cent%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Center Rate: The percentage of batted balls allowed by a pitcher that are hit to the middle of the field.",
+                alignment="left",
+            ),
+            "Pull%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Pull Rate: The percentage of batted balls allowed by a pitcher that are hit to the batter's pull side.",
+                alignment="left",
+            ),
+            "Oppo%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Opposite Field Rate: The percentage of batted balls allowed by a pitcher that are hit to the opposite field.",
+                alignment="left",
+            ),
+            "Zone%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Zone Rate: The percentage of pitches that are located inside the strike zone.",
+                alignment="left",
+            ),
+            "Arm%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Arm-Side Pitch Rate: The percentage of pitches thrown to the pitcher's arm side of the strike zone.",
+                alignment="left",
+            ),
+            "Glove%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Glove-Side Pitch Rate: The percentage of pitches thrown to the pitcher's glove side of the strike zone.",
+                alignment="left",
+            ),
+            "High%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="High Pitch Rate: The percentage of pitches thrown in the upper half of the strike zone or above it.",
+                alignment="left",
+            ),
+            "Low%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Low Pitch Rate: The percentage of pitches thrown in the lower half of the strike zone or below it.",
+                alignment="left",
+            ),
+            "MM%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Middle-Middle Pitch Rate: The percentage of pitches thrown in the middle-middle quadrant of the strike zone. Lower is generally better because middle-middle pitches are usually the easiest locations for hitters to damage.",
+                alignment="left",
+            ),
+            "Behind%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Behind-in-the-Count Pitch Rate: The percentage of pitches thrown when the pitcher is behind in the count. Lower is generally better because it indicates that a pitcher is working ahead more often.",
+                alignment="left",
+            ),
+            "Grade": st.column_config.NumberColumn(
+                help="pERA Grade: A 20-80 scale grade for pERA, inspired by Jeff Zimmerman's model for per pitch valuations. A grade of 50 is league average, and every 10 points represents one standard deviation from average.",
+                alignment="left",
+            ),
+            "pERA-": st.column_config.NumberColumn(
+                format="%.0f",
+                help="pERA Minus: A normalized version of pERA, inspired by Jeff Zimmerman's model for per pitch valuations, with 100 always being the league average. Lower values are better.",
+                alignment="left",
+            ),
             "Z-Con%": st.column_config.NumberColumn(
                 format="%.1f%%",
                 help="In-Zone Contact Rate: The percentage of swings on pitches in the strike zone that result in contact, including both fair and foul balls.",
@@ -1846,6 +2412,96 @@ def get_column_config(suffix=None):
             "HR/FB": st.column_config.NumberColumn(
                 format="%.1f%%",
                 help="Home Run to Fly Ball Ratio: The rate of fly balls that end up as home runs. HR/FB is useful in providing context about how sustainable a hitter's power is.",
+                alignment="left",
+            ),
+            "Z-Swing%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="In-Zone Swing Rate: The percentage of pitches inside the strike zone that a player swings at.",
+                alignment="left",
+            ),
+            "Z-O Swing%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Zone-minus-Chase Swing Rate: The difference between a hitter's in-zone swing rate and chase rate. It shows how much more often a hitter swings at strikes than pitches outside the zone.",
+                alignment="left",
+            ),
+            "Contact%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Contact Rate: The percentage of a player's swings that result in contact, including both fair and foul balls.",
+                alignment="left",
+            ),
+            "O-Con%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Out-of-Zone Contact Rate: The percentage of swings at pitches outside the strike zone that result in contact.",
+                alignment="left",
+            ),
+            "Whiff%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Whiff Rate: The percentage of a player's swings that result in swinging strikes.",
+                alignment="left",
+            ),
+            "CSW%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Called Strike plus Whiff Rate: The percentage of pitches a player sees that result in either a called strike or a swinging strike. For hitters, lower is generally better.",
+                alignment="left",
+            ),
+            "sHPT": st.column_config.NumberColumn(
+                format="%.1f",
+                help="Simple Hittable Pitches Taken: The percentage of taken pitches that are hittable pitches, calculated as C/(C+D). Lower is generally better because it means a hitter is taking fewer hittable pitches among all pitches they let go.",
+                alignment="left",
+            ),
+            "sST": st.column_config.NumberColumn(
+                format="%.1f",
+                help="Simple Selection Tendency: The percentage of good decisions that come from taking bad pitches, calculated as D/(A+D). Higher generally points to a more selective approach, while lower scores generally point to a more aggressive approach.",
+                alignment="left",
+            ),
+            "GB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Ground Ball Rate: The percentage of a player's batted balls that are hit on the ground.",
+                alignment="left",
+            ),
+            "FB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Fly Ball Rate: The percentage of a player's batted balls that are fly balls.",
+                alignment="left",
+            ),
+            "LD%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Line Drive Rate: The percentage of a player's batted balls that are line drives.",
+                alignment="left",
+            ),
+            "OFFB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Outfield Fly Ball Rate: The percentage of a player's batted balls that are hit as outfield fly balls.",
+                alignment="left",
+            ),
+            "IFFB%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Infield Fly Ball Rate: The percentage of a player's fly balls that are hit as infield pop-ups.",
+                alignment="left",
+            ),
+            "AIR%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help=" Air Ball Rate: The percentage of a player's batted balls that are not hit on the ground, including line drives, fly balls, and pop-ups.",
+                alignment="left",
+            ),
+            "HR%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Home Run Rate: The percentage of a player's plate appearances that result in home runs.",
+                alignment="left",
+            ),
+            "Pull%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Pull Rate: The percentage of a player's batted balls hit to the pull side of the field.",
+                alignment="left",
+            ),
+            "Cent%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Center Rate: The percentage of a player's batted balls hit to the middle of the field.",
+                alignment="left",
+            ),
+            "Oppo%": st.column_config.NumberColumn(
+                format="%.1f%%",
+                help="Opposite Field Rate: The percentage of a player's batted balls hit to the opposite field.",
                 alignment="left",
             ),
             "PullAIR%": st.column_config.NumberColumn(

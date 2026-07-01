@@ -25,9 +25,9 @@ def main():
             display_df.columns.to_list(), mode="team_summary"
         )
 
-    display_df = hp.convert_pct_cols_to_float(display_df)
+    display_df = hp.prepare_streamlit_types(display_df)
 
-    # Apply sorting and reset index (must be after convert_pct_cols_to_float())
+    # Apply sorting and reset index (must be after prepare_streamlit_types())
     display_df = display_df.sort_values(
         user_sort_col, ascending=user_sort_asc
     ).reset_index(drop=True)

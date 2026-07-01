@@ -29,11 +29,17 @@ def main():
             user_year = hp.create_year_filter()
             lead_bat_df = hp.load_csv(st.secrets[user_year + "LeadersBR_link"])
             player_bat_df = hp.load_csv(st.secrets[user_year + "StatsFinalBR_link"])
+
+            # Drop unwanted columns and reorder (must be before sort filters are made)
+            lead_bat_df = hp.prepare_streamlit_col_order(lead_bat_df, "player_bat")
+            player_bat_df = hp.prepare_streamlit_col_order(player_bat_df, "player_bat")
+
             leader_view = st.toggle("Qualifiers")
             if leader_view is True:
-                display_df = lead_bat_df.drop("#", axis=1)
+                display_df = lead_bat_df
             else:
                 display_df = player_bat_df
+
             display_df = display_df.fillna(value={"Pos": "N/A"})
             user_pa = hp.create_pa_filter(display_df, "player")
             # Drop players below PA threshold
@@ -55,11 +61,10 @@ def main():
     display_df = display_df[display_df["League"].isin(user_league)]
     display_df = display_df[display_df["Team"].isin(user_team)]
 
-    # Convert to best matched type and use column_config for trailing zeroes
-    display_df = hp.convert_pct_cols_to_float(display_df)
-    display_df = display_df.convert_dtypes()
+    # Convert to desired types and use column_config for trailing zeroes
+    display_df = hp.prepare_streamlit_types(display_df)
 
-    # Apply sorting and reset index (must be after convert_pct_cols_to_float())
+    # Apply sorting and reset index (must be after prepare_streamlit_types())
     display_df = display_df.sort_values(
         user_sort_col, ascending=user_sort_asc
     ).reset_index(drop=True)
@@ -84,8 +89,35 @@ def main():
         "Swing%",
         "sSeager",
         "TTO%",
+        "Z-Swing%",
+        "Z-O Swing%",
+        "Contact%",
+        "O-Con%",
+        "Whiff%",
+        "CSW%",
+        "sHPT",
+        "sST",
+        "GB%",
+        "FB%",
+        "LD%",
+        "OFFB%",
+        "IFFB%",
+        "AIR%",
+        "HR%",
+        "Pull%",
+        "Cent%",
+        "Oppo%",
     ]
-    invert_pct_cols = ["K%", "Chase%", "SwStr%"]
+    invert_pct_cols = [
+        "K%",
+        "Chase%",
+        "SwStr%",
+        "Whiff%",
+        "CSW%",
+        "sHPT",
+        "GB%",
+        "IFFB%",
+    ]
 
     # Shorten team names before displaying
     hp.convert_team_names(display_df, "Team", "short")
@@ -93,9 +125,14 @@ def main():
     # Display dataframe
     styler = display_df[user_cols].style
     styler.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
-    styler.apply(hp.color_by_team, axis=0)
+    bold_cols = []
+    if "Team" in user_cols:
+        styler.apply(hp.color_by_team, axis=0)
+        bold_cols.append("Team")
+    if "Player" in user_cols:
+        bold_cols.append("Player")
     styler = styler.set_properties(
-        subset=["Player", "Team"],
+        subset=bold_cols,
         **{"font-weight": "bold"}
     )
     st.dataframe(
@@ -106,7 +143,7 @@ def main():
         column_order=user_cols,
         column_config=hp.get_column_config("BR"),
     )
-    generate_player_batting_plots(player_bat_df, display_df, user_year)
+    #generate_player_batting_plots(player_bat_df, display_df, user_year)
 
 
 def generate_player_batting_plots(original_df, display_df, user_year):
@@ -139,7 +176,7 @@ def generate_player_batting_plots(original_df, display_df, user_year):
     )
 
     # Convert cols to best matched type and get weighted league average approximations
-    converted_src_df = hp.convert_pct_cols_to_float(original_df)
+    converted_src_df = hp.prepare_streamlit_types(original_df)
     converted_src_df = converted_src_df.convert_dtypes()
     league_obp = (
         converted_src_df["H"].sum()

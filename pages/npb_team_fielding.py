@@ -38,11 +38,10 @@ def main():
     display_df = display_df[display_df["League"].isin(user_league)]
     display_df = display_df[display_df["Team"].isin(user_team)]
 
-    # Convert to best matched type and use column_config for trailing zeroes
-    display_df = hp.convert_pct_cols_to_float(display_df)
-    display_df = display_df.convert_dtypes()
+    # Convert to desired types and use column_config for trailing zeroes
+    display_df = hp.prepare_streamlit_types(display_df)
 
-    # Apply sorting and reset index (must be after convert_pct_cols_to_float())
+    # Apply sorting and reset index (must be after prepare_streamlit_types())
     display_df = display_df.sort_values(
         user_sort_col, ascending=user_sort_asc
     ).reset_index(drop=True)
@@ -65,11 +64,12 @@ def main():
     # Display dataframe
     styler = display_df[user_cols].style
     styler.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
-    styler.apply(hp.color_by_team, axis=0)
-    styler = styler.set_properties(
-        subset=["Team"],
-        **{"font-weight": "bold"}
-    )
+    if "Team" in user_cols:
+        styler.apply(hp.color_by_team, axis=0)
+        styler = styler.set_properties(
+            subset=["Team"],
+            **{"font-weight": "bold"}
+        )
     st.dataframe(
         styler,
         width="stretch",

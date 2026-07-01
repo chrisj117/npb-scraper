@@ -27,6 +27,10 @@ def main():
         with r1c1:
             user_year = hp.create_year_filter()
             team_bat_df = hp.load_csv(st.secrets[user_year + "TeamBR_link"])
+
+            # Drop unwanted columns and reorder (must be before sort filters are made)
+            team_bat_df = hp.prepare_streamlit_col_order(team_bat_df, "team_bat")
+
             user_league = hp.create_league_filter(mode="npb")
         with r1c2:
             user_team = hp.create_team_filter(mode="npb")
@@ -44,11 +48,10 @@ def main():
     display_df = display_df[display_df["League"].isin(user_league)]
     display_df = display_df[display_df["Team"].isin(user_team)]
 
-    # Convert to best matched type and use column_config for trailing zeroes
-    display_df = hp.convert_pct_cols_to_float(display_df)
-    display_df = display_df.convert_dtypes()
+    # Convert to desired types and use column_config for trailing zeroes
+    display_df = hp.prepare_streamlit_types(display_df)
 
-    # Apply sorting and reset index (must be after convert_pct_cols_to_float())
+    # Apply sorting and reset index (must be after prepare_streamlit_types())
     display_df = display_df.sort_values(
         user_sort_col, ascending=user_sort_asc
     ).reset_index(drop=True)
@@ -73,17 +76,44 @@ def main():
         "Swing%",
         "sSeager",
         "TTO%",
+        "K-BB%",
+        "Z-Swing%",
+        "Z-O Swing%",
+        "Contact%",
+        "O-Con%",
+        "Whiff%",
+        "CSW%",
+        "sHPT",
+        "sST",
+        "GB%",
+        "FB%",
+        "LD%",
+        "OFFB%",
+        "IFFB%",
+        "AIR%",
+        "HR%",
+        "Pull%",
+        "Cent%",
+        "Oppo%",
     ]
-    invert_pct_cols = ["K%", "Chase%", "SwStr%"]
+    invert_pct_cols = [
+        "K%",
+        "Chase%",
+        "SwStr%",
+        "K-BB%",
+        "Whiff%",
+        "CSW%",
+        "sHPT",
+        "GB%",
+        "IFFB%",
+    ]
 
     # Display df
     styler = display_df[user_cols].style
     styler.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
-    styler.apply(hp.color_by_team, axis=0)
-    styler = styler.set_properties(
-        subset=["Team"],
-        **{"font-weight": "bold"}
-    )
+    if "Team" in user_cols:
+        styler.apply(hp.color_by_team, axis=0)
+        styler = styler.set_properties(subset=["Team"], **{"font-weight": "bold"})
     st.dataframe(
         styler,
         width="stretch",
@@ -128,8 +158,7 @@ def generate_team_batting_plots(original_df, display_df, user_year):
     )
 
     # Convert cols to best matched type and get weighted league average approximations
-    converted_src_df = hp.convert_pct_cols_to_float(original_df)
-    converted_src_df = converted_src_df.convert_dtypes()
+    converted_src_df = hp.prepare_streamlit_types(original_df)
     league_obp = (
         converted_src_df["H"].sum()
         + converted_src_df["BB"].sum()

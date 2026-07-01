@@ -27,6 +27,10 @@ def main():
         with r1c1:
             user_year = hp.create_year_filter()
             team_pitch_df = hp.load_csv(st.secrets[user_year + "TeamPR_link"])
+
+            # Drop unwanted columns and reorder (must be before sort filters are made)
+            team_pitch_df = hp.prepare_streamlit_col_order(team_pitch_df, "team_pitch")
+
             user_league = hp.create_league_filter(mode="npb")
         with r1c2:
             user_team = hp.create_team_filter(mode="npb")
@@ -44,11 +48,10 @@ def main():
     display_df = display_df[display_df["League"].isin(user_league)]
     display_df = display_df[display_df["Team"].isin(user_team)]
 
-    # Convert to best matched type and use column_config for trailing zeroes
-    display_df = hp.convert_pct_cols_to_float(display_df)
-    display_df = display_df.convert_dtypes()
+    # Convert to desired types and use column_config for trailing zeroes
+    display_df = hp.prepare_streamlit_types(display_df)
 
-    # Apply sorting and reset index (must be after convert_pct_cols_to_float())
+    # Apply sorting and reset index (must be after prepare_streamlit_types())
     display_df = display_df.sort_values(
         user_sort_col, ascending=user_sort_asc
     ).reset_index(drop=True)
@@ -66,6 +69,36 @@ def main():
         "CSW%",
         "Sec%",
         "FB Velo",
+        "Z-Swing%",
+        "Z-O Swing%",
+        "Swing%",
+        "O-Con%",
+        "Contact%",
+        "Whiff%",
+        "sSeager",
+        "Strike%",
+        "Ball%",
+        "F-Str%",
+        "Putaway%",
+        "PLUS%",
+        "LD%",
+        "FB%",
+        "OFFB%",
+        "IFFB%",
+        "AIR%",
+        "PullAIR%",
+        "Cent%",
+        "Pull%",
+        "Oppo%",
+        "Zone%",
+        "Arm%",
+        "Glove%",
+        "High%",
+        "Low%",
+        "MM%",
+        "Behind%",
+        "Grade",
+        "pERA-",
     ]
     invert_pct_cols = [
         "ERA",
@@ -78,16 +111,32 @@ def main():
         "BB%",
         "HR/FB",
         "Z-Con%",
+        "Z-Swing%",
+        "Z-O Swing%",
+        "Swing%",
+        "O-Con%",
+        "Contact%",
+        "sSeager",
+        "Ball%",
+        "LD%",
+        "FB%",
+        "OFFB%",
+        "AIR%",
+        "PullAIR%",
+        "MM%",
+        "Behind%",
+        "pERA-",
     ]
 
     # Display df
     styler = display_df[user_cols].style
     styler.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
-    styler.apply(hp.color_by_team, axis=0)
-    styler = styler.set_properties(
-        subset=["Team"],
-        **{"font-weight": "bold"}
-    )
+    if "Team" in user_cols:
+        styler.apply(hp.color_by_team, axis=0)
+        styler = styler.set_properties(
+            subset=["Team"],
+            **{"font-weight": "bold"}
+        )
     st.dataframe(
         styler,
         hide_index=False,
@@ -131,8 +180,7 @@ def generate_team_pitching_plots(original_df, display_df, user_year):
     )
 
     # Convert cols to best matched type and get weighted league average approximations
-    converted_src_df = hp.convert_pct_cols_to_float(original_df)
-    converted_src_df = converted_src_df.convert_dtypes()
+    converted_src_df = hp.prepare_streamlit_types(original_df)
     league_gb = hp.wavg_ignore_missing(converted_src_df, "GB%", "IP")
     league_chase = hp.wavg_ignore_missing(converted_src_df, "Chase%", "IP")
     league_swstr = hp.wavg_ignore_missing(converted_src_df, "SwStr%", "IP")
