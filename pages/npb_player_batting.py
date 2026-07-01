@@ -143,7 +143,7 @@ def main():
         column_order=user_cols,
         column_config=hp.get_column_config("BR"),
     )
-    #generate_player_batting_plots(player_bat_df, display_df, user_year)
+    generate_player_batting_plots(player_bat_df, display_df, user_year)
 
 
 def generate_player_batting_plots(original_df, display_df, user_year):

@@ -601,6 +601,7 @@ def create_sort_filter(cols, mode):
             "MM%": "asc",
             "Behind%": "asc",
             "pERA-": "asc",
+            "kwERA-": "asc",
             "Team": None,
             "League": None,
         }
@@ -1353,7 +1354,9 @@ def prepare_streamlit_col_order(df, mode=None):
         pandas.DataFrame: The prepared DataFrame with cleaned and ordered columns.
     """
     # These are columns that should never appear on any Streamlit page
-    bad_cols = ["#", "ParkF", "keys", "NBBG", "HP"]
+    bad_cols = ["#", "ParkF", "keys", "NBBG"]
+    if mode in ["team_pitch", "player_pitch"]:
+        bad_cols.append("HP")
     df = df.drop(columns=bad_cols, errors="ignore")
 
     # Rename, drop extraneous columns, set order
@@ -2208,6 +2211,7 @@ def get_column_config(suffix=None):
                 alignment="left",
             ),
             "Grade": st.column_config.NumberColumn(
+                format="%.0f",
                 help="pERA Grade: A 20-80 scale grade for pERA, inspired by Jeff Zimmerman's model for per pitch valuations. A grade of 50 is league average, and every 10 points represents one standard deviation from average.",
                 alignment="left",
             ),
