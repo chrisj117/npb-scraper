@@ -2793,7 +2793,10 @@ class TeamSummaryData(Stats):
             Aggregates and organizes team statistics from fielding, standings,
             batting, and pitching data to calculate metrics such as win-loss
             records, run differentials, and advanced metrics like OPS+ and
-            ERA+."""
+            ERA+.
+        format_team_summary():
+            Rescales percentage statistics, reorders columns to a standard
+            layout, and applies number formatting for final output."""
 
     def __init__(
         self,
@@ -2836,14 +2839,22 @@ class TeamSummaryData(Stats):
         elif self.suffix == "F":
             upload_dir = os.path.join(self.year_dir, "farm")
 
+        # Store df without HTML, rounding, rank col for Streamlit
+        streamlit_df = self.df.copy()
+        # Apply revisions to Streamlit df without going into format__team_summary() (which rounds stats)
+        streamlit_df = revise_stats(streamlit_df, os.path.dirname(__file__), self.year)
+        streamlit_dir = os.path.join(self.year_dir, "streamlit_src")
+        streamlit_filename = self.year + "TeamSummaryFinal" + self.suffix + ".csv"
+        streamlit_filename = store_dataframe(
+            streamlit_df, streamlit_dir, streamlit_filename, "csv"
+        )
+
+        # Prepare tablepress team summary formatting
+        self.format_team_summary()
+
         # Print organized dataframe to file
         alt_filename = self.year + "TeamSummaryAlt" + self.suffix + ".csv"
         alt_filename = store_dataframe(self.df, alt_dir, alt_filename, "alt")
-
-        # Store df without HTML for streamlit
-        st_dir = os.path.join(self.year_dir, "streamlit_src")
-        st_filename = self.year + "TeamSummaryFinal" + self.suffix + ".csv"
-        st_filename = store_dataframe(self.df, st_dir, st_filename, "csv")
 
         # Add blank # column for Wordpress table counter
         self.df["#"] = ""
@@ -2906,6 +2917,15 @@ class TeamSummaryData(Stats):
         )
         self.df = select_league(self.df, self.suffix, self.year)
 
+    def format_team_summary(self):
+        """Formats team summary statistics for final output.
+
+        Performs the following operations on the team summary dataframe:
+        1. Rescales percentage statistics from Google Sheets data.
+        2. Reorders columns to a standard layout including Team, W, L, PCT,
+           Diff, HR, SB, OPS+, ERA+, FIP-, K-BB%, and TZR.
+        3. Applies number formatting to all statistics (e.g., PCT to 3 decimals,
+           K-BB% to 1 decimal percentage, OPS+ and ERA+ to whole numbers)."""
         # Column reordering
         self.df = self.df[
             [
@@ -2925,11 +2945,21 @@ class TeamSummaryData(Stats):
             ]
         ]
         # Number formatting
-        format_maps = {"PCT": "{:.3f}"}
+        self.rescale_pct_stats()
+        format_maps = {
+            "PCT": "{:.3f}",
+            "HR": "{:.0f}",
+            "W": "{:.0f}",
+            "L": "{:.0f}",
+            "SB": "{:.0f}",
+            "OPS+": "{:.0f}",
+            "wSB": "{:.1f}",
+            "ERA+": "{:.0f}",
+            "FIP-": "{:.0f}",
+            "K-BB%": "{:.1%}",
+        }
         for key, value in format_maps.items():
             self.df[key] = self.df[key].apply(value.format)
-        # Apply manual revisions
-        self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
 
 class DailyScoresData(Stats):
