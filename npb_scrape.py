@@ -811,36 +811,8 @@ class PlayerData(Stats):
             self.df.columns[self.df.columns.str.contains("Unnamed")], axis=1
         )
 
-        # Make deep copy for leader's file
-        leader_df = self.df.copy()
-        # Get df with number of games played by each team for IP/PA drop consts (Post season stats = skip PA/IP drop)
-        if self.suffix not in ("BP", "PP"):
-            game_df = self.get_team_games()
-            # Add new column (called 'GTeam') for team's games played
-            leader_df = leader_df.merge(game_df, on="Team", suffixes=(None, "Team"))
-
-        if self.suffix in ("PR", "PF"):
-            # Drop all players below the IP/PA threshold
-            if self.suffix == "PF":
-                leader_df = leader_df.drop(
-                    leader_df[leader_df.IP < (leader_df["GTeam"] * 0.8)].index
-                )
-            else:
-                leader_df = leader_df.drop(
-                    leader_df[leader_df.IP < leader_df["GTeam"]].index
-                )
-            leader_df.drop(["GTeam"], axis=1, inplace=True)
-        elif self.suffix in ("BR", "BF"):
-            # Drop all players below the IP/PA threshold (PA gets rounded down)
-            if self.suffix == "BF":
-                leader_df = leader_df.drop(
-                    leader_df[leader_df.PA < np.floor((leader_df["GTeam"] * 2.7))].index
-                )
-            else:
-                leader_df = leader_df.drop(
-                    leader_df[leader_df.PA < np.floor((leader_df["GTeam"] * 3.1))].index
-                )
-            leader_df.drop(["GTeam"], axis=1, inplace=True)
+        # Calculate leaders for Streamlit
+        leader_df = self.determine_qualifiers()
 
         # Store normal + leader df without HTML, rounding, rank col, etc and with more gsheet stats for Streamlit
         streamlit_df = self.df.copy()
@@ -873,7 +845,7 @@ class PlayerData(Stats):
         self.df["#"] = ""
         move_col = self.df.pop("#")
         self.df.insert(0, "#", move_col)
-        # Make deep copy of original df to avoid HTML in df's team/player names
+        # Make deep copy of original df to avoid HTML in df's team/player names for determine_qualifiers()
         final_df = self.df.copy()
         # Convert player/team names to HTML that contains appropriate URLs
         if int(self.year) == datetime.now().year:
@@ -883,9 +855,11 @@ class PlayerData(Stats):
         final_filename = self.year + "StatsFinal" + self.suffix + ".csv"
         final_filename = store_dataframe(final_df, upload_dir, final_filename, "csv")
 
+        # Calculate leaders again after Tablepress formatting and extra cols were applied
+        leader_df = self.determine_qualifiers()
+
         # Leader file output
         if self.suffix in ("PR", "PF"):
-            leader_df = self.df.copy()
             # Convert player/team names to HTML that contains appropriate URLs
             if int(self.year) == datetime.now().year:
                 leader_df = convert_player_to_html(leader_df, self.suffix, self.year)
@@ -908,7 +882,6 @@ class PlayerData(Stats):
 
         # Leader file is calculated differently for batters
         elif self.suffix in ("BR", "BF"):
-            leader_df = self.df.copy()
             # Convert player/team names to HTML that contains appropriate URLs
             if int(self.year) == datetime.now().year:
                 leader_df = convert_player_to_html(leader_df, self.suffix, self.year)
@@ -953,6 +926,51 @@ class PlayerData(Stats):
                     "An alternative view of team pitching results will be stored "
                     "in: " + new_csv_alt
                 )
+
+    def determine_qualifiers(self):
+        """Filters player statistics to only qualify leaders based on playing time thresholds.
+
+        Creates a copy of the main dataframe and filters out players who do not
+        meet the minimum playing time required to qualify as a statistical leader.
+        Thresholds are based on team games played:
+        - Pitchers (PR/PF): Must exceed team games played (Farm uses 0.8x).
+        - Batters (BR/BF): Must exceed 2.7x (Farm) or 3.1x (NPB) team games played (PA rounded down).
+        Post-season suffixes (BP/PP) skip qualification filtering.
+
+        Returns:
+            pandas.DataFrame: Filtered dataframe containing only qualified players.
+        """
+        leader_df = self.df.copy()
+        # Get df with number of games played by each team for IP/PA drop consts (Post season stats = skip PA/IP drop)
+        if self.suffix not in ("BP", "PP"):
+            game_df = self.get_team_games()
+            # Add new column (called 'GTeam') for team's games played
+            leader_df = leader_df.merge(game_df, on="Team", suffixes=(None, "Team"))
+
+        if self.suffix in ("PR", "PF"):
+            # Drop all players below the IP/PA threshold
+            if self.suffix == "PF":
+                leader_df = leader_df.drop(
+                    leader_df[leader_df.IP < (leader_df["GTeam"] * 0.8)].index
+                )
+            else:
+                leader_df = leader_df.drop(
+                    leader_df[leader_df.IP < leader_df["GTeam"]].index
+                )
+            leader_df.drop(["GTeam"], axis=1, inplace=True)
+        elif self.suffix in ("BR", "BF"):
+            # Drop all players below the IP/PA threshold (PA gets rounded down)
+            if self.suffix == "BF":
+                leader_df = leader_df.drop(
+                    leader_df[leader_df.PA < np.floor((leader_df["GTeam"] * 2.7))].index
+                )
+            else:
+                leader_df = leader_df.drop(
+                    leader_df[leader_df.PA < np.floor((leader_df["GTeam"] * 3.1))].index
+                )
+            leader_df.drop(["GTeam"], axis=1, inplace=True)
+
+        return leader_df
 
     def format_player_bat(self):
         """Formats batting statistics for final output.
