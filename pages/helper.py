@@ -2916,14 +2916,17 @@ def get_column_config(suffix=None):
                 alignment="left",
             ),
             "OPS+": st.column_config.NumberColumn(
+                format="%.0f",
                 help="On Base plus Slugging Plus",
                 alignment="left",
             ),
             "ERA+": st.column_config.NumberColumn(
+                format="%.0f",
                 help="Earned Run Average Plus",
                 alignment="left",
             ),
             "FIP-": st.column_config.NumberColumn(
+                format="%.0f",
                 help="Fielding Independent Pitching Minus",
                 alignment="left",
             ),
