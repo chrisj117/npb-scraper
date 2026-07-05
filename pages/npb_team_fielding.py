@@ -75,7 +75,7 @@ def main():
         width="stretch",
         row_height=25,
         hide_index=False,
-        column_config=hp.get_column_config("fielding"),
+        column_config=hp.get_column_config("team_fielding"),
     )
 
 

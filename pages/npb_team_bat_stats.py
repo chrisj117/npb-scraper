@@ -120,7 +120,7 @@ def main():
         hide_index=False,
         row_height=25,
         column_order=user_cols,
-        column_config=hp.get_column_config("BR"),
+        column_config=hp.get_column_config("team_bat"),
     )
     generate_team_batting_plots(team_bat_df, display_df, user_year)
 
@@ -230,7 +230,12 @@ def generate_team_batting_plots(original_df, display_df, user_year):
                 color=alt.Color("Team:N", legend=None).scale(
                     domain=list(team_colors.keys()), range=list(team_colors.values())
                 ),
-                tooltip=["Team", "OBP", "SLG", "OPS"],
+                tooltip=[
+                    "Team",
+                    alt.Tooltip("OBP", format=".3f"),
+                    alt.Tooltip("SLG", format=".3f"),
+                    alt.Tooltip("OPS", format=".3f"),
+                ],
             )
         )
 
@@ -304,7 +309,12 @@ def generate_team_batting_plots(original_df, display_df, user_year):
                 color=alt.Color("Team:N", legend=None).scale(
                     domain=list(team_colors.keys()), range=list(team_colors.values())
                 ),
-                tooltip=["Team", "BB%", "K%", "BB/K"],
+                tooltip=[
+                    "Team",
+                    alt.Tooltip("BB%", format=".1f"),
+                    alt.Tooltip("K%", format=".1f"),
+                    alt.Tooltip("BB/K", format=".2f"),
+                ],
             )
         )
 
@@ -378,7 +388,12 @@ def generate_team_batting_plots(original_df, display_df, user_year):
                 color=alt.Color("Team:N", legend=None).scale(
                     domain=list(team_colors.keys()), range=list(team_colors.values())
                 ),
-                tooltip=["Team", "ISO", "Chase%", "OPS+"],
+                tooltip=[
+                    "Team",
+                    alt.Tooltip("ISO", format=".3f"),
+                    alt.Tooltip("Chase%", format=".1f"),
+                    alt.Tooltip("OPS+", format=".0f"),
+                ],
             )
         )
 
@@ -458,7 +473,12 @@ def generate_team_batting_plots(original_df, display_df, user_year):
                 color=alt.Color("Team:N", legend=None).scale(
                     domain=list(team_colors.keys()), range=list(team_colors.values())
                 ),
-                tooltip=["Team", "PullAIR%", "sSeager", "OPS+"],
+                tooltip=[
+                    "Team",
+                    alt.Tooltip("PullAIR%", format=".1f"),
+                    alt.Tooltip("sSeager", format=".1f"),
+                    alt.Tooltip("OPS+", format=".0f"),
+                ],
             )
         )
 

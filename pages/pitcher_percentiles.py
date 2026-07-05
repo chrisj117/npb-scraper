@@ -35,6 +35,7 @@ def main():
 
     # Only display percentiles if enough data is present
     if disable_percentiles is False:
+        pitch_df = hp.prepare_streamlit_col_order(pitch_df)
         # Drop players below IP threshold
         pitch_df = pitch_df.drop(pitch_df[pitch_df.IP < drop_ip].index)
         user_pitcher, user_team = hp.create_team_plus_player_filter(pitch_df, "Pitcher")

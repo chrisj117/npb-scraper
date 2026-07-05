@@ -34,7 +34,7 @@ def main():
         width="stretch",
         hide_index=True,
         row_height=25,
-        column_config=hp.get_column_config("standings"),
+        column_config=hp.get_column_config("team_standings"),
     )
 
     st.write("Pacific Standings")
@@ -54,7 +54,7 @@ def main():
         width="stretch",
         hide_index=True,
         row_height=25,
-        column_config=hp.get_column_config("standings"),
+        column_config=hp.get_column_config("team_standings"),
     )
 
     st.write("Latest Scores")

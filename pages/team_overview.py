@@ -219,7 +219,7 @@ def create_lineup(cumulative_df, field_df, advanced_view):
         width="stretch",
         hide_index=True,
         row_height=25,
-        column_config=hp.get_column_config("BR"),
+        column_config=hp.get_column_config("player_bat"),
     )
 
 
@@ -322,7 +322,7 @@ def create_bench(cumulative_df, field_df, advanced_view):
         width="stretch",
         hide_index=True,
         row_height=25,
-        column_config=hp.get_column_config("BR"),
+        column_config=hp.get_column_config("player_bat"),
     )
 
 
@@ -592,7 +592,7 @@ def create_rotation(pitch_df, advanced_view):
         width="stretch",
         hide_index=True,
         row_height=25,
-        column_config=hp.get_column_config("PR"),
+        column_config=hp.get_column_config("player_pitch"),
     )
 
 
@@ -662,7 +662,7 @@ def create_bullpen(pitch_df, advanced_view):
         width="stretch",
         hide_index=True,
         row_height=25,
-        column_config=hp.get_column_config("PR"),
+        column_config=hp.get_column_config("player_pitch"),
     )
 
 

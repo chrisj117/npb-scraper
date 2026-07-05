@@ -26,6 +26,7 @@ def main():
         )
 
     display_df = hp.prepare_streamlit_types(display_df)
+    display_df = hp.prepare_streamlit_col_order(display_df, mode="team_summary")
 
     # Apply sorting and reset index (must be after prepare_streamlit_types())
     display_df = display_df.sort_values(
@@ -103,6 +104,7 @@ def main():
     }
 
     # Create scatter plot with colored points and team name labels
+    display_df = hp.format_cols_as_strs(display_df)
     points = (
         alt.Chart(display_df)
         .mark_point(size=250, opacity=0.8, filled=True)
@@ -133,7 +135,11 @@ def main():
             x=alt.X("ERA+:Q"),
             y=alt.Y("OPS+:Q"),
             text="short_Team",
-            tooltip=["Team", "ERA+", "OPS+"],
+            tooltip=[
+                "Team",
+                alt.Tooltip("ERA+", format=".0f"),
+                alt.Tooltip("OPS+", format=".0f"),
+            ],
         )
     )
 

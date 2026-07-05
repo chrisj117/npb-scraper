@@ -90,7 +90,7 @@ def main():
         hide_index=False,
         row_height=25,
         column_order=user_cols,
-        column_config=hp.get_column_config("fielding"),
+        column_config=hp.get_column_config("player_fielding"),
     )
 
 

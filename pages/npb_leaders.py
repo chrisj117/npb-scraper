@@ -55,9 +55,9 @@ def main():
             st.header(table.columns.to_list()[1])
             # Determine stat display/hover configs
             if "Player" in table.columns.to_list():
-                config = "BR"
+                config = "player_bat"
             elif "Pitcher" in table.columns.to_list():
-                config = "PR"
+                config = "player_pitch"
             else:
                 config = ""
 

@@ -31,8 +31,12 @@ def main():
             player_pitch_df = hp.load_csv(st.secrets[user_year + "StatsFinalPR_link"])
 
             # Drop unwanted columns and reorder (must be before sort filters are made)
-            lead_pitch_df = hp.prepare_streamlit_col_order(lead_pitch_df, mode="player_pitch")
-            player_pitch_df = hp.prepare_streamlit_col_order(player_pitch_df, mode="player_pitch")
+            lead_pitch_df = hp.prepare_streamlit_col_order(
+                lead_pitch_df, mode="player_pitch"
+            )
+            player_pitch_df = hp.prepare_streamlit_col_order(
+                player_pitch_df, mode="player_pitch"
+            )
 
             leader_view = st.toggle("Qualifiers")
             if leader_view is True:
@@ -150,17 +154,14 @@ def main():
         bold_cols.append("Team")
     if "Pitcher" in user_cols:
         bold_cols.append("Pitcher")
-    styler = styler.set_properties(
-        subset=bold_cols,
-        **{"font-weight": "bold"}
-    )
+    styler = styler.set_properties(subset=bold_cols, **{"font-weight": "bold"})
     st.dataframe(
         styler,
         width="stretch",
         hide_index=False,
         row_height=25,
         column_order=user_cols,
-        column_config=hp.get_column_config("PR"),
+        column_config=hp.get_column_config("player_pitch"),
     )
     generate_player_pitching_plots(player_pitch_df, display_df, user_year)
 
@@ -261,7 +262,13 @@ def generate_player_pitching_plots(original_df, display_df, user_year):
                 color=alt.Color("Team:N", legend=None).scale(
                     domain=list(team_colors.keys()), range=list(team_colors.values())
                 ),
-                tooltip=["Pitcher", "K%", "BB%", "K-BB%", "Team"],
+                tooltip=[
+                    "Pitcher",
+                    alt.Tooltip("K%", format=".1f"),
+                    alt.Tooltip("BB%", format=".1f"),
+                    alt.Tooltip("K-BB%", format=".1f"),
+                    "Team",
+                ],
             )
         )
 
@@ -338,7 +345,13 @@ def generate_player_pitching_plots(original_df, display_df, user_year):
                 color=alt.Color("Team:N", legend=None).scale(
                     domain=list(team_colors.keys()), range=list(team_colors.values())
                 ),
-                tooltip=["Pitcher", "CSW%", "GB%", "ERA+", "Team"],
+                tooltip=[
+                    "Pitcher",
+                    alt.Tooltip("CSW%", format=".1f"),
+                    alt.Tooltip("GB%", format=".1f"),
+                    alt.Tooltip("ERA+", format=".0f"),
+                    "Team",
+                ],
             )
         )
 
@@ -415,7 +428,13 @@ def generate_player_pitching_plots(original_df, display_df, user_year):
                 color=alt.Color("Team:N", legend=None).scale(
                     domain=list(team_colors.keys()), range=list(team_colors.values())
                 ),
-                tooltip=["Pitcher", "SwStr%", "Chase%", "ERA+", "Team"],
+                tooltip=[
+                    "Pitcher",
+                    alt.Tooltip("SwStr%", format=".1f"),
+                    alt.Tooltip("Chase%", format=".1f"),
+                    alt.Tooltip("ERA+", format=".0f"),
+                    "Team",
+                ],
             )
         )
 
@@ -495,7 +514,13 @@ def generate_player_pitching_plots(original_df, display_df, user_year):
                 color=alt.Color("Team:N", legend=None).scale(
                     domain=list(team_colors.keys()), range=list(team_colors.values())
                 ),
-                tooltip=["Pitcher", "FB Velo", "Sec%", "ERA+", "Team"],
+                tooltip=[
+                    "Pitcher",
+                    alt.Tooltip("FB Velo", format=".1f"),
+                    alt.Tooltip("Sec%", format=".1f"),
+                    alt.Tooltip("ERA+", format=".0f"),
+                    "Team",
+                ],
             )
         )
 
