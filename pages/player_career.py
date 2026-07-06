@@ -115,7 +115,7 @@ def main():
     bat_tab, pitch_tab = st.tabs(["Batting", "Pitching"])
     with bat_tab:
         # Preprocess bat
-        bat_display_df = normalize_pct_cols(career_bat_df)
+        bat_display_df = career_bat_df
         bat_display_df["Team"] = bat_display_df["Team"].str.split().str[0]
         bat_display_df = bat_display_df.merge(
             career_bio_df[["Link", "BirthDate"]], on="Link", how="left"
@@ -251,7 +251,7 @@ def main():
 
     with pitch_tab:
         # Preprocess pitch
-        pitch_display_df = normalize_pct_cols(career_pitch_df)
+        pitch_display_df = career_pitch_df
         pitch_display_df["IP"] = hp.convert_ip_column_in(pitch_display_df)
         pitch_display_df["Team"] = pitch_display_df["Team"].str.split().str[0]
         pitch_display_df = pitch_display_df.merge(
