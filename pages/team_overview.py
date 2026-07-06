@@ -16,8 +16,8 @@ def main():
 
     Functions called:
         - create_top_pos_players(cumulative_df): Shows the team's top 10 position players by IMPACT metric.
-        - create_lineup(cumulative_df, advanced_view): Shows the team's starting lineup and reserve batters.
-        - create_bench(cumulative_df, advanced_view): Shows the team's bench/reserve batters.
+        - create_lineup(cumulative_df, field_df, advanced_view): Shows the team's starting lineup and reserve batters.
+        - create_bench(cumulative_df, lineup_df, advanced_view): Shows the team's bench/reserve batters.
         - create_top_pitchers(pitch_df): Shows the team's top 10 pitchers by IMPACT metric.
         - create_rotation(pitch_df, advanced_view): Shows the team's starting rotation.
         - create_bullpen(pitch_df, advanced_view): Shows the team's bullpen.
@@ -121,8 +121,8 @@ def main():
     # Streamlit dataframe displays
     with c1:
         create_top_pos_players(cumulative_df)
-        create_lineup(cumulative_df, field_df, advanced_view)
-        create_bench(cumulative_df, field_df, advanced_view)
+        lineup_df = create_lineup(cumulative_df, field_df, advanced_view)
+        create_bench(cumulative_df, lineup_df, advanced_view)
         create_team_bat_stats(team_bat_df, team_field_df, user_team, user_year)
     with c2:
         create_top_pitchers(pitch_df)
@@ -135,9 +135,10 @@ def create_lineup(cumulative_df, field_df, advanced_view):
     """
     Displays the projected starting lineup for the selected team.
 
-    Uses the cumulative batting and fielding dataframe to identify the highest-inning
-    player at each position, excluding UTL and DH for CL teams. Formats the lineup
-    table for display, optionally including advanced statistics.
+    Uses field_df to identify the player with the most innings at each position,
+    excluding UTL for all teams and DH for Central League teams. If a player is
+    already assigned to a position, selects the next highest-inning player at that
+    position. Formats the lineup table with basic or advanced statistics.
 
     Parameters:
         cumulative_df (DataFrame): Merged batting and fielding data for the selected team.
@@ -145,9 +146,9 @@ def create_lineup(cumulative_df, field_df, advanced_view):
         advanced_view (bool): Whether to display advanced statistics columns.
 
     Returns:
-        None
+        DataFrame: The formatted lineup dataframe.
     """
-    lineup_df = pd.DataFrame()
+    lineup_df = pd.DataFrame({"Player": []})
     # Find top players in each position (minus UTL and 1)
     if "CL" in cumulative_df["League"].values:
         # CL league does not have DH players
@@ -155,16 +156,21 @@ def create_lineup(cumulative_df, field_df, advanced_view):
     else:
         filter_pos_rows = ["DH", "RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
     for pos in filter_pos_rows:
-        all_stats_pos_df = cumulative_df.drop(
-            cumulative_df[cumulative_df["Pos"] != pos].index
-        )
         field_pos_df = field_df.drop(field_df[field_df["Pos"] != pos].index)
         # Use field_df to get whoever has most innings at that position (cumulative_df has innings aggregated across all positions)
-        starter_field = field_pos_df[field_pos_df["Inn"] == field_pos_df["Inn"].max()]
-        starter_all_stats = all_stats_pos_df[
-            all_stats_pos_df["Player"] == starter_field["Player"].iloc[0]
-        ]
+        starter_field = field_pos_df.sort_values("Inn", ascending=False)
+        # If a player is already in lineup_df, get the next available player
+        starter_player = starter_field["Player"].iloc[0]
+        while starter_player in lineup_df["Player"].values:
+            starter_player = starter_field["Player"].iloc[1]
+            starter_field = starter_field.iloc[1:]
+
+        # Grab batting and aggregated stats from cumulative df
+        starter_all_stats = cumulative_df[cumulative_df["Player"] == starter_player]
         lineup_df = pd.concat([starter_all_stats, lineup_df])
+
+    # Overwrite positions from cumulative_df with reverse of filter_pos_rows
+    lineup_df["Pos"] = filter_pos_rows[::-1]
 
     # Column reordering
     chosen_lineup_cols = [
@@ -222,44 +228,31 @@ def create_lineup(cumulative_df, field_df, advanced_view):
         column_config=hp.get_column_config("player_bat"),
     )
 
+    return lineup_df
 
-def create_bench(cumulative_df, field_df, advanced_view):
+
+def create_bench(cumulative_df, lineup_df, advanced_view):
     """
     Displays the bench/reserve batters for the selected team.
 
-    Identifies the highest-inning player at each position to determine the starting
-    lineup, then selects the top reserve players by PA not already in the starting
-    lineup. Adjusts the number of reserves based on league (6 for CL, 5 for others)
-    due to DH rules. Formats and displays the bench table in Streamlit.
+    Uses the provided starting lineup to identify reserve players, then selects
+    the top players by PA not already in the starting lineup. Adjusts the number
+    of reserves based on league (6 for CL, 5 for others) due to DH rules. Formats
+    and displays the bench table in Streamlit.
 
     Parameters:
         cumulative_df (DataFrame): Merged batting and fielding data for the selected team.
-        field_df (DataFrame): Fielding data for the selected team.
+        lineup_df (DataFrame): The starting lineup dataframe returned by create_lineup().
         advanced_view (bool): Whether to display advanced statistics columns.
 
     Returns:
         None
     """
-    lineup_df = pd.DataFrame()
-    # Find top players in each position (minus UTL and 1)
+    # Determine bench size based on league (6 for CL, 5 for PL)
     if "CL" in cumulative_df["League"].values:
-        # CL league does not have DH players
-        filter_pos_rows = ["RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
         bench_num = 6
     else:
-        filter_pos_rows = ["DH", "RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
         bench_num = 5
-    for pos in filter_pos_rows:
-        all_stats_pos_df = cumulative_df.drop(
-            cumulative_df[cumulative_df["Pos"] != pos].index
-        )
-        field_pos_df = field_df.drop(field_df[field_df["Pos"] != pos].index)
-        # Use field_df to get whoever has most innings at that position (cumulative_df has innings aggregated across all positions)
-        starter_field = field_pos_df[field_pos_df["Inn"] == field_pos_df["Inn"].max()]
-        starter_all_stats = all_stats_pos_df[
-            all_stats_pos_df["Player"] == starter_field["Player"].iloc[0]
-        ]
-        lineup_df = pd.concat([starter_all_stats, lineup_df])
 
     # Reserves = top 4 guys with most PA but not in top 9
     starter_list = lineup_df["Player"].tolist()

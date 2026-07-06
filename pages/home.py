@@ -14,7 +14,7 @@ def main():
     )
     st.header("Team Overview")
     st.write(
-        "Each team's primary lineup, rotation, and bullpen, plus top bench players. Starting position players are selected by defensive innings, bench players by plate appearances, starting pitchers by innings pitched, and relievers by saves and holds."
+        "Each team's primary lineup, rotation, and bullpen, plus top bench players. Starting position players are selected by defensive innings, bench players by plate appearances, starting pitchers by innings pitched, and relievers by saves and holds. Percentile coloring is based off each section individually."
     )
     st.header("Career Overview")
     st.write("An NPB player's bio information and career statistics. Select from a wide range of stats and explore trends in numbers. Please note that this database only includes players who appeared from 2016 onward, and the numbers may not be comprehensive.")

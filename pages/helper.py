@@ -2428,10 +2428,12 @@ def get_column_config(mode=None):
             alignment="left",
         ),
         "PA": st.column_config.NumberColumn(
+            format="%.0f",
             help="Plate Appearances: The total number of times a player comes to bat.",
             alignment="left",
         ),
         "RBI": st.column_config.NumberColumn(
+            format="%.0f",
             help="Runs Batted In: The number of runs a player drives in with their at-bats, except when grounding into a double play or reaching on an error.",
             alignment="left",
         ),
@@ -2456,6 +2458,7 @@ def get_column_config(mode=None):
             alignment="left",
         ),
         "SB": st.column_config.NumberColumn(
+            format="%.0f",
             help="Stolen Bases: The number of times a player successfully steals a base.",
             alignment="left",
         ),
@@ -2692,10 +2695,12 @@ def get_column_config(mode=None):
                     alignment="left",
                 ),
                 "HR": st.column_config.NumberColumn(
+                    format="%.0f",
                     help="Home Runs: The number of hits where a player safely reaches home plate without an error or fielder's choice.",
                     alignment="left",
                 ),
                 "BB": st.column_config.NumberColumn(
+                    format="%.0f",
                     help="Walks: The number of times a player is awarded first base after receiving four balls outside the strike zone.",
                     alignment="left",
                 ),
@@ -2704,6 +2709,7 @@ def get_column_config(mode=None):
                     alignment="left",
                 ),
                 "SO": st.column_config.NumberColumn(
+                    format="%.0f",
                     help="Strikeouts: The number of times a player is put out on three strikes.",
                     alignment="left",
                 ),
@@ -2712,6 +2718,7 @@ def get_column_config(mode=None):
                     alignment="left",
                 ),
                 "H": st.column_config.NumberColumn(
+                    format="%.0f",
                     help="Hits: The number of times a player reaches safely on a ball put in play without an error or fielder's choice.",
                     alignment="left",
                 ),
@@ -2730,6 +2737,7 @@ def get_column_config(mode=None):
                     alignment="left",
                 ),
                 "HR": st.column_config.NumberColumn(
+                    format="%.0f",
                     help="Home Runs: The number of home runs a pitcher allows.",
                     alignment="left",
                 ),
