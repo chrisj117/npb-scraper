@@ -1,5 +1,7 @@
 """Displays top players, lineup, rotation, and bullpen data with Streamlit"""
 
+from calendar import c
+
 import altair as alt
 import streamlit as st
 import pandas as pd
@@ -94,7 +96,9 @@ def main():
     pitch_df = pitch_df.drop(pitch_df[pitch_df.Team != user_team].index)
     field_df = field_df.drop(field_df[field_df.Team != user_team].index)
     cumulative_df = hp.prepare_streamlit_types(cumulative_df)
+    cumulative_df = hp.prepare_streamlit_col_order(cumulative_df)
     pitch_df = hp.prepare_streamlit_types(pitch_df)
+    pitch_df = hp.prepare_streamlit_col_order(pitch_df)
     team_field_df = hp.prepare_streamlit_types(team_field_df)
     team_bat_df = hp.prepare_streamlit_types(team_bat_df)
     team_pitch_df = hp.prepare_streamlit_types(team_pitch_df)
@@ -345,11 +349,14 @@ def create_top_pos_players(cumulative_df):
         + (cumulative_df["PA"] / 30)
     ) / 10
     top_pos_player_df = cumulative_df.sort_values(by="IMPACT", ascending=False).head(10)
+    # Some players have inf/" " BB/K values causing the column to be string, so manually force BB/K to float
+    top_pos_player_df["BB/K"] = top_pos_player_df["BB/K"].astype(float)
 
     # Create archetypes for players
     archetypes = []
     for _, row in top_pos_player_df.iterrows():
         player_archetypes = []
+        # Archetypes are informally grouped by color
         if (
             row["OPS+"] > 130
             and row["K%"] < 20
@@ -359,12 +366,20 @@ def create_top_pos_players(cumulative_df):
             player_archetypes.append(":yellow-badge[All-Rounder ⭐]")
         if row["ISO"] > 0.150 and row["HR/FB"] > 9:
             player_archetypes.append(":red-badge[Slugger 💥]")
+        if row["OFFB%"] > 40.0 and row["GB%"] < 40:
+            player_archetypes.append(":red-badge[Air Raider 🛩️]")
         if row["K%"] < 17.5 and row["SwStr%"] < 9:
             player_archetypes.append(":blue-badge[Contact Hitter 🏓]")
+        if row["GB%"] > 50.0 and row["Oppo%"] > 25 and row["HR/FB"] < 5:
+            player_archetypes.append(":blue-badge[Slap Hitter 🖐️]")
         if row["OBP"] > 0.33 and row["Chase%"] < 27.5 and row["BB%"] > 7.5:
             player_archetypes.append(":violet-badge[Disciplined 👁️]")
+        if row["O-Con%"] > 67.0 and row["BB/K"] > 0.6:
+            player_archetypes.append(":violet-badge[Pesky 🪰]")
         if row["Swing%"] > 47.5 and row["Chase%"] > 27.5:
             player_archetypes.append(":orange-badge[Aggressive 🗡️]")
+        if row["Pull%"] > 45.0 and row["Oppo%"] < 20:
+            player_archetypes.append(":orange-badge[Dead Pull 💀]")
         if (row["TZR/143"] > 8 or row["Framing/143"] > 8) and row["Pos"] not in [
             "1B",
             "DH",
@@ -392,18 +407,6 @@ def create_top_pos_players(cumulative_df):
         st.write(
             "A star position player with an OPS+ above 130, a K% below 20.0%, and a TZR/143 above 5.0."
         )
-        st.write(":red-badge[Slugger 💥]")
-        st.write("A power hitter with an ISO above .150 and an HR/FB% above 9.0%.")
-        st.write(":blue-badge[Contact Hitter 🏓]")
-        st.write("A high-contact hitter with a K% below 17.5% and a SwStr% below 9.0%")
-        st.write(":violet-badge[Disciplined 👁️]")
-        st.write(
-            "A selective hitter with an OBP above .330, a BB% above 7.5%, and a Chase% below 27.5%."
-        )
-        st.write(":orange-badge[Aggressive 🗡️]")
-        st.write(
-            "A proactive hitter with a Swing% above 47.5% and a Chase% above 27.5%."
-        )
         st.write(":grey-badge[Defensive Specialist 🛡️]")
         st.write(
             "A fielder with a TZR/143 above 8.0, or a catcher with a Framing/143 above 8.0. Primary first basemen and designated hitters are excluded."
@@ -412,6 +415,27 @@ def create_top_pos_players(cumulative_df):
         st.write(
             "A dangerous base stealer with either more than 10 stolen bases and a wSB above 1.0, or is on pace for more than 25 stolen base attempts over a full season."
         )
+        st.write(":red-badge[Slugger 💥]")
+        st.write("A power hitter with an ISO above .150 and an HR/FB% above 9.0%.")
+        st.write(":red-badge[Air Raider 🛩️]")
+        st.write("A fly ball hitter with an OFFB% above 40.0% and a GB% below 40.0%.")
+        st.write(":blue-badge[Contact Hitter 🏓]")
+        st.write("A high-contact hitter with a K% below 17.5% and a SwStr% below 9.0%")
+        st.write(":blue-badge[Slap Hitter 🖐️]")
+        st.write("A non-power hitter with a GB% above 50.0%, an Oppo% above 25.0%, and a HR/FB% below 5.0%.")
+        st.write(":violet-badge[Disciplined 👁️]")
+        st.write(
+            "A selective hitter with an OBP above .330, a BB% above 7.5%, and a Chase% below 27.5%."
+        )
+        st.write(":violet-badge[Pesky 🪰]")
+        st.write("A feisty hitter with an O-Con% above 67.0% and a BB/K above 0.60.")
+        st.write(":orange-badge[Aggressive 🗡️]")
+        st.write(
+            "A proactive hitter with a Swing% above 47.5% and a Chase% above 27.5%."
+        )
+        st.write(":orange-badge[Dead Pull 💀]")
+        st.write("A hitter with an extreme pull-side approach with a Pull% above 45.0% and an Oppo% below 20.0%.")
+
     st.table(
         top_pos_player_df,
         width="stretch",
@@ -449,20 +473,29 @@ def create_top_pitchers(pitch_df):
     archetypes = []
     for _, row in top_pitcher_df.iterrows():
         player_archetypes = []
+        # Archetypes are informally grouped by color
         if row["ERA+"] > 120 and row["K-BB%"] > 15 and (row["IP"] / row["G"]) > 6:
             player_archetypes.append(":yellow-badge[Ace ♠️]")
         if (row["IP"] / row["G"]) > 7 or row["CG"] > 2:
             player_archetypes.append(":green-badge[Workhorse 🐎]")
         if row["FB Velo"] > 93:
             player_archetypes.append(":red-badge[Power Pitcher 🔥]")
+        if row["K%"] > 22.5 and row["Putaway%"] > 20:
+            player_archetypes.append(":red-badge[Strikeout Artist 🎨]")
         if row["FB Velo"] < 90:
             player_archetypes.append(":violet-badge[Finesse Pitcher 🧠]")
         if row["GB%"] > 51:
-            player_archetypes.append(":grey-badge[Groundballer ⬇️]")
-        if row["BB%"] < 5.5:
+            player_archetypes.append(":violet-badge[Worm Burner 🪱]")
+        if row["BB%"] < 6.0 and row["Zone%"] > 53:
             player_archetypes.append(":blue-badge[Control Specialist 🎯]")
+        if row["F-Str%"] > 65.0 and row["Behind%"] < 10:
+            player_archetypes.append(":blue-badge[Count Setter ⏩]")
         if row["ERA+"] > 140 and (row["IP"] / row["G"]) < 1.5 and row["SwStr%"] > 12:
             player_archetypes.append(":orange-badge[Fireman 🧯]")
+        if row["High%"] > 47.5:
+            player_archetypes.append(":grey-badge[Ladder Climber 🪜]")
+        if row["Low%"] > 62.5:
+            player_archetypes.append(":grey-badge[Low Zoner 🦵]")
         archetypes.append("".join(player_archetypes) if player_archetypes else "")
     top_pitcher_df["Archetype"] = archetypes
 
@@ -494,20 +527,37 @@ def create_top_pitchers(pitch_df):
         st.write(
             "A durable starter who averages more than 7.0 innings per game or has thrown more than two complete games."
         )
+        st.write(":orange-badge[Fireman 🧯]")
+        st.write("A dominant reliever with an ERA+ above 140 and a SwStr% above 12.0%.")
         st.write(":red-badge[Power Pitcher 🔥]")
         st.write(
             "A hard-throwing pitcher with an average fastball velocity above 93.0 mph."
+        )
+        st.write(":red-badge[Strikeout Artist 🎨]")
+        st.write("A skilled pitcher with a K% above 22.5% and a Putaway% above 20.0%.")
+        st.write(":blue-badge[Control Specialist 🎯]")
+        st.write(
+            "A strike-thrower who limits free passes with a BB% below 6.0% and a Zone% above 53.0%."
+        )
+        st.write(":blue-badge[Count Setter ⏩]")
+        st.write(
+            "A decisive pitcher who gets ahead of the count often with a F-Str% above 65.0% and a Behind% below 10.0%."
         )
         st.write(":violet-badge[Finesse Pitcher 🧠]")
         st.write(
             " A soft-throwing pitcher with an average fastball velocity below 90.0 mph."
         )
-        st.write(":grey-badge[Groundballer ⬇️]")
-        st.write("A pitcher who limits fly balls with a GB% above 51.0%.")
-        st.write(":blue-badge[Control Specialist 🎯]")
-        st.write("A strike-thrower who limits free passes with a BB% below 5.5%.")
-        st.write(":orange-badge[Fireman 🧯]")
-        st.write("A dominant reliever with an ERA+ above 140 and a SwStr% above 12.0%.")
+        st.write(":violet-badge[Worm Burner 🪱]")
+        st.write("A pitcher who consistently generates groundballs with a GB% above 51.0%.")
+        st.write(":grey-badge[Ladder Climber 🪜]")
+        st.write(
+            "A pitcher who consistently throws high locations with a High% above 47.5%."
+        )
+        st.write(":grey-badge[Low Zoner 🦵]")
+        st.write(
+            "A pitcher who consistently throws low locations with a Low% above 62.5%."
+        )
+
     st.table(
         top_pitcher_df,
         width="stretch",
