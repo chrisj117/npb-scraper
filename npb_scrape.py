@@ -527,7 +527,7 @@ class Stats:
         # Original scraped tables split IP into 2 columns
         # Convert all NaN to 0 (as floats)
         elif (self.suffix == "PR" and int(self.year) <= 2025) or (
-            self.suffix == "PP" and int(self.year) >= 2025
+            self.suffix == "PP" and int(self.year) < 2025
         ):
             self.df.iloc[:, 11] = self.df.iloc[:, 11].fillna(0)
             self.df.iloc[:, 11] = self.df.iloc[:, 11].astype(float)
@@ -561,7 +561,6 @@ class Stats:
         # IP ".0 .1 .2" fix
         self.df["IP"] = convert_ip_column_in(self.df, "IP")
 
-    # TODO: change self.year to local passed in year
     def append_gsheets_pitcher_data(self, year):
         """Appends Google Sheets pitcher data to the main dataframe.
 
@@ -623,6 +622,15 @@ class Stats:
             ) and all(bad_str not in col for bad_str in bad_gsheet_cols):
                 new_gsheet_cols.append(col)
         gsheet_df = gsheet_df[new_gsheet_cols]
+
+        # Standardize percentage stats to whole numbers for Streamlit (Tablepress's conversion in rescale_pct_stats())
+        for col in gsheet_df.columns.to_list():
+            # Most new columns that need rescaling end in % except for HR/FB
+            if "%" in col or col == "HR/FB":
+                # If there are entries under 1.0, then we need to rescale to whole number format
+                col_max = gsheet_df[col].max()
+                if pd.notna(col_max) and col_max < 1.0:
+                    gsheet_df[col] = gsheet_df[col] * 100
 
         # Merge only needed columns from gsheet_df
         self.df = pd.merge(
@@ -697,6 +705,15 @@ class Stats:
                 new_gsheet_cols.append(col)
         gsheet_df = gsheet_df[new_gsheet_cols]
 
+        # Standardize percentage stats to whole numbers for Streamlit (Tablepress's conversion in rescale_pct_stats())
+        for col in gsheet_df.columns.to_list():
+            # Most new columns that need rescaling end in % except for HR/FB
+            if "%" in col or col == "HR/FB":
+                # If there are entries under 1.0, then we need to rescale to whole number format
+                col_max = gsheet_df[col].max()
+                if pd.notna(col_max) and col_max < 1.0:
+                    gsheet_df[col] = gsheet_df[col] * 100
+
         # Merge only needed columns from gsheet_df
         self.df = pd.merge(
             gsheet_df,
@@ -711,7 +728,7 @@ class Stats:
 
         Google Sheets and other data contains percentages as whole numbers (e.g., 50 for 50%).
         This method converts them to decimal format (e.g., 0.50) for proper percentage
-        display in the final output files.
+        display in the final Tablepress output files.
         """
         for col in self.df.columns.to_list():
             # Most new columns that need rescaling end in % except for HR/FB
@@ -3117,8 +3134,6 @@ class CareerData(Stats):
         org_career_pitch():
             Organizes career pitching statistics - calculates ERA+ and aggregates
             multiple years of data.
-        output_final():
-            Outputs the final organized career data to CSV files for upload.
         metric_to_imperial():
             Helper to convert height (cm) and weight (kg) to feet/inches and pounds."""
 
@@ -3355,6 +3370,16 @@ class CareerData(Stats):
             # Call org_player_bat with the single year
             self.org_player_bat(self.suffix, year)
 
+            # Standardize all percentages for Streamlit display
+            for col in self.df.columns.to_list():
+                # Most new columns that need rescaling end in % except for HR/FB
+                if "%" in col or col == "HR/FB":
+                    # If there are entries under 1.0, then we need to rescale to whole number format
+                    col_max = self.df[col].max()
+                    print(col + " max: " + str(col_max))
+                    if pd.notna(col_max) and col_max <= 1.0:
+                        self.df[col] = self.df[col] * 100
+
             # Add positions from fielding
             self.append_career_bat_positions(year)
 
@@ -3436,6 +3461,16 @@ class CareerData(Stats):
 
             # Call org_player_pitch with the single year
             self.org_player_pitch(self.suffix, year)
+
+            # Standardize all percentages for Streamlit display
+            for col in self.df.columns.to_list():
+                # Most new columns that need rescaling end in % except for HR/FB
+                if "%" in col or col == "HR/FB":
+                    # If there are entries under 1.0, then we need to rescale to whole number format
+                    col_max = self.df[col].max()
+                    print(col + " max: " + str(col_max))
+                    if pd.notna(col_max) and col_max <= 1.0:
+                        self.df[col] = self.df[col] * 100
 
             # Store the processed year dataframe
             processed_dfs.append(self.df.copy())
@@ -3989,6 +4024,9 @@ def get_gsheets_data(input_dir, year_dir, suffix, year, stat_type):
     year (string): The desired NPB year to scrape"""
     # Google sheet stats not available before 2021, so return immediately
     if int(year) < 2021:
+        return
+    # Google sheet team stats not available before 2025, so return
+    if int(year) < 2025 and stat_type == "team":
         return
 
     gsheet_df = pd.read_csv(os.path.join(input_dir, "google_sheet_urls.csv"))
