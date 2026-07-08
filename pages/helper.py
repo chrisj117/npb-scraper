@@ -581,7 +581,7 @@ def create_sort_filter(cols, mode):
             "K-BB%": "desc",
             "CSW%": "desc",
             "HR%": "asc",
-            "Z-Con%": "desc",
+            "Z-Con%": "asc",
             "SwStr%": "desc",
             "Chase%": "desc",
             "GB%": "desc",
