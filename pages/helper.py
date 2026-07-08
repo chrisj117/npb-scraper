@@ -728,23 +728,39 @@ def create_pos_filter(df, mode=None):
 
 def create_stat_cols_filter(df, mode=None, key=None):
     """
-    Creates a Streamlit segmented control filter for selecting statistic
-    columns to display.
+    Creates Streamlit widgets for selecting which statistic columns to display.
 
     Parameters:
-        df (pandas.DataFrame): DataFrame containing available statistic
+        df (pandas.DataFrame): DataFrame containing the available statistic
             columns.
-        mode (str, optional): If set to "player_bat" or "player_pitch",
-            provides a default selection of common batting or pitching stats.
-            Otherwise, defaults to all columns.
+        mode (str, optional): Determines both the default column selection and
+            the available quick-view presets. Options:
+            - "player_bat": Default batting stats; "Plate Discipline" and
+              "Batted Ball" quick views (plus "All"/"None").
+            - "team_bat": Team batting stats; same batting quick views.
+            - "player_pitch": Default pitching stats; "Plate Discipline",
+              "Batted Ball", and "Approach" quick views.
+            - "team_pitch": Team pitching stats; same pitching quick views.
+            - "player_field": Default fielding stats.
+            - "team_field": Team fielding stats.
+            - "career_bat_cols": Default career batting stats.
+            - "career_pitch_cols": Default career pitching stats.
+            - None (default): Defaults to every column in df.
+        key (str, optional): Prefix used for Streamlit widget keys, so multiple
+            instances of the filter can coexist on one page without key
+            collisions. If provided, the "All/None" control uses
+            f"{key}_all_none".
 
     Functionality:
-        - Displays a multi-select segmented control for users to choose which
-        statistic columns to show.
-        - Sorts the selected columns in the order they appear in the DataFrame.
+        - Displays a primary "Select Stats" segmented control offering "All",
+          "None", and any applicable quick-view presets for the given mode.
+        - Displays a secondary multi-select "Statistics" segmented control whose
+          default selection is driven by the chosen preset (or the mode default).
+        - Reorders the selected columns to match the order they appear in df.
 
     Returns:
-        list: List of selected statistic column names.
+        list: List of selected statistic column names, ordered as they appear in
+            df.
     """
     if mode == "player_bat":
         filter_default = [
@@ -917,36 +933,228 @@ def create_stat_cols_filter(df, mode=None, key=None):
         all_none_key = key + "_all_none"
     else:
         all_none_key = key
+
+    # Add views based on columns in dataframe
+    options_list = ["All", "None"]
+    # Batter mode views
+    if mode in ["player_bat", "team_bat"]:
+        batter_plate_discipline_cols = [
+            "Player",
+            "G",
+            "PA",
+            "K%",
+            "BB%",
+            "BB/K",
+            "Z-Swing%",
+            "Chase%",
+            "Z-O Swing%",
+            "Swing%",
+            "Z-Con%",
+            "O-Con%",
+            "Contact%",
+            "Whiff%",
+            "SwStr%",
+            "CSW%",
+            "sHPT",
+            "sST",
+            "sSeager",
+            "TTO%",
+            "Age",
+            "Pos",
+            "B",
+            "Team",
+            "League",
+            "OBP",
+        ]
+        batter_batted_balls_cols = [
+            "Player",
+            "G",
+            "PA",
+            "AVG",
+            "SLG",
+            "OPS+",
+            "ISO",
+            "BABIP",
+            "HR",
+            "HR%",
+            "HR/FB",
+            "GB%",
+            "LD%",
+            "FB%",
+            "OFFB%",
+            "IFFB%",
+            "AIR%",
+            "PullAIR%",
+            "Pull%",
+            "Cent%",
+            "Oppo%",
+            "Age",
+            "Pos",
+            "B",
+            "Team",
+            "League",
+        ]
+
+        if mode == "team_bat":
+            for col in ["Player", "Age", "G", "Pos", "B"]:
+                batter_plate_discipline_cols.remove(col)
+                batter_batted_balls_cols.remove(col)
+
+        if set(batter_plate_discipline_cols).issubset(df.columns.to_list()):
+            options_list.append("Plate Discipline")
+        if set(batter_batted_balls_cols).issubset(df.columns.to_list()):
+            options_list.append("Batted Ball")
+    # Pitcher mode views
+    if mode in ["player_pitch", "team_pitch"]:
+        pitcher_plate_discipline_cols = [
+            "Pitcher",
+            "G",
+            "IP",
+            "K%",
+            "BB%",
+            "K-BB%",
+            "Z-Swing%",
+            "Chase%",
+            "Z-O Swing%",
+            "Swing%",
+            "Z-Con%",
+            "O-Con%",
+            "Contact%",
+            "Whiff%",
+            "SwStr%",
+            "CSW%",
+            "sSeager",
+            "Strike%",
+            "Ball%",
+            "F-Str%",
+            "Putaway%",
+            "Age",
+            "T",
+            "Team",
+            "League",
+        ]
+        pitcher_batted_ball_cols = [
+            "Pitcher",
+            "G",
+            "IP",
+            "HR%",
+            "HR/FB",
+            "GB%",
+            "LD%",
+            "FB%",
+            "OFFB%",
+            "IFFB%",
+            "AIR%",
+            "PullAIR%",
+            "Pull%",
+            "Cent%",
+            "Oppo%",
+            "Age",
+            "T",
+            "Team",
+            "League",
+        ]
+        pitcher_approach_cols = [
+            "Pitcher",
+            "G",
+            "IP",
+            "Zone%",
+            "High%",
+            "Low%",
+            "MM%",
+            "Arm%",
+            "Glove%",
+            "Behind%",
+            "Sec%",
+            "Age",
+            "T",
+            "Team",
+            "League",
+        ]
+
+        if mode == "team_pitch":
+            for col in ["Pitcher", "G", "Age", "T"]:
+                pitcher_plate_discipline_cols.remove(col)
+                pitcher_batted_ball_cols.remove(col)
+                pitcher_approach_cols.remove(col)
+
+        if set(pitcher_plate_discipline_cols).issubset(df.columns.to_list()):
+            options_list.append("Plate Discipline")
+        if set(pitcher_batted_ball_cols).issubset(df.columns.to_list()):
+            options_list.append("Batted Ball")
+        if set(pitcher_approach_cols).issubset(df.columns.to_list()):
+            options_list.append("Approach")
+    # Create "Select Stats" buttons
     all_none_filter = st.segmented_control(
         "Select Stats",
-        options=["All", "None"],
+        options=options_list,
         selection_mode="single",
         key=all_none_key,
     )
+
+    # Change highlighted "Statistics" cols buttons
     if all_none_filter == "All":
         cols = filter_container.segmented_control(
             "Statistics",
-            df.columns.tolist(),
-            default=df.columns.tolist(),
+            df.columns.to_list(),
+            default=df.columns.to_list(),
             selection_mode="multi",
         )
     elif all_none_filter == "None":
         cols = filter_container.segmented_control(
             "Statistics",
-            df.columns.tolist(),
-            default=df.columns.tolist()[0],
+            df.columns.to_list(),
+            default=df.columns.to_list()[0],
             selection_mode="multi",
         )
+    # Alternative batter quick views
+    elif all_none_filter == "Plate Discipline" and mode in ["player_bat", "team_bat"]:
+        cols = filter_container.segmented_control(
+            "Statistics",
+            df.columns.to_list(),
+            default=batter_plate_discipline_cols,
+            selection_mode="multi",
+        )
+    elif all_none_filter == "Batted Ball" and mode in ["player_bat", "team_bat"]:
+        cols = filter_container.segmented_control(
+            "Statistics",
+            df.columns.to_list(),
+            default=batter_batted_balls_cols,
+            selection_mode="multi",
+        )
+    # Alternative pitcher quick views
+    elif all_none_filter == "Plate Discipline" and mode in ["player_pitch", "team_pitch"]:
+        cols = filter_container.segmented_control(
+            "Statistics",
+            df.columns.to_list(),
+            default=pitcher_plate_discipline_cols,
+            selection_mode="multi",
+        )
+    elif all_none_filter == "Batted Ball" and mode in ["player_pitch", "team_pitch"]:
+        cols = filter_container.segmented_control(
+            "Statistics",
+            df.columns.to_list(),
+            default=pitcher_batted_ball_cols,
+            selection_mode="multi",
+        )
+    elif all_none_filter == "Approach" and mode in ["player_pitch", "team_pitch"]:
+        cols = filter_container.segmented_control(
+            "Statistics",
+            df.columns.to_list(),
+            default=pitcher_approach_cols,
+            selection_mode="multi",
+        )
+    # Default stats
     else:
         cols = filter_container.segmented_control(
             "Statistics",
-            df.columns.tolist(),
+            df.columns.to_list(),
             default=filter_default,
             selection_mode="multi",
         )
 
     # Sort cols as dataframe
-    cols = [c for c in df.columns.tolist() if c in cols]
+    cols = [c for c in df.columns.to_list() if c in cols]
     return cols
 
 
