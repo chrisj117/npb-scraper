@@ -21,7 +21,8 @@ def main():
 
     # User filters
     stat_col1, stat_col2, stat_col3 = st.columns(
-        [2, 1.1, 5.9], vertical_alignment="center"
+        [2, 0.75, 6.25],
+        vertical_alignment="center",
     )
     with stat_col1:
         user_year = hp.create_year_filter()
@@ -38,21 +39,22 @@ def main():
     # Generate list of dataframe to show
     leader_tables = build_leader_tables(user_year, user_bat_pitch, user_league)
 
-    # Print dataframes in 3 columns
-    r1c1, r1c2, r1c3 = st.columns([1, 1, 1])
+    # Print dataframes in 4 columns
+    r1c1, r1c2, r1c3, r1c4 = st.columns([1, 1, 1, 1], gap="xxsmall")
     i = 0
     for table in leader_tables:
         # Distribute dataframes into each column
-        if i % 3 == 0:
+        if i % 4 == 0:
             chosen_col = r1c1
-        elif i % 3 == 1:
+        elif i % 4 == 1:
             chosen_col = r1c2
-        else:
+        elif i % 4 == 2:
             chosen_col = r1c3
-
+        else:
+            chosen_col = r1c4
         with chosen_col:
-            # 2nd column will always be stat name
-            st.header(table.columns.to_list()[1])
+            # 2nd column from data will always be stat name
+            st.write("***" + table.columns.to_list()[1] + "***")
             # Determine stat display/hover configs
             if "Player" in table.columns.to_list():
                 config = "player_bat"
@@ -61,16 +63,16 @@ def main():
             else:
                 config = ""
 
+            # Shorten team names
+            hp.convert_team_names(table, "Team", mode="short")
+
             styler = table.style
             styler.apply(hp.color_by_team, axis=0)
             if "Player" in table.columns:
-                bolded=["Player", "Team"]
+                bolded = ["Player", "Team"]
             else:
-                bolded=["Pitcher", "Team"]
-            styler = styler.set_properties(
-                subset=bolded,
-                **{"font-weight": "bold"}
-            )
+                bolded = ["Pitcher", "Team"]
+            styler = styler.set_properties(subset=bolded, **{"font-weight": "bold"})
             chosen_col.dataframe(
                 styler,
                 width="stretch",
@@ -103,6 +105,10 @@ def build_leader_tables(user_year, user_bat_pitch, user_league):
     player_bat_df = hp.load_csv(st.secrets[user_year + "StatsFinalBR_link"])
     lead_pitch_df = hp.load_csv(st.secrets[user_year + "LeadersPR_link"])
     player_pitch_df = hp.load_csv(st.secrets[user_year + "StatsFinalPR_link"])
+    lead_bat_df = hp.prepare_streamlit_col_order(lead_bat_df)
+    player_bat_df = hp.prepare_streamlit_col_order(player_bat_df)
+    lead_pitch_df = hp.prepare_streamlit_col_order(lead_pitch_df)
+    player_pitch_df = hp.prepare_streamlit_col_order(player_pitch_df)
 
     stat_dicts = []
     # Dict of stats and what dataframes they come from
@@ -113,9 +119,13 @@ def build_leader_tables(user_year, user_bat_pitch, user_league):
         "SLG": lead_bat_df,
         "OPS": lead_bat_df,
         "HR": player_bat_df,
+        "ISO": lead_bat_df,
+        "BABIP": lead_bat_df,
+        "OPS+": lead_bat_df,
         "RBI": player_bat_df,
         "H": player_bat_df,
         "R": player_bat_df,
+        "SH": player_bat_df,
         "SB": player_bat_df,
         "SO": player_bat_df,
         "BB": player_bat_df,
@@ -124,21 +134,26 @@ def build_leader_tables(user_year, user_bat_pitch, user_league):
     if "Batting" in user_bat_pitch:
         stat_dicts.append(bat_stat_dict)
     pitch_stat_dict = {
+        "IP": player_pitch_df,
         "ERA": lead_pitch_df,
         "FIP": lead_pitch_df,
         "WHIP": lead_pitch_df,
-        "IP": player_pitch_df,
         "W": player_pitch_df,
+        "L": player_pitch_df,
+        "CG": player_pitch_df,
         "SHO": player_pitch_df,
         "G": player_pitch_df,
         "HLD": player_pitch_df,
         "SV": player_pitch_df,
+        "HR": player_pitch_df,
         "SO": player_pitch_df,
         "BB": player_pitch_df,
         "K-BB%": lead_pitch_df,
         "GB%": lead_pitch_df,
+        "SwStr%": lead_pitch_df,
         "CSW%": lead_pitch_df,
         "FB Velo": player_pitch_df,
+        "Grade": lead_pitch_df,
     }
     if "Pitching" in user_bat_pitch:
         stat_dicts.append(pitch_stat_dict)

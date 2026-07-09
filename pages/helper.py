@@ -2893,7 +2893,7 @@ def get_column_config(mode=None):
                 ),
             }
         )
-    if mode == "player_bat":
+    if mode in ["player_bat", "team_bat"]:
         column_config.update(
             {
                 "sSeager": st.column_config.NumberColumn(
@@ -2935,7 +2935,7 @@ def get_column_config(mode=None):
                 ),
             }
         )
-    if mode == "player_pitch":
+    if mode in ["player_pitch", "team_pitch"]:
         column_config.update(
             {
                 "sSeager": st.column_config.NumberColumn(
