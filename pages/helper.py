@@ -2229,22 +2229,22 @@ def color_by_team(col):
         list: List of CSS background-color strings for each cell in the column.
     """
     valid_data = col.dropna()
-    if len(valid_data) == 0 or col.name != "Team":
+    if len(valid_data) == 0 or col.name not in ("Team", "Home Team", "Away Team"):
         return [""] * len(col)
 
     team_colors = {
-        "Rakuten": "#b63a52",
-        "Nipponham": "#4f8cb2",
-        "ORIX": "#bbaa31",
-        "SoftBank": "#fcc800",
-        "Seibu": "#6b7fcf",
-        "Lotte": "#9a9a9a",
-        "Hiroshima": "#f9271a",
-        "Chunichi": "#4a68c2",
-        "Yomiuri": "#f69822",
-        "Hanshin": "#ffe200",
-        "DeNA": "#9b8cf2",
-        "Yakult": "#4dba84",
+        "Rakuten": "#c1586c",
+        "Nipponham": "#699dbe",
+        "ORIX": "#c5b750",
+        "SoftBank": "#fcd026",
+        "Seibu": "#8192d6",
+        "Lotte": "#a9a9a9",
+        "Hiroshima": "#fa473c",
+        "Chunichi": "#657fcb",
+        "Yomiuri": "#f7a743",
+        "Hanshin": "#ffe626",
+        "DeNA": "#aa9df4",
+        "Yakult": "#68c496",
         "League Average": "#ffffff",
     }
 
@@ -2853,6 +2853,9 @@ def get_column_config(mode=None):
         "vs M": st.column_config.TextColumn(
             help="Record vs. Lotte Marines",
             alignment="left",
+        ),
+        "Scores": st.column_config.TextColumn(
+            alignment="center",
         ),
     }
     # Pin and widen team columns on according pages, keep unpinned elsewhere
