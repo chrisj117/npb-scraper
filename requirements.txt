@@ -1,8 +1,8 @@
-altair==6.1.0
-beautifulsoup4==4.14.3
-numpy==2.4.4
+altair==6.2.2
+beautifulsoup4==4.15.0
+numpy==2.5.1
 pandas==3.0.3
-playwright==1.59.0
-Requests==2.34.0
-streamlit==1.57.0
+playwright==1.61.0
+Requests==2.34.2
+streamlit==1.59.2
 urllib3==2.7.0
