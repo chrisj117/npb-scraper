@@ -3376,7 +3376,6 @@ class CareerData(Stats):
                 if "%" in col or col == "HR/FB":
                     # If there are entries under 1.0, then we need to rescale to whole number format
                     col_max = self.df[col].max()
-                    print(col + " max: " + str(col_max))
                     if pd.notna(col_max) and col_max <= 1.0:
                         self.df[col] = self.df[col] * 100
 
@@ -3468,7 +3467,6 @@ class CareerData(Stats):
                 if "%" in col or col == "HR/FB":
                     # If there are entries under 1.0, then we need to rescale to whole number format
                     col_max = self.df[col].max()
-                    print(col + " max: " + str(col_max))
                     if pd.notna(col_max) and col_max <= 1.0:
                         self.df[col] = self.df[col] * 100
 
@@ -5303,6 +5301,8 @@ def add_roster_data(df, suffix, year):
     # Remove trailing zeroes from age
     df["Age"] = df["Age"].astype(str)
     df["Age"] = df["Age"].str.replace(".0", "")
+    # Drop temp keys col
+    df= df.drop("keys", axis=1)
     return df
 
 
