@@ -8,7 +8,6 @@ import pandas as pd
 import requests
 import numpy as np
 
-
 @st.cache_data(ttl=600, max_entries=25, show_spinner=False)
 def load_csv(url=None):
     """
@@ -615,6 +614,7 @@ def create_sort_filter(cols, mode):
             "MM%": "asc",
             "Behind%": "asc",
             "pERA-": "asc",
+            "pERA": "asc",
             "kwERA-": "asc",
             "Team": None,
             "League": None,
@@ -1595,6 +1595,7 @@ def prepare_streamlit_col_order(df, mode=None):
             "PAR%": "Putaway%",
             "YpERA Grade": "Grade",
             "YpERA-": "pERA-",
+            "YpERA": "pERA",
         },
         errors="ignore",
     )
@@ -1728,7 +1729,7 @@ def prepare_streamlit_col_order(df, mode=None):
             "League",
         ]
     elif mode == "team_pitch":
-        df = df.drop(columns=["sST", "sHPT", "TBF"], errors="ignore")
+        df = df.drop(columns=["sST", "sHPT", "TBF", "Adj YpERA"], errors="ignore")
         col_order = [
             "Team",
             "G",
@@ -1752,6 +1753,7 @@ def prepare_streamlit_col_order(df, mode=None):
             "ERA",
             "FIP",
             "kwERA",
+            "pERA",
             "WHIP",
             "ERA+",
             "FIP-",
@@ -1802,7 +1804,7 @@ def prepare_streamlit_col_order(df, mode=None):
             "League",
         ]
     elif mode == "player_pitch":
-        df = df.drop(columns=["sST", "sHPT", "TBF", "PCT", "BK"], errors="ignore")
+        df = df.drop(columns=["sST", "sHPT", "TBF", "PCT", "BK", "Adj YpERA"], errors="ignore")
         col_order = [
             "Pitcher",
             "G",
@@ -1826,6 +1828,7 @@ def prepare_streamlit_col_order(df, mode=None):
             "ERA",
             "FIP",
             "kwERA",
+            "pERA",
             "WHIP",
             "ERA+",
             "FIP-",
@@ -2477,6 +2480,11 @@ def get_column_config(mode=None):
         "pERA-": st.column_config.NumberColumn(
             format="%.0f",
             help="Pitch ERA Minus: A normalized version of pERA, inspired by Jeff Zimmerman's model for per pitch valuations, with 100 always being the league average. Lower values are better.",
+            alignment="left",
+        ),
+        "pERA": st.column_config.NumberColumn(
+            format="%.2f",
+            help="Pitch ERA: A per pitch valuation model inspired by Jeff Zimmerman.",
             alignment="left",
         ),
         "Z-Con%": st.column_config.NumberColumn(
