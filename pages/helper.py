@@ -9,7 +9,7 @@ import requests
 import numpy as np
 
 
-@st.cache_data(ttl=600, show_spinner=False)
+@st.cache_data(ttl=600, max_entries=25, show_spinner=False)
 def load_csv(url=None):
     """
     Loads a csv from a link and returns it as a dataframe.
@@ -24,7 +24,19 @@ def load_csv(url=None):
     # Returns dataframe if good link, otherwise None
     response = requests.get(url, timeout=10)
     if response.status_code == 200:
-        return pd.read_csv(StringIO(response.text))
+        df = pd.read_csv(StringIO(response.text))
+        # Downcast floats and integers to smaller memory footprints
+        f_cols = df.select_dtypes(include=["float"]).columns
+        i_cols = df.select_dtypes(include=["integer"]).columns
+
+        df[f_cols] = df[f_cols].apply(
+            pd.to_numeric, downcast="float"
+        )
+        df[i_cols] = df[i_cols].apply(
+            pd.to_numeric, downcast="integer"
+        )
+
+        return df
     st.error("Failed to load raw data.")
     return None
 
@@ -1123,7 +1135,10 @@ def create_stat_cols_filter(df, mode=None, key=None):
             selection_mode="multi",
         )
     # Alternative pitcher quick views
-    elif all_none_filter == "Plate Discipline" and mode in ["player_pitch", "team_pitch"]:
+    elif all_none_filter == "Plate Discipline" and mode in [
+        "player_pitch",
+        "team_pitch",
+    ]:
         cols = filter_container.segmented_control(
             "Statistics",
             df.columns.to_list(),
@@ -1346,7 +1361,7 @@ def create_ip_filter(df, mode=None):
         value=filter_default,
         min_value=filter_min,
         step=25.0,
-        max_value=df["IP"].max(),
+        max_value=df["IP"].max().astype(float),
         format="%0.1f",
     )
     return ip
@@ -1384,7 +1399,7 @@ def create_inn_filter(df, mode=None):
         value=filter_default,
         min_value=filter_min,
         step=250.0,
-        max_value=df["Inn"].max(),
+        max_value=df["Inn"].max().astype(float),
         format="%0.1f",
     )
     return inn
@@ -2884,6 +2899,20 @@ def get_column_config(mode=None):
             {
                 "T": st.column_config.NumberColumn(
                     help="Ties",
+                    alignment="left",
+                ),
+                "Diff": st.column_config.NumberColumn(
+                    format="%.0f",
+                    help="Run Differential",
+                    alignment="left",
+                ),
+            }
+        )
+    if mode == "team_summary":
+        column_config.update(
+            {
+                "HR": st.column_config.NumberColumn(
+                    help="Home Runs",
                     alignment="left",
                 ),
                 "Diff": st.column_config.NumberColumn(
