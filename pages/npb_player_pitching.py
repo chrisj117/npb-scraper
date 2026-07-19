@@ -114,6 +114,9 @@ def main():
         "Grade",
         "pERA-",
         "pERA",
+        "ERA-",
+        "CStr%",
+        "xK-BB%",
     ]
     invert_pct_cols = [
         "ERA",
@@ -142,6 +145,7 @@ def main():
         "Behind%",
         "pERA-",
         "pERA",
+        "ERA-",
     ]
 
     # Shorten team names before displaying

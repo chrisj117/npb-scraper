@@ -107,6 +107,7 @@ def main():
         "Pull%",
         "Cent%",
         "Oppo%",
+        "GB/FB",
     ]
     invert_pct_cols = [
         "K%",
@@ -117,6 +118,7 @@ def main():
         "sHPT",
         "GB%",
         "IFFB%",
+        "GB/FB",
     ]
 
     # Shorten team names before displaying
