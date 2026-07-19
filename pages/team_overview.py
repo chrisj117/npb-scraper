@@ -1,7 +1,5 @@
 """Displays top players, lineup, rotation, and bullpen data with Streamlit"""
 
-from calendar import c
-
 import altair as alt
 import streamlit as st
 import pandas as pd
@@ -42,7 +40,7 @@ def main():
     team_bat_df = hp.load_csv(st.secrets[user_year + "TeamBR_link"])
     team_field_df = hp.load_csv(st.secrets[user_year + "TeamFieldingFinalR_link"])
     team_pitch_df = hp.load_csv(st.secrets[user_year + "TeamPR_link"])
-    if int(user_year) >= 2026:
+    if int(user_year) >= 2025:
         central_df = hp.load_csv(st.secrets[user_year + "StandingsFinalC_npb_link"])
         pacific_df = hp.load_csv(st.secrets[user_year + "StandingsFinalP_npb_link"])
     else:
@@ -191,6 +189,7 @@ def create_lineup(cumulative_df, field_df, advanced_view):
             "ISO",
             "K%",
             "BB%",
+            "GB/FB",
             "sSeager",
             "OPS+",
         ]
@@ -199,12 +198,14 @@ def create_lineup(cumulative_df, field_df, advanced_view):
             "H",
             "HR",
             "RBI",
+            "TB",
             "SB",
             "SO",
             "BB",
             "AVG",
         ]
     lineup_df = lineup_df[chosen_lineup_cols]
+    lineup_df = lineup_df.convert_dtypes()
 
     # Declare columns to be colored percentiles
     pct_cols = [
@@ -216,8 +217,9 @@ def create_lineup(cumulative_df, field_df, advanced_view):
         "OPS+",
         "AVG",
         "PA",
+        "GB/FB",
     ]
-    invert_pct_cols = ["K%"]
+    invert_pct_cols = ["K%", "GB/FB",]
 
     # Display data
     st.write("***Lineup***")
@@ -281,6 +283,7 @@ def create_bench(cumulative_df, lineup_df, advanced_view):
             "ISO",
             "K%",
             "BB%",
+            "GB/FB",
             "sSeager",
             "OPS+",
         ]
@@ -289,12 +292,14 @@ def create_bench(cumulative_df, lineup_df, advanced_view):
             "H",
             "HR",
             "RBI",
+            "TB",
             "SB",
             "SO",
             "BB",
             "AVG",
         ]
     bench_df = bench_df[chosen_bench_cols]
+    bench_df = bench_df.convert_dtypes()
 
     # Declare columns to be colored percentiles
     pct_cols = [
@@ -306,8 +311,9 @@ def create_bench(cumulative_df, lineup_df, advanced_view):
         "OPS+",
         "AVG",
         "PA",
+        "GB/FB",
     ]
-    invert_pct_cols = ["K%"]
+    invert_pct_cols = ["K%", "GB/FB",]
 
     # Display data
     st.write("***Bench***")
@@ -615,16 +621,17 @@ def create_rotation(pitch_df, advanced_view):
             "GB%",
             "K%",
             "BB%",
+            "pERA-",
             "FIP-",
-            "ERA+",
+            "ERA-",
         ]
     else:
-        chosen_sp_cols = chosen_sp_cols + ["W", "CG", "HR", "SO", "BB", "WHIP", "ERA"]
+        chosen_sp_cols = chosen_sp_cols + ["W", "L", "CG", "HR", "SO", "BB", "WHIP", "ERA"]
     sp_df = sp_df[chosen_sp_cols]
 
     # Declare columns to be colored percentiles
-    pct_cols = ["IP", "FB Velo", "CSW%", "GB%", "K%", "FIP-", "ERA+"]
-    invert_pct_cols = ["ERA", "FIP-", "BB%"]
+    pct_cols = ["IP", "FB Velo", "CSW%", "GB%", "K%", "FIP-", "ERA-", "pERA-",]
+    invert_pct_cols = ["ERA", "FIP-", "BB%", "ERA-", "pERA-",]
 
     st.write("***Rotation***")
     styler_sp = sp_df.style
@@ -685,16 +692,17 @@ def create_bullpen(pitch_df, advanced_view):
             "GB%",
             "K%",
             "BB%",
+            "pERA-",
             "FIP-",
-            "ERA+",
+            "ERA-",
         ]
     else:
-        chosen_bp_cols = chosen_bp_cols + ["SV", "HLD", "HR", "SO", "BB", "WHIP", "ERA"]
+        chosen_bp_cols = chosen_bp_cols + ["G", "SV", "HLD", "HR", "SO", "BB", "WHIP", "ERA"]
     bp_df = bp_df[chosen_bp_cols]
 
     # Declare columns to be colored percentiles
-    pct_cols = ["IP", "FB Velo", "CSW%", "GB%", "K%", "FIP-", "ERA+"]
-    invert_pct_cols = ["ERA", "FIP-", "BB%"]
+    pct_cols = ["IP", "FB Velo", "CSW%", "GB%", "K%", "FIP-", "ERA-", "pERA-",]
+    invert_pct_cols = ["ERA", "FIP-", "BB%", "ERA-", "pERA-",]
 
     st.write("***Bullpen***")
     styler_bp = bp_df.style
