@@ -29,6 +29,8 @@ from playwright.sync_api import sync_playwright
 # TODO: change farm 2026 fielding "League" to "Division" *
 # TODO: refactor daily scores
 # TODO: move input dir creation here (main)?
+# TODO: change playwright to selenium
+# TODO: update github tests to use fedora instead of ubuntu
 def main():
     """The main function for the NPB/Farm League Statistic Scraper.
 
@@ -435,6 +437,7 @@ class Stats:
             self.df["ERA+"] = 100 * ((total_era * self.df["ParkF"]) / self.df["ERA"])
             self.df["ERA+"] = self.df["ERA+"].astype(str).replace("inf", "999")
             self.df["ERA+"] = self.df["ERA+"].astype(float)
+            self.df["ERA-"] = 10000 / self.df["ERA+"]
             self.df["kwERA-"] = 100 * (self.df["kwERA"] / (total_kwera))
             self.df["FIP"] = (
                 (
@@ -640,6 +643,15 @@ class Stats:
             how="right",
         )
 
+        # Calculate new stats based off of GSheet stats
+        self.df["CStr%"] = self.df["CSW%"] - self.df["SwStr%"]
+        self.df["xK-BB%"] = (
+            (0.828 * self.df["CSW%"])
+            + (1.188 * self.df["SwStr%"])
+            - (0.726 * self.df["Ball%"])
+            + 1.778
+        )
+
     def append_gsheets_batter_data(self, year):
         """Appends Google Sheets batter data to the main dataframe.
 
@@ -721,6 +733,9 @@ class Stats:
             on=["Player", "Team"],
             how="right",
         )
+
+        # Calculate new stats based off of GSheet stats
+        self.df["GB/FB"] = self.df["GB%"] / self.df["FB%"]
 
     def rescale_pct_stats(self):
         """
@@ -1836,6 +1851,10 @@ class TeamData(Stats):
                 on="Team",
                 how="left",
             )
+
+            # Add new GSheet specific stats
+            self.df["GB/FB"] = self.df["GB%"] / self.df["FB%"]
+
             self.gsheet_added = True
         else:
             new_gsheet_cols = []
@@ -1927,6 +1946,7 @@ class TeamData(Stats):
         # Calculations for RATE stats
         self.df["ERA"] = 9 * (self.df["ER"] / self.df["IP"])
         self.df["ERA+"] = 100 * (total_era * self.df["ParkF"]) / self.df["ERA"]
+        self.df["ERA-"] = 10000 / self.df["ERA+"]
         self.df["kwERA"] = 4.80 - (
             10 * ((self.df["SO"] - self.df["BB"]) / self.df["BF"])
         )
@@ -1989,6 +2009,16 @@ class TeamData(Stats):
                 on="Team",
                 how="left",
             )
+
+            # Add new GSheet specific stats
+            self.df["CStr%"] = self.df["CSW%"] - self.df["SwStr%"]
+            self.df["xK-BB%"] = (
+                (0.828 * self.df["CSW%"])
+                + (1.188 * self.df["SwStr%"])
+                - (0.726 * self.df["Ball%"])
+                + 1.778
+            )
+
             self.gsheet_added = True
         else:
             new_gsheet_cols = []
@@ -1999,6 +2029,7 @@ class TeamData(Stats):
         # Recalculate averages for stats that are based on league averages
         league_avg["ERA"] = total_era
         league_avg["ERA+"] = 100
+        league_avg["ERA-"] = 100
         league_avg["FIP-"] = 100
         league_avg["kwERA-"] = 100
         league_avg["K%"] = (self.df["SO"].sum() / self.df["BF"].sum()) * 100
@@ -5302,7 +5333,7 @@ def add_roster_data(df, suffix, year):
     df["Age"] = df["Age"].astype(str)
     df["Age"] = df["Age"].str.replace(".0", "")
     # Drop temp keys col
-    df= df.drop("keys", axis=1)
+    df = df.drop("keys", axis=1)
     return df
 
 
