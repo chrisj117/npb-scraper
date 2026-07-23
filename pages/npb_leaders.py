@@ -20,23 +20,26 @@ def main():
     st.title("NPB Leaders")
 
     # User filters
-    stat_col1, stat_col2, stat_col3 = st.columns(
-        [2, 0.75, 6.25],
+    stat_col1, stat_col2 = st.columns(
+        [2, 8],
         vertical_alignment="center",
     )
     with stat_col1:
         user_year = hp.create_year_filter()
     with stat_col2:
-        user_league = hp.create_league_filter("npb")
-    with stat_col3:
-        user_bat_pitch = st.pills(
-            "Statistics",
-            ["Batting", "Pitching"],
-            selection_mode="multi",
-            default=["Batting", "Pitching"],
-        )
+        with st.container(horizontal=True):
+            user_league = hp.create_league_filter("npb")
+            user_bat_pitch = st.pills(
+                "Statistics",
+                ["Batting", "Pitching"],
+                selection_mode="multi",
+                default=["Batting", "Pitching"],
+            )
 
     # Generate list of dataframe to show
+    if len(user_league) == 0 or len(user_bat_pitch) == 0:
+        st.error("Error: No players to rank - check your filters above.", icon="🚨")
+        return
     leader_tables = build_leader_tables(user_year, user_bat_pitch, user_league)
 
     # Print dataframes in 4 columns

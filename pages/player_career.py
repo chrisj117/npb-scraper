@@ -31,8 +31,8 @@ def main():
     Returns:
         None
     """
-    # TODO: fix and check formatting of stats like K%
-    st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide", initial_sidebar_state=200)
+
     career_bio_df = hp.load_csv(st.secrets["career_bio_link"])
     career_bat_df = hp.load_csv(st.secrets["career_bat_link"])
     career_pitch_df = hp.load_csv(st.secrets["career_pitch_link"])

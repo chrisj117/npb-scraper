@@ -142,10 +142,10 @@ def display_player_percentile(df, name, team, year, suffix):
             "WHIP",
             "pERA-",
             "FIP-",
-            "ERA+",
+            "ERA-",
             "IP",
         ]
-        invert_cols = ["HR%", "HR/FB", "WHIP", "FIP-", "BB%", "pERA-"]
+        invert_cols = ["HR%", "HR/FB", "WHIP", "FIP-", "BB%", "pERA-", "ERA-"]
     elif suffix in ("BR", "BF"):
         # Rename positions
         pos_dict = {
@@ -2011,6 +2011,7 @@ def format_cols_as_strs(df, mode=None):
         "kwERA": "{:.2f}",
         "ERA": "{:.2f}",
         "ERA+": "{:.0f}",
+        "ERA-": "{:.0f}",
         "FIP-": "{:.0f}",
         "Z-Con%": "{:.1%}",
         "Sec%": "{:.1%}",
@@ -2310,119 +2311,147 @@ def get_column_config(mode=None):
     """
     column_config = {
         "HR/FB": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Home Run to Fly Ball Ratio: The rate of fly balls that end up as home runs.",
             alignment="left",
         ),
         "Z-Swing%": st.column_config.NumberColumn(
+            width=70,
             format="%.1f%%",
             help="In-Zone Swing Rate: The percentage of pitches inside the strike zone that are swung at.",
             alignment="left",
         ),
         "Z-O Swing%": st.column_config.NumberColumn(
+            width=80,
             format="%.1f%%",
             help="Zone-minus-Chase Swing Rate: The difference between in-zone swing rate and chase rate.",
             alignment="left",
         ),
         "Contact%": st.column_config.NumberColumn(
+            width=70,
             format="%.1f%%",
             help="Contact Rate: The percentage of swings that result in contact, including both fair and foul balls.",
             alignment="left",
         ),
         "O-Con%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Out-of-Zone Contact Rate: The percentage of swings on pitches outside the strike zone that result in contact.",
             alignment="left",
         ),
         "Whiff%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Whiff Rate: The percentage of swings that result in swinging strikes.",
             alignment="left",
         ),
         "CSW%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Called Strike plus Whiff Rate: The percentage of pitches that result in either a called strike or a swinging strike. For pitchers, higher is generally better. For hitters, lower is generally better.",
             alignment="left",
         ),
         "GB%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Ground Ball Rate: The percentage of batted balls that are hit on the ground.",
             alignment="left",
         ),
         "FB%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Fly Ball Rate: The percentage of batted balls that are fly balls.",
             alignment="left",
         ),
         "GB/FB": st.column_config.NumberColumn(
+            width=50,
             format="%.2f",
             help="Ground Ball to Fly Ball Ratio: The ratio of ground balls to fly balls allowed.",
             alignment="left",
         ),
         "CStr%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Called Strike Rate: The percentage of all pitches taken for a called strike.",
             alignment="left",
         ),
         "ERA-": st.column_config.NumberColumn(
+            width=40,
             format="%.0f",
             help="Earned Run Average Minus: A normalized version of ERA that adjusts for park factors, with 100 always being the league average. Lower values are better.",
             alignment="left",
         ),
         "xK-BB%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Expected Strikeout minus Walk Rate: An estimated expected strikeout rate minus walk rate, calculated as 0.828 * CSW% + 1.188 * SwStr% - 0.726 * Ball% + 1.778. ",
             alignment="left",
         ),
         "LD%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Line Drive Rate: The percentage of batted balls that are line drives.",
             alignment="left",
         ),
         "OFFB%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Outfield Fly Ball Rate: The percentage of batted balls that are hit as outfield fly balls.",
             alignment="left",
         ),
         "IFFB%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Infield Fly Ball Rate: The percentage of fly balls that are hit as infield pop-ups.",
             alignment="left",
         ),
         "AIR%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help=" Air Ball Rate: The percentage of batted balls that are not hit on the ground, including line drives, fly balls, and pop-ups.",
             alignment="left",
         ),
         "HR%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Home Run Rate: The percentage of plate appearances that result in home runs.",
             alignment="left",
         ),
         "Pull%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Pull Rate: The percentage of batted balls hit to the pull side of the field.",
             alignment="left",
         ),
         "Cent%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Center Rate: The percentage of batted balls hit to the middle of the field.",
             alignment="left",
         ),
         "Oppo%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Opposite Field Rate: The percentage of batted balls hit to the opposite field.",
             alignment="left",
         ),
         "PullAIR%": st.column_config.NumberColumn(
+            width=70,
             format="%.1f%%",
             help="Pulled Air Ball Rate: The percentage of balls in play that are pulled and not hit on the ground.",
             alignment="left",
         ),
-        "Pitcher": st.column_config.TextColumn(pinned=True),
-        "Player": st.column_config.TextColumn(pinned=True),
+        "Pitcher": st.column_config.TextColumn(
+            pinned=True,
+            width=120,
+        ),
+        "Player": st.column_config.TextColumn(
+            pinned=True,
+            width=120,
+        ),
         "Year": st.column_config.TextColumn(
-            width=45,
+            width=40,
             alignment="left",
         ),
         "Age": st.column_config.TextColumn(
@@ -2436,313 +2465,379 @@ def get_column_config(mode=None):
             alignment="left",
         ),
         "SwStr%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Swinging Strike Rate: The percentage of total pitches that result in swinging strikes.",
             alignment="left",
         ),
         "Sec%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Secondary Pitch Rate: The percentage of a pitcher's pitches that are NOT fastballs (4-Seam, Sinker, Cutter).",
             alignment="left",
         ),
         "Strike%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Strike Rate: The percentage of total pitches that are recorded as strikes, including called strikes, swinging strikes, foul balls, and balls put in play.",
             alignment="left",
         ),
         "Ball%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Ball Rate: The percentage of total pitches that are recorded as balls.",
             alignment="left",
         ),
         "F-Str%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="First-Pitch Strike Rate: The percentage of plate appearances that begin with a first-pitch strike.",
             alignment="left",
         ),
         "Putaway%": st.column_config.NumberColumn(
+            width=70,
             format="%.1f%%",
             help="Putaway Rate: The percentage of two-strike pitches that result in a strikeout. It measures how often a pitcher finishes off hitters once they are in a putaway count.",
             alignment="left",
         ),
         "PLUS%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Plus Rate: The percentage of pitches that result in a positive outcome for the pitcher, including called strikes, swinging strikes, foul balls, and batted-ball outs.",
             alignment="left",
         ),
         "Zone%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Zone Rate: The percentage of pitches that are located inside the strike zone.",
             alignment="left",
         ),
         "Arm%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Arm-Side Pitch Rate: The percentage of pitches thrown to the pitcher's arm side of the strike zone.",
             alignment="left",
         ),
         "Glove%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Glove-Side Pitch Rate: The percentage of pitches thrown to the pitcher's glove side of the strike zone.",
             alignment="left",
         ),
         "High%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="High Pitch Rate: The percentage of pitches thrown in the upper half of the strike zone or above it.",
             alignment="left",
         ),
         "Low%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Low Pitch Rate: The percentage of pitches thrown in the lower half of the strike zone or below it.",
             alignment="left",
         ),
         "MM%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Middle-Middle Pitch Rate: The percentage of pitches thrown in the middle-middle quadrant of the strike zone. Lower is generally better because middle-middle pitches are usually the easiest locations for hitters to damage.",
             alignment="left",
         ),
         "Behind%": st.column_config.NumberColumn(
+            width=70,
             format="%.1f%%",
             help="Behind-in-the-Count Pitch Rate: The percentage of pitches thrown when the pitcher is behind in the count. Lower is generally better because it indicates that a pitcher is working ahead more often.",
             alignment="left",
         ),
         "Grade": st.column_config.NumberColumn(
+            width=50,
             format="%.0f",
             help="Pitch ERA Grade: A 20-80 scale grade for pERA, inspired by Jeff Zimmerman's model for per pitch valuations. A grade of 50 is league average, and every 10 points represents one standard deviation from average.",
             alignment="left",
         ),
         "pERA-": st.column_config.NumberColumn(
+            width=50,
             format="%.0f",
             help="Pitch ERA Minus: A normalized version of pERA, inspired by Jeff Zimmerman's model for per pitch valuations, with 100 always being the league average. Lower values are better.",
             alignment="left",
         ),
         "pERA": st.column_config.NumberColumn(
+            width=50,
             format="%.2f",
             help="Pitch ERA: A per pitch valuation model inspired by Jeff Zimmerman.",
             alignment="left",
         ),
         "Z-Con%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="In-Zone Contact Rate: The percentage of swings on pitches in the strike zone that result in contact, including both fair and foul balls.",
             alignment="left",
         ),
         "Con%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
-            help="Contact Rate: The percentage of swings against a pitcher that result in contact, including both fair and foul balls. Recognized by PitcherList.com in 2018 as one of the “Big Three” plate discipline metrics.",
+            help="Contact Rate: The percentage of swings against a pitcher that result in contact, including both fair and foul balls. Recognized by PitcherList.com in 2018 as one of the â€œBig Threeâ€ plate discipline metrics.",
             alignment="left",
         ),
         "FB Velo": st.column_config.NumberColumn(
+            width=60,
             format="%.1f",
             help="Average Fastball Velocity: The average speed of a pitcher's fastball, measured in miles per hour (mph).",
             alignment="left",
         ),
         "IP": st.column_config.NumberColumn(
+            width=48,
             format="%.1f",
             help="Innings Pitched: The total number of innings a pitcher completes, recorded in one-third increments.",
             alignment="left",
         ),
         "BF": st.column_config.NumberColumn(
+            width=40,
             help="Batters Faced: The total number of hitters a pitcher faces.",
             alignment="left",
         ),
         "ER": st.column_config.NumberColumn(
+            width=40,
             help="Earned Runs: The number of runs scored against the pitcher that are not the result of errors or passed balls.",
             alignment="left",
         ),
         "HB": st.column_config.NumberColumn(
+            width=40,
             help="Hit By Pitches: The number of batters a pitcher hits with a pitch.",
             alignment="left",
         ),
         "K%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Strikeout Rate: The percentage of plate appearances that end in a strikeout.",
             alignment="left",
         ),
         "K-BB%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Strikeout Rate minus Walk Rate: The difference between a pitcher's strikeout rate and walk rate.",
             alignment="left",
         ),
         "WHIP": st.column_config.NumberColumn(
+            width=50,
             format="%.2f",
             help="Walks plus Hits per Inning Pitched: The average number of walks and hits allowed by a pitcher per inning.",
             alignment="left",
         ),
         "ERA+": st.column_config.NumberColumn(
+            width=50,
             format="%.0f",
             help="Earned Run Average Plus: A normalized version of ERA that adjusts for park factors, with 100 always being the league average. Higher values are better.",
             alignment="left",
         ),
         "FIP": st.column_config.NumberColumn(
+            width=40,
             format="%.2f",
             help="Fielding Independent Pitching: A measure of a pitcher's effectiveness based on strikeouts, walks, and home runs, independent of defensive performance.",
             alignment="left",
         ),
         "FIP-": st.column_config.NumberColumn(
+            width=40,
             format="%.0f",
             help="Fielding Independent Pitching Minus: A normalized version of FIP that adjusts for park factors, with 100 always being the league average. Lower values are better.",
             alignment="left",
         ),
         "kwERA": st.column_config.NumberColumn(
+            width=60,
             format="%.2f",
             help="Strikeout-Walk based Earned Run Average: An estimate of a pitcher's ERA based on strikeout and walk rates.",
             alignment="left",
         ),
         "kwERA-": st.column_config.NumberColumn(
+            width=60,
             format="%.0f",
             help="Strikeout-Walk based Earned Run Average Minus: A normalized version of kwERA with 100 always being the league average. Lower values are better.",
             alignment="left",
         ),
         "SV": st.column_config.NumberColumn(
+            width=40,
             help="Saves: The number of games a pitcher finishes while preserving a lead of three runs or fewer.",
             alignment="left",
         ),
         "HLD": st.column_config.NumberColumn(
+            width=40,
             help="Holds: The number of games a relief pitcher enters in a save situation, maintains the lead, but does not finish.",
             alignment="left",
         ),
         "CG": st.column_config.NumberColumn(
+            width=40,
             help="Complete Games: The number of games where a pitcher pitches the entire game.",
             alignment="left",
         ),
         "SHO": st.column_config.NumberColumn(
+            width=40,
             help="Shutouts: The number of complete games a pitcher finishes without allowing any runs.",
             alignment="left",
         ),
         "WP": st.column_config.NumberColumn(
+            width=40,
             help="Wild Pitches: The number of pitches a pitcher throws that are too wild for the catcher to handle, allowing baserunners to advance.",
             alignment="left",
         ),
         "ERA": st.column_config.NumberColumn(
+            width=40,
             format="%.2f",
             help="Earned Run Average: The average number of earned runs a pitcher allows per nine innings pitched.",
             alignment="left",
         ),
         "sHPT": st.column_config.NumberColumn(
+            width=50,
             format="%.1f",
             help="Simple Hittable Pitches Taken: The percentage of taken pitches that are hittable pitches, calculated as C/(C+D). Lower is generally better because it means a player is taking fewer hittable pitches among all pitches they let go.",
             alignment="left",
         ),
         "sST": st.column_config.NumberColumn(
+            width=40,
             format="%.1f",
             help="Simple Selection Tendency: The percentage of good decisions that come from taking bad pitches, calculated as D/(A+D). Higher generally points to a more selective approach, while lower scores generally point to a more aggressive approach.",
             alignment="left",
         ),
         "Chase%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Chase Rate: The percentage of pitches outside the strike zone that are swung at.",
             alignment="left",
         ),
         "Swing%": st.column_config.NumberColumn(
+            width=60,
             format="%.1f%%",
             help="Swing Rate: The percentage of total pitches swung at.",
             alignment="left",
         ),
         "AB": st.column_config.NumberColumn(
+            width=40,
             help="At-bats: The number of times a player bats, excluding walks, hit-by-pitches, sacrifices, errors, fielder's choices, and catcher's interferences.",
             alignment="left",
         ),
         "BB%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Walk Rate: The percentage of plate appearances that result in a walk.",
             alignment="left",
         ),
         "TTO%": st.column_config.NumberColumn(
+            width=50,
             format="%.1f%%",
             help="Three True Outcomes Rate: The percentage of plate appearances that result in one of the three true outcomes: a home run, a strikeout, or a walk.",
             alignment="left",
         ),
         "AVG": st.column_config.NumberColumn(
+            width=50,
             format="%.3f",
             help="Batting Average: The ratio of a player's hits to their at-bats.",
             alignment="left",
         ),
         "OBP": st.column_config.NumberColumn(
+            width=50,
             format="%.3f",
             help="On Base Percentage: The percentage of plate appearances in which a player reaches base.",
             alignment="left",
         ),
         "SLG": st.column_config.NumberColumn(
+            width=50,
             format="%.3f",
             help="Slugging Percentage: The total number of bases a player records per at-bat.",
             alignment="left",
         ),
         "OPS": st.column_config.NumberColumn(
+            width=50,
             format="%.3f",
             help="On Base plus Slugging: The sum of a player's on-base percentage and slugging percentage.",
             alignment="left",
         ),
         "ISO": st.column_config.NumberColumn(
+            width=50,
             format="%.3f",
             help="Isolated Power: A measure of a player's raw power, calculated as SLG - AVG.",
             alignment="left",
         ),
         "BABIP": st.column_config.NumberColumn(
+            width=50,
             format="%.3f",
             help="Batting Average on Balls in Play: The batting average for balls hit into play, excluding home runs.",
             alignment="left",
         ),
         "BB/K": st.column_config.NumberColumn(
+            width=50,
             format="%.2f",
             help="Walk to Strikeout Ratio: A comparison of how often a player walks versus how often they strike out.",
             alignment="left",
         ),
         "wSB": st.column_config.NumberColumn(
+            width=40,
             format="%.1f",
             help="Weighted Stolen Base Runs: An estimate of the number of runs a player contributes to his team by stealing bases, with 0.0 being league-average.",
             alignment="left",
         ),
         "PA": st.column_config.NumberColumn(
+            width=40,
             format="%.0f",
             help="Plate Appearances: The total number of times a player comes to bat.",
             alignment="left",
         ),
         "RBI": st.column_config.NumberColumn(
+            width=40,
             format="%.0f",
             help="Runs Batted In: The number of runs a player drives in with their at-bats, except when grounding into a double play or reaching on an error.",
             alignment="left",
         ),
         "1B": st.column_config.NumberColumn(
+            width=30,
             help="Singles: The number of hits where a player safely reaches first base without an error or fielder's choice.",
             alignment="left",
         ),
         "2B": st.column_config.NumberColumn(
+            width=40,
             help="Doubles: The number of hits where a player safely reaches second base without an error or fielder's choice.",
             alignment="left",
         ),
         "3B": st.column_config.NumberColumn(
+            width=30,
             help="Triples: The number of hits where a player safely reaches third base without an error or fielder's choice.",
             alignment="left",
         ),
         "TB": st.column_config.NumberColumn(
             help="Total Bases: The total number of bases a player records from hits.",
             alignment="left",
+            width=40,
         ),
         "HP": st.column_config.NumberColumn(
+            width=30,
             help="Hit By Pitches: The number of times a player reaches first base after being hit by a pitched ball.",
             alignment="left",
         ),
         "SB": st.column_config.NumberColumn(
+            width=30,
             format="%.0f",
             help="Stolen Bases: The number of times a player successfully steals a base.",
             alignment="left",
         ),
         "CS": st.column_config.NumberColumn(
+            width=30,
             help="Caught Stealing: The number of times a player is tagged out while attempting to steal a base.",
             alignment="left",
         ),
         "SF": st.column_config.NumberColumn(
+            width=30,
             help="Sacrifice Flies: A fly ball that results in a run being scored, but the batter is out.",
             alignment="left",
         ),
         "SH": st.column_config.NumberColumn(
+            width=30,
             help="Sacrifice Hits: A bunt that allows a runner to advance to the next base, but the batter is out.",
             alignment="left",
         ),
         "GDP": st.column_config.NumberColumn(
+            width=40,
             help="Grounded into Double Plays: The number of times a player hits a ground ball that results in two outs.",
             alignment="left",
         ),
         "OPS+": st.column_config.NumberColumn(
+            width=50,
             format="%.0f",
             help="On Base plus Slugging Plus: A normalized version of OPS that adjusts for park factors, with 100 always being the league average. Higher values are better.",
             alignment="left",
@@ -2750,169 +2845,211 @@ def get_column_config(mode=None):
         "B": st.column_config.TextColumn(
             help="Bats: A hitter's batting hand.",
             alignment="left",
+            width=30,
         ),
         "Range": st.column_config.NumberColumn(
+            width=50,
             format="%.1f",
             help="Range Runs: Defensive runs through fielding batted balls.",
             alignment="left",
         ),
         "Def Value": st.column_config.NumberColumn(
+            width=70,
             format="%.1f",
             help="Position-Adjusted Total Zone Runs: A player's position-adjusted fielding value per 143 games or 1287 innings (a full NPB season).",
             alignment="left",
         ),
         "Arm": st.column_config.NumberColumn(
+            width=50,
             format="%.1f",
             help="Arm Runs: Defensive runs through throwing. For outfielders, this includes throwing out and preventing runners from advancing bases. For catchers, this includes preventing stolen bases.",
             alignment="left",
         ),
         "Framing": st.column_config.NumberColumn(
+            width=60,
             format="%.1f",
             help="Framing: A catcher's framing value.",
             alignment="left",
         ),
         "DPR": st.column_config.NumberColumn(
+            width=50,
             format="%.1f",
             help="Double Play Runs: Defensive runs through fielding ground ball double plays.",
             alignment="left",
         ),
         "ARM": st.column_config.NumberColumn(
+            width=50,
             format="%.1f",
             help="Arm Runs: Defensive runs through throwing. For outfielders, this includes throwing out and preventing runners from advancing bases. For catchers, this includes preventing stolen bases.",
             alignment="left",
         ),
         "Blocking": st.column_config.NumberColumn(
+            width=70,
             format="%.1f",
             help="Blocking: A catcher's blocking value.",
             alignment="left",
         ),
         "ErrR": st.column_config.NumberColumn(
+            width=40,
             format="%.1f",
             help="Error Runs: Defensive runs through preventing errors.",
             alignment="left",
         ),
         "Inn": st.column_config.NumberColumn(
+            width=50,
             format="%.1f",
             help="Innings Played: Total innings played at the position, recorded in one-third increments.",
             alignment="left",
         ),
         "Pos Adj": st.column_config.NumberColumn(
+            width=60,
             format="%.1f",
             help="Positional Adjustment: Adjustment to value premium positions higher. Hierarchy: Catcher > Shortstop > Center Field > Second Base > Third Base > Right Field > Left Field > Designated Hitter.",
             alignment="left",
         ),
         "RngR": st.column_config.NumberColumn(
+            width=50,
             format="%.1f",
             help="Range Runs: Defensive runs through fielding batted balls.",
             alignment="left",
         ),
         "TZR": st.column_config.NumberColumn(
+            width=50,
             format="%.1f",
             help="Total Zone Runs: Combined fielding value of defensive metrics. Infield/Outfield = RngR + DPR + ARM + ErrR; Catchers = ARM + ErrR. Does not include framing or blocking.",
             alignment="left",
         ),
         "TZR/143": st.column_config.NumberColumn(
+            width=60,
             format="%.1f",
             help="Total Zone Runs per 143 games: Approximate TZR per 143 games or 1287 innings (a full NPB season).",
             alignment="left",
         ),
         "G": st.column_config.NumberColumn(
+            width=40,
             help="Games Played",
             alignment="left",
         ),
         "W": st.column_config.NumberColumn(
+            width=40,
             help="Wins",
             alignment="left",
         ),
         "L": st.column_config.NumberColumn(
+            width=40,
             help="Losses",
             alignment="left",
         ),
         "PCT": st.column_config.NumberColumn(
+            width=50,
             format="%.3f",
             help="Winning Percentage",
             alignment="left",
         ),
         "GB": st.column_config.TextColumn(
+            width=40,
             help="Games Behind",
             alignment="left",
         ),
         "RS": st.column_config.TextColumn(
+            width=40,
             help="Runs Scored",
             alignment="left",
         ),
         "RA": st.column_config.NumberColumn(
+            width=40,
             help="Runs Against",
             alignment="left",
         ),
         "XPCT": st.column_config.NumberColumn(
+            width=50,
             format="%.3f",
             help="Pythagorean Winning Percentage",
             alignment="left",
         ),
         "Home": st.column_config.TextColumn(
+            width=60,
             help="Home Record",
             alignment="left",
         ),
         "Road": st.column_config.TextColumn(
+            width=60,
             help="Road Record",
             alignment="left",
         ),
         "vs T": st.column_config.TextColumn(
+            width=60,
             help="Record vs. Hanshin Tigers",
             alignment="left",
         ),
         "vs DB": st.column_config.TextColumn(
+            width=60,
             help="Record vs. DeNA BayStars",
             alignment="left",
         ),
         "vs G": st.column_config.TextColumn(
+            width=60,
             help="Record vs. Yomiuri Giants",
             alignment="left",
         ),
         "vs C": st.column_config.TextColumn(
+            width=60,
             help="Record vs. Hiroshima Carp",
             alignment="left",
         ),
         "vs D": st.column_config.TextColumn(
+            width=60,
             help="Record vs. Chunichi Dragons",
             alignment="left",
         ),
         "vs S": st.column_config.TextColumn(
+            width=60,
             help="Record vs. Yakult Swallows",
             alignment="left",
         ),
         "Inter": st.column_config.TextColumn(
+            width=60,
             help="Interleague Record",
             alignment="left",
         ),
         "vs H": st.column_config.TextColumn(
+            width=60,
             help="Record vs. SoftBank Hawks",
             alignment="left",
         ),
         "vs F": st.column_config.TextColumn(
+            width=60,
             help="Record vs. Nipponham Fighters",
             alignment="left",
         ),
         "vs B": st.column_config.TextColumn(
+            width=60,
             help="Record vs. ORIX Buffaloes",
             alignment="left",
         ),
         "vs E": st.column_config.TextColumn(
+            width=60,
             help="Record vs. Rakuten Eagles",
             alignment="left",
         ),
         "vs L": st.column_config.TextColumn(
+            width=60,
             help="Record vs. Seibu Lions",
             alignment="left",
         ),
         "vs M": st.column_config.TextColumn(
+            width=60,
             help="Record vs. Lotte Marines",
             alignment="left",
         ),
         "Scores": st.column_config.TextColumn(
+            width=60,
             alignment="center",
         ),
+        "Role": st.column_config.TextColumn(
+            width=40,
+            alignment="left",
+        )
     }
     # Pin and widen team columns on according pages, keep unpinned elsewhere
     if "team" in mode:
@@ -2929,7 +3066,7 @@ def get_column_config(mode=None):
         column_config.update(
             {
                 "Team": st.column_config.TextColumn(
-                    width=85,
+                    width=90,
                     alignment="left",
                 )
             }
@@ -2939,10 +3076,12 @@ def get_column_config(mode=None):
         column_config.update(
             {
                 "T": st.column_config.NumberColumn(
+                    width=30,
                     help="Ties",
                     alignment="left",
                 ),
                 "Diff": st.column_config.NumberColumn(
+                    width=40,
                     format="%.0f",
                     help="Run Differential",
                     alignment="left",
@@ -2953,10 +3092,12 @@ def get_column_config(mode=None):
         column_config.update(
             {
                 "HR": st.column_config.NumberColumn(
+                    width=40,
                     help="Home Runs",
                     alignment="left",
                 ),
                 "Diff": st.column_config.NumberColumn(
+                    width=40,
                     format="%.0f",
                     help="Run Differential",
                     alignment="left",
@@ -2967,38 +3108,46 @@ def get_column_config(mode=None):
         column_config.update(
             {
                 "sSeager": st.column_config.NumberColumn(
+                    width=60,
                     format="%.1f",
                     help="Simple Seager: A simplified version of SEAGER (named after Corey Seager) that measures swing choices using zone vs. out-of-zone pitches instead of more complex pitch-level models. For hitters, it rewards swinging at strikes and taking balls, and it can be calculated as D/(A+D) - C/(C+D) using four pitch-decision buckets.",
                     alignment="left",
                 ),
                 "R": st.column_config.NumberColumn(
+                    width=40,
                     help="Runs: The number of times a player crosses home plate to score.",
                     alignment="left",
                 ),
                 "HR": st.column_config.NumberColumn(
+                    width=40,
                     format="%.0f",
                     help="Home Runs: The number of hits where a player safely reaches home plate without an error or fielder's choice.",
                     alignment="left",
                 ),
                 "BB": st.column_config.NumberColumn(
+                    width=40,
                     format="%.0f",
                     help="Walks: The number of times a player is awarded first base after receiving four balls outside the strike zone.",
                     alignment="left",
                 ),
                 "IBB": st.column_config.NumberColumn(
+                    width=40,
                     help="Intentional Walks: The number of times a player is intentionally awarded first base by the opposing team.",
                     alignment="left",
                 ),
                 "SO": st.column_config.NumberColumn(
+                    width=40,
                     format="%.0f",
                     help="Strikeouts: The number of times a player is put out on three strikes.",
                     alignment="left",
                 ),
                 "Qualifier": st.column_config.TextColumn(
+                    width=60,
                     help="Qualified Hitter: A player is qualified for titles with 3.1 PA per team game played (NPB) or 2.7 PA per team game played (Farm).",
                     alignment="left",
                 ),
                 "H": st.column_config.NumberColumn(
+                    width=40,
                     format="%.0f",
                     help="Hits: The number of times a player reaches safely on a ball put in play without an error or fielder's choice.",
                     alignment="left",
@@ -3009,44 +3158,54 @@ def get_column_config(mode=None):
         column_config.update(
             {
                 "sSeager": st.column_config.NumberColumn(
+                    width=60,
                     format="%.1f",
                     help="Simple Seager: A simplified version of SEAGER that measures swing choices against a pitcher using zone vs. out-of-zone pitches instead of more complex pitch-level models. For pitchers, it rewards getting hitters to take strikes and swing at balls, and it can be calculated as C/(A+C) - B/(B+D) using four pitch-decision buckets.",
                     alignment="left",
                 ),
                 "R": st.column_config.NumberColumn(
+                    width=40,
                     help="Runs: The total number of runs a pitcher allows.",
                     alignment="left",
                 ),
                 "HR": st.column_config.NumberColumn(
+                    width=40,
                     format="%.0f",
                     help="Home Runs: The number of home runs a pitcher allows.",
                     alignment="left",
                 ),
                 "BB": st.column_config.NumberColumn(
+                    width=40,
                     help="Walks: The number of times a pitcher allows a batter to reach first base by throwing four balls.",
                     alignment="left",
                 ),
                 "IBB": st.column_config.NumberColumn(
+                    width=40,
                     help="Intentional Walks: The number of walks a pitcher intentionally issues.",
                     alignment="left",
                 ),
                 "SO": st.column_config.NumberColumn(
+                    width=40,
                     help="Strikeouts: The number of batters a pitcher retires on strikes.",
                     alignment="left",
                 ),
                 "Qualifier": st.column_config.TextColumn(
+                    width=60,
                     help="Qualified Pitcher: A pitcher is qualified for titles with 1.0 IP per team game played (NPB) or 0.8 IP per team game played (Farm).",
                     alignment="left",
                 ),
                 "H": st.column_config.NumberColumn(
+                    width=40,
                     help="Hits: The number of hits a pitcher allows.",
                     alignment="left",
                 ),
                 "T": st.column_config.TextColumn(
+                    width=30,
                     help="Throws: A pitcher's throwing hand.",
                     alignment="left",
                 ),
                 "Diff": st.column_config.NumberColumn(
+                    width=50,
                     format="%.2f",
                     help="ERA-FIP Differential: The differential of a pitcher's ERA and FIP. Higher values indicate underperformance and lower values indicate overperformance relative to expectations.",
                     alignment="left",

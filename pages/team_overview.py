@@ -27,7 +27,7 @@ def main():
     Returns:
         None
     """
-    st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide", initial_sidebar_state=200)
 
     # User selections
     user_year = hp.create_year_filter()
@@ -219,7 +219,10 @@ def create_lineup(cumulative_df, field_df, advanced_view):
         "PA",
         "GB/FB",
     ]
-    invert_pct_cols = ["K%", "GB/FB",]
+    invert_pct_cols = [
+        "K%",
+        "GB/FB",
+    ]
 
     # Display data
     st.write("***Lineup***")
@@ -313,7 +316,10 @@ def create_bench(cumulative_df, lineup_df, advanced_view):
         "PA",
         "GB/FB",
     ]
-    invert_pct_cols = ["K%", "GB/FB",]
+    invert_pct_cols = [
+        "K%",
+        "GB/FB",
+    ]
 
     # Display data
     st.write("***Bench***")
@@ -428,7 +434,9 @@ def create_top_pos_players(cumulative_df):
         st.write(":blue-badge[Contact Hitter 🏓]")
         st.write("A high-contact hitter with a K% below 17.5% and a SwStr% below 9.0%")
         st.write(":blue-badge[Slap Hitter 🖐️]")
-        st.write("A non-power hitter with a GB% above 50.0%, an Oppo% above 25.0%, and a HR/FB% below 5.0%.")
+        st.write(
+            "A non-power hitter with a GB% above 50.0%, an Oppo% above 25.0%, and a HR/FB% below 5.0%."
+        )
         st.write(":violet-badge[Disciplined 👁️]")
         st.write(
             "A selective hitter with an OBP above .330, a BB% above 7.5%, and a Chase% below 27.5%."
@@ -440,7 +448,9 @@ def create_top_pos_players(cumulative_df):
             "A proactive hitter with a Swing% above 47.5% and a Chase% above 27.5%."
         )
         st.write(":orange-badge[Dead Pull 💀]")
-        st.write("A hitter with an extreme pull-side approach with a Pull% above 45.0% and an Oppo% below 20.0%.")
+        st.write(
+            "A hitter with an extreme pull-side approach with a Pull% above 45.0% and an Oppo% below 20.0%."
+        )
 
     st.table(
         top_pos_player_df,
@@ -554,7 +564,9 @@ def create_top_pitchers(pitch_df):
             " A soft-throwing pitcher with an average fastball velocity below 90.0 mph."
         )
         st.write(":violet-badge[Worm Burner 🪱]")
-        st.write("A pitcher who consistently generates groundballs with a GB% above 51.0%.")
+        st.write(
+            "A pitcher who consistently generates groundballs with a GB% above 51.0%."
+        )
         st.write(":grey-badge[Ladder Climber 🪜]")
         st.write(
             "A pitcher who consistently throws high locations with a High% above 47.5%."
@@ -626,12 +638,36 @@ def create_rotation(pitch_df, advanced_view):
             "ERA-",
         ]
     else:
-        chosen_sp_cols = chosen_sp_cols + ["W", "L", "CG", "HR", "SO", "BB", "WHIP", "ERA"]
+        chosen_sp_cols = chosen_sp_cols + [
+            "W",
+            "L",
+            "CG",
+            "HR",
+            "SO",
+            "BB",
+            "WHIP",
+            "ERA",
+        ]
     sp_df = sp_df[chosen_sp_cols]
 
     # Declare columns to be colored percentiles
-    pct_cols = ["IP", "FB Velo", "CSW%", "GB%", "K%", "FIP-", "ERA-", "pERA-",]
-    invert_pct_cols = ["ERA", "FIP-", "BB%", "ERA-", "pERA-",]
+    pct_cols = [
+        "IP",
+        "FB Velo",
+        "CSW%",
+        "GB%",
+        "K%",
+        "FIP-",
+        "ERA-",
+        "pERA-",
+    ]
+    invert_pct_cols = [
+        "ERA",
+        "FIP-",
+        "BB%",
+        "ERA-",
+        "pERA-",
+    ]
 
     st.write("***Rotation***")
     styler_sp = sp_df.style
@@ -697,12 +733,36 @@ def create_bullpen(pitch_df, advanced_view):
             "ERA-",
         ]
     else:
-        chosen_bp_cols = chosen_bp_cols + ["G", "SV", "HLD", "HR", "SO", "BB", "WHIP", "ERA"]
+        chosen_bp_cols = chosen_bp_cols + [
+            "G",
+            "SV",
+            "HLD",
+            "HR",
+            "SO",
+            "BB",
+            "WHIP",
+            "ERA",
+        ]
     bp_df = bp_df[chosen_bp_cols]
 
     # Declare columns to be colored percentiles
-    pct_cols = ["IP", "FB Velo", "CSW%", "GB%", "K%", "FIP-", "ERA-", "pERA-",]
-    invert_pct_cols = ["ERA", "FIP-", "BB%", "ERA-", "pERA-",]
+    pct_cols = [
+        "IP",
+        "FB Velo",
+        "CSW%",
+        "GB%",
+        "K%",
+        "FIP-",
+        "ERA-",
+        "pERA-",
+    ]
+    invert_pct_cols = [
+        "ERA",
+        "FIP-",
+        "BB%",
+        "ERA-",
+        "pERA-",
+    ]
 
     st.write("***Bullpen***")
     styler_bp = bp_df.style
@@ -886,7 +946,7 @@ def create_team_pitch_stats(team_pitch_df, team, year):
     )
 
     rank_cols = [
-        "ERA+",
+        "ERA-",
         "FIP-",
         "WHIP",
         "HR/FB",
@@ -901,7 +961,7 @@ def create_team_pitch_stats(team_pitch_df, team, year):
         "Sec%",
         "FB Velo",
     ]
-    invert_rank_col = ["FIP-", "WHIP", "BB%", "HR%", "HR/FB"]
+    invert_rank_col = ["FIP-", "WHIP", "BB%", "HR%", "HR/FB", "ERA-"]
     rank_df = pd.DataFrame(team_pitch_df["Team"])
     for col in rank_cols:
         if col in invert_rank_col:

@@ -15,7 +15,7 @@ def main():
     Returns:
         None
     """
-    st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide", initial_sidebar_state=200)
 
     with st.container(border=True):
         # Sorting options

@@ -7,7 +7,9 @@ def main():
     """Main navigational driver for the Streamlit app"""
 
     st.set_page_config(
-        page_title="Yakyu Cosmopolitan's NPB Statistics Dashboard", page_icon="⚾"
+        page_title="Yakyu Cosmopolitan's NPB Statistics Dashboard",
+        page_icon="⚾",
+        initial_sidebar_state=200,
     )
     st.logo(st.secrets["logo_link"], size="large")
 
