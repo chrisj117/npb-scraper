@@ -42,7 +42,10 @@ def main():
     pg.run()
 
     # Footer
-    st.caption("[Yakyu Cosmopolitan](https://www.yakyucosmo.com/)")
+    st.caption(
+        "[Yakyu Cosmopolitan](https://www.yakyucosmo.com/) · [Support on Patreon](https://www.patreon.com/c/baseballcosmo)🧡",
+        text_alignment="center",
+    )
 
 
 if __name__ == "__main__":

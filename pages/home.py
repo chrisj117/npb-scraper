@@ -8,7 +8,7 @@ def main():
 
     st.set_page_config(layout="centered", initial_sidebar_state=200)
 
-    st.title("Yakyu Cosmopolitan Dashboard")
+    st.title("Yakyu Cosmopolitan's NPB Dashboard 🇯🇵⚾", text_alignment="center")
     st.write(
         "Welcome to the Yakyu Cosmopolitan Dashboard, your home for up-to-date Nippon Professional Baseball statistics. Data is updated daily throughout the season."
     )
@@ -36,7 +36,14 @@ def main():
     st.write(
         "Sort, filter, and compare comprehensive batting, pitching, and fielding tables with percentile-based coloring that makes standout performances easy to identify. Customize the minimum playing-time requirements to quickly find league leaders and explore statistical trends."
     )
-    st.write("Thank you for visiting!")
+    st.info(
+        "Thank you for visiting! For exclusive data and development updates, please consider supporting Yakyu Cosmopolitan on [Patreon](https://www.patreon.com/c/baseballcosmo) for as little as $1 per month! Your contribution helps keep this app free."
+    )
+
+    st.iframe(
+        "https://www.google.com/maps/d/embed?mid=1ZHEgyoTb730mB6rCF9lueotXFzUXFaU&ehbc=2E312F",
+        height=500,
+    )
 
 
 if __name__ == "__main__":
