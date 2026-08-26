@@ -2,3 +2,4 @@ __pycache__/
 .venv/
 .streamlit/secrets.toml
 input/google_sheet_urls.csv
+tmp/
