@@ -3,6 +3,6 @@ beautifulsoup4==4.15.0
 numpy==2.5.2
 pandas==3.0.5
 playwright==1.62.0
-Requests==2.34.2
-streamlit==1.62.0
+requests==2.34.2
+streamlit==1.63.0
 urllib3==2.7.0

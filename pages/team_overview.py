@@ -1057,6 +1057,22 @@ def create_team_header(central_df: pd.DataFrame, pacific_df: pd.DataFrame, team)
     Returns:
         None
     """
+    # Determine title/subtitle contents
+    emoji_dict = {
+        "ORIX Buffaloes": "🐃",
+        "Hiroshima Carp": "🎏",
+        "Chunichi Dragons": "🐉",
+        "DeNA BayStars": "🌟",
+        "Rakuten Eagles": "🦅",
+        "Nipponham Fighters": "🦊",
+        "Yomiuri Giants": "🐰",
+        "SoftBank Hawks": "🪶",
+        "Seibu Lions": "🦁",
+        "Lotte Marines": "⚓",
+        "Yakult Swallows": "🐧",
+        "Hanshin Tigers": "🐯",
+    }
+
     all_standings_df = pd.concat([central_df, pacific_df])
     # Preserve index team is at before reindexing (index contains placement in their league)
     all_standings_df.index += 1
@@ -1096,6 +1112,7 @@ def create_team_header(central_df: pd.DataFrame, pacific_df: pd.DataFrame, team)
         + " Place",
         anchor=False,
         divider="grey",
+        icon=emoji_dict[team],
     )
 
 

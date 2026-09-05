@@ -8,6 +8,7 @@ import pandas as pd
 import requests
 import numpy as np
 
+
 @st.cache_data(ttl=600, max_entries=25, show_spinner=False)
 def load_csv(url=None):
     """
@@ -28,12 +29,8 @@ def load_csv(url=None):
         f_cols = df.select_dtypes(include=["float"]).columns
         i_cols = df.select_dtypes(include=["integer"]).columns
 
-        df[f_cols] = df[f_cols].apply(
-            pd.to_numeric, downcast="float"
-        )
-        df[i_cols] = df[i_cols].apply(
-            pd.to_numeric, downcast="integer"
-        )
+        df[f_cols] = df[f_cols].apply(pd.to_numeric, downcast="float")
+        df[i_cols] = df[i_cols].apply(pd.to_numeric, downcast="integer")
 
         return df
     st.error("Failed to load raw data.")
@@ -1814,7 +1811,9 @@ def prepare_streamlit_col_order(df, mode=None):
             "League",
         ]
     elif mode == "player_pitch":
-        df = df.drop(columns=["sST", "sHPT", "TBF", "PCT", "BK", "Adj YpERA"], errors="ignore")
+        df = df.drop(
+            columns=["sST", "sHPT", "TBF", "PCT", "BK", "Adj YpERA"], errors="ignore"
+        )
         col_order = [
             "Pitcher",
             "G",
@@ -3049,7 +3048,7 @@ def get_column_config(mode=None):
         "Role": st.column_config.TextColumn(
             width=40,
             alignment="left",
-        )
+        ),
     }
     # Pin and widen team columns on according pages, keep unpinned elsewhere
     if "team" in mode:
