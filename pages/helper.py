@@ -22,7 +22,11 @@ def load_csv(url=None):
         dataframe if the link is valid.
     """
     # Returns dataframe if good link, otherwise None
-    response = requests.get(url, timeout=10)
+    if url == "":
+        return None
+    else:
+        response = requests.get(url, timeout=10)
+
     if response.status_code == 200:
         df = pd.read_csv(StringIO(response.text))
         # Downcast floats and integers to smaller memory footprints

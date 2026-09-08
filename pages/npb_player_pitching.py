@@ -29,6 +29,9 @@ def main():
             user_year = hp.create_year_filter()
             lead_pitch_df = hp.load_csv(st.secrets[user_year + "LeadersPR_link"])
             player_pitch_df = hp.load_csv(st.secrets[user_year + "StatsFinalPR_link"])
+            postseason_pitch_df = hp.load_csv(
+                st.secrets[user_year + "StatsFinalPP_link"]
+            )
 
             # Drop unwanted columns and reorder (must be before sort filters are made)
             lead_pitch_df = hp.prepare_streamlit_col_order(
@@ -39,17 +42,31 @@ def main():
             )
 
             leader_view = st.toggle("Qualifiers")
-            if leader_view is True:
-                display_df = lead_pitch_df
+            # Only display postseason toggle if there is a dataframe, else make sure it's False
+            if postseason_pitch_df is not None:
+                postseason_view = st.toggle("Postseason")
+
+                if postseason_view is True:
+                    display_df = postseason_pitch_df
+                elif leader_view is True:
+                    display_df = lead_pitch_df
+                else:
+                    display_df = player_pitch_df
             else:
-                display_df = player_pitch_df
+                postseason_view = False
+
+                if leader_view is True:
+                    display_df = lead_pitch_df
+                else:
+                    display_df = player_pitch_df
 
             user_ip = hp.create_ip_filter(display_df, mode="player")
             # Drop players below IP threshold
             display_df = display_df.drop(display_df[display_df.IP < user_ip].index)
         with r1c2:
             user_league = hp.create_league_filter(mode="npb")
-            user_pitching_hand = hp.create_hand_filter(mode="player_pitch")
+            if "T" in display_df.columns:
+                user_pitching_hand = hp.create_hand_filter(mode="player_pitch")
         with r1c3:
             user_team = hp.create_team_filter(mode="npb")
 
@@ -58,7 +75,8 @@ def main():
         user_sort_col, user_sort_asc = hp.create_sort_filter(user_cols, mode="pitch")
 
     # Apply filters
-    display_df = display_df[display_df["T"].isin(user_pitching_hand)]
+    if "T" in display_df.columns:
+        display_df = display_df[display_df["T"].isin(user_pitching_hand)]
     display_df = display_df[display_df["League"].isin(user_league)]
     display_df = display_df[display_df["Team"].isin(user_team)]
 
@@ -169,7 +187,9 @@ def main():
         column_order=user_cols,
         column_config=hp.get_column_config("player_pitch"),
     )
-    generate_player_pitching_plots(player_pitch_df, display_df, user_year)
+
+    if postseason_view is False:
+        generate_player_pitching_plots(player_pitch_df, display_df, user_year)
 
 
 def generate_player_pitching_plots(original_df, display_df, user_year):

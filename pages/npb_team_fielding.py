@@ -21,13 +21,14 @@ def main():
     # Split filters away from dataframe
     with st.container(border=True):
         # Smaller filters split by cols, larger filters receive exclusive cols
-        r1c1, r1c2 = st.columns([1, 9])
+        r1c1, r1c2, r1c3 = st.columns([2, 1, 6])
 
         with r1c1:
             user_year = hp.create_year_filter()
             display_df = hp.load_csv(st.secrets[user_year + "TeamFieldingFinalR_link"])
-            user_league = hp.create_league_filter(mode="npb")
         with r1c2:
+            user_league = hp.create_league_filter(mode="npb")
+        with r1c3:
             user_team = hp.create_team_filter(mode="npb")
         user_cols = hp.create_stat_cols_filter(display_df, "team_field")
 
@@ -66,10 +67,7 @@ def main():
     styler.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
     if "Team" in user_cols:
         styler.apply(hp.color_by_team, axis=0)
-        styler = styler.set_properties(
-            subset=["Team"],
-            **{"font-weight": "bold"}
-        )
+        styler = styler.set_properties(subset=["Team"], **{"font-weight": "bold"})
     st.dataframe(
         styler,
         width="stretch",

@@ -22,17 +22,28 @@ def main():
     # Split filters away from dataframe
     with st.container(border=True):
         # Smaller filters split by cols, larger filters receive exclusive cols
-        r1c1, r1c2 = st.columns([1, 9])
+        r1c1, r1c2, r1c3 = st.columns([2, 1, 6])
 
         with r1c1:
             user_year = hp.create_year_filter()
             team_pitch_df = hp.load_csv(st.secrets[user_year + "TeamPR_link"])
+            postseason_team_pitch_df = hp.load_csv(
+                st.secrets[user_year + "TeamPP_link"]
+            )
 
             # Drop unwanted columns and reorder (must be before sort filters are made)
             team_pitch_df = hp.prepare_streamlit_col_order(team_pitch_df, "team_pitch")
 
-            user_league = hp.create_league_filter(mode="npb")
+            # Only display postseason toggle if there is a dataframe, else make sure it's False
+            if postseason_team_pitch_df is not None:
+                postseason_view = st.toggle("Postseason")
+                if postseason_view is True:
+                    team_pitch_df = postseason_team_pitch_df
+            else:
+                postseason_view = False
         with r1c2:
+            user_league = hp.create_league_filter(mode="npb")
+        with r1c3:
             user_team = hp.create_team_filter(mode="npb")
         user_cols = hp.create_stat_cols_filter(team_pitch_df, "team_pitch")
 
@@ -147,7 +158,9 @@ def main():
         column_order=user_cols,
         column_config=hp.get_column_config("team_pitch"),
     )
-    generate_team_pitching_plots(team_pitch_df, display_df, user_year)
+
+    if postseason_view is False:
+        generate_team_pitching_plots(team_pitch_df, display_df, user_year)
 
 
 def generate_team_pitching_plots(original_df, display_df, user_year):

@@ -29,16 +29,30 @@ def main():
             user_year = hp.create_year_filter()
             lead_bat_df = hp.load_csv(st.secrets[user_year + "LeadersBR_link"])
             player_bat_df = hp.load_csv(st.secrets[user_year + "StatsFinalBR_link"])
+            postseason_bat_df = hp.load_csv(st.secrets[user_year + "StatsFinalBP_link"])
 
             # Drop unwanted columns and reorder (must be before sort filters are made)
             lead_bat_df = hp.prepare_streamlit_col_order(lead_bat_df, "player_bat")
             player_bat_df = hp.prepare_streamlit_col_order(player_bat_df, "player_bat")
 
             leader_view = st.toggle("Qualifiers")
-            if leader_view is True:
-                display_df = lead_bat_df
+            # Only display postseason toggle if there is a dataframe, else make sure it's False
+            if postseason_bat_df is not None:
+                postseason_view = st.toggle("Postseason")
+
+                if postseason_view is True:
+                    display_df = postseason_bat_df
+                elif leader_view is True:
+                    display_df = lead_bat_df
+                else:
+                    display_df = player_bat_df
             else:
-                display_df = player_bat_df
+                postseason_view = False
+
+                if leader_view is True:
+                    display_df = lead_bat_df
+                else:
+                    display_df = player_bat_df
 
             display_df = display_df.fillna(value={"Pos": "N/A"})
             user_pa = hp.create_pa_filter(display_df, "player")
@@ -46,9 +60,11 @@ def main():
             display_df = display_df.drop(display_df[display_df.PA < user_pa].index)
         with r1c2:
             user_league = hp.create_league_filter(mode="npb")
-            user_batting_hand = hp.create_hand_filter("player_bat")
+            if "B" in display_df.columns:
+                user_batting_hand = hp.create_hand_filter("player_bat")
         with r1c3:
-            user_pos = hp.create_pos_filter(display_df, mode="player_bat")
+            if "Pos" in display_df.columns:
+                user_pos = hp.create_pos_filter(display_df, mode="player_bat")
             user_team = hp.create_team_filter(mode="npb")
 
         user_cols = hp.create_stat_cols_filter(display_df, mode="player_bat")
@@ -56,8 +72,10 @@ def main():
         user_sort_col, user_sort_asc = hp.create_sort_filter(user_cols, mode="bat")
 
     # Apply filters
-    display_df = display_df[display_df["Pos"].isin(user_pos)]
-    display_df = display_df[display_df["B"].isin(user_batting_hand)]
+    if "Pos" in display_df.columns:
+        display_df = display_df[display_df["Pos"].isin(user_pos)]
+    if "B" in display_df.columns:
+        display_df = display_df[display_df["B"].isin(user_batting_hand)]
     display_df = display_df[display_df["League"].isin(user_league)]
     display_df = display_df[display_df["Team"].isin(user_team)]
 
@@ -142,7 +160,9 @@ def main():
         column_order=user_cols,
         column_config=hp.get_column_config("player_bat"),
     )
-    generate_player_batting_plots(player_bat_df, display_df, user_year)
+
+    if postseason_view is False:
+        generate_player_batting_plots(player_bat_df, display_df, user_year)
 
 
 def generate_player_batting_plots(original_df, display_df, user_year):
