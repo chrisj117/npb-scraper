@@ -34,6 +34,10 @@ def main():
             # Drop unwanted columns and reorder (must be before sort filters are made)
             lead_bat_df = hp.prepare_streamlit_col_order(lead_bat_df, "player_bat")
             player_bat_df = hp.prepare_streamlit_col_order(player_bat_df, "player_bat")
+            if postseason_bat_df is not None:
+                postseason_bat_df = hp.prepare_streamlit_col_order(
+                    postseason_bat_df, "player_bat"
+                )
 
             leader_view = st.toggle("Qualifiers")
             # Only display postseason toggle if there is a dataframe, else make sure it's False

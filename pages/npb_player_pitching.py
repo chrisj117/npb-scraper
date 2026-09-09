@@ -40,6 +40,10 @@ def main():
             player_pitch_df = hp.prepare_streamlit_col_order(
                 player_pitch_df, mode="player_pitch"
             )
+            if postseason_pitch_df is not None:
+                postseason_pitch_df = hp.prepare_streamlit_col_order(
+                    postseason_pitch_df, "player_pitch"
+                )
 
             leader_view = st.toggle("Qualifiers")
             # Only display postseason toggle if there is a dataframe, else make sure it's False
