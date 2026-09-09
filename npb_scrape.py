@@ -1382,7 +1382,7 @@ class PlayerData(Stats):
         self.org_player_pitch(self.suffix, self.year)
 
     def org_post_player_bat(self):
-        """Preprocesses the raw post season's batting stat csv for org_player_pitch()"""
+        """Preprocesses the raw post season's batting stat csv for org_player_bat()"""
         # Remove all players with 0 PA
         self.df = self.df.drop(self.df[self.df.PA == 0].index)
         # Convert numeric columns to proper type
@@ -5290,8 +5290,10 @@ def add_roster_data(df, suffix, year):
     df (pandas dataframe): A dataframe containing entries with player names
     suffix (string): Indicates the data to add:
     "BR" = regular season batting arm data
+    "BP" = postseason (regular season batting arm data)
     "BF" = farm batting arm data
     "PR" = regular season throwing arm data
+    "PP" = postseason (regular season batting arm data)
     "PF" = farm throwing arm data
 
     Returns:
@@ -5304,10 +5306,10 @@ def add_roster_data(df, suffix, year):
     roster_df = pd.read_csv(roster_data_file)
     convert_col = df.iloc[:, 0].name
     tb_col = ""
-    if suffix in ("BR", "BF", "PR", "PF"):
-        if suffix in ("PR", "PF"):
+    if suffix in ("BR", "BF", "PR", "PF", "PP", "BP"):
+        if suffix in ("PR", "PF", "PP"):
             tb_col = "T"
-        elif suffix in ("BR", "BF"):
+        elif suffix in ("BR", "BF", "BP"):
             tb_col = "B"
         # Create dict of Player Name,Team:T/B arm tag
         player_arm_dict = dict(
