@@ -40,12 +40,8 @@ def main():
     team_bat_df = hp.load_csv(st.secrets[user_year + "TeamBR_link"])
     team_field_df = hp.load_csv(st.secrets[user_year + "TeamFieldingFinalR_link"])
     team_pitch_df = hp.load_csv(st.secrets[user_year + "TeamPR_link"])
-    if int(user_year) >= 2025:
-        central_df = hp.load_csv(st.secrets[user_year + "StandingsFinalC_npb_link"])
-        pacific_df = hp.load_csv(st.secrets[user_year + "StandingsFinalP_npb_link"])
-    else:
-        central_df = hp.load_csv(st.secrets[user_year + "StandingsFinalC_link"])
-        pacific_df = hp.load_csv(st.secrets[user_year + "StandingsFinalP_link"])
+    central_df = hp.load_csv(st.secrets[user_year + "StandingsFinalC_npb_link"])
+    pacific_df = hp.load_csv(st.secrets[user_year + "StandingsFinalP_npb_link"])
 
     # Check min league avg PA and IP for appropriate sample sizes before continuing
     if (

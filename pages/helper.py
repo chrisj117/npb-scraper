@@ -202,7 +202,9 @@ def display_player_percentile(df, name, team, year, suffix):
         invert_cols = ["K%", "SwStr%", "Chase%"]
 
     # Get player's age
-    age = df[(df[name_col] == name) & (df["Team"] == team)]["Age"].astype(str)
+    age = (
+        df[(df[name_col] == name) & (df["Team"] == team)]["Age"].astype(int).astype(str)
+    )
     # Save raw numbers
     raw_data = prepare_streamlit_types(
         df[(df[name_col] == name) & (df["Team"] == team)][plot_cols]
@@ -2091,7 +2093,7 @@ def create_year_filter():
         string: The user's chosen year.
     """
     # Always place newest year first
-    year = st.selectbox("Year", ["2026", "2025"])
+    year = st.selectbox("Year", ["2026", "2025", "2024"])
     return year
 
 
