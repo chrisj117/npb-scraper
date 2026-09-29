@@ -17,6 +17,7 @@ from urllib3.util.retry import Retry
 from playwright.sync_api import sync_playwright
 
 
+# TODO: check that roster_revisions.csv can trickle to career (or rework roster_revisions.csv)
 # TODO: declutter main() by putting most scraping/org functions in a separate function + redoing get_user_input()
 # TODO: need more robust error checking surrounding scrape and org functions
 # TODO: split into multiple class files for organization
@@ -156,7 +157,7 @@ def main():
     npb_bat_player_stats = PlayerData(stats_dir, year_dir, "BR", scrape_year)
     npb_pitch_player_stats = PlayerData(stats_dir, year_dir, "PR", scrape_year)
     # Adding positions to batting stats
-    npb_bat_player_stats.append_positions(npb_fielding.df, npb_pitch_player_stats.df)
+    npb_fielding.update_roster_pos(npb_bat_player_stats.df, npb_pitch_player_stats.df)
     # NPB Team stats
     npb_bat_team_stats = TeamData(
         npb_bat_player_stats.df, stats_dir, year_dir, "BR", scrape_year
@@ -213,7 +214,9 @@ def main():
     farm_bat_player_stats = PlayerData(stats_dir, year_dir, "BF", scrape_year)
     farm_pitch_player_stats = PlayerData(stats_dir, year_dir, "PF", scrape_year)
     # Adding positions to batting stats
-    farm_bat_player_stats.append_positions(farm_fielding.df, farm_pitch_player_stats.df)
+    farm_bat_player_stats.append_farm_positions(
+        farm_fielding.df, farm_pitch_player_stats.df
+    )
     # Farm Team stats
     farm_bat_team_stats = TeamData(
         farm_bat_player_stats.df, stats_dir, year_dir, "BF", scrape_year
@@ -239,6 +242,7 @@ def main():
     farm_fielding.output_final()
     farm_team_fielding.output_final()
     print("Farm statistics finished!\n")
+
     # If there are no post season URLs in npb_urls.csv, skip post season
     bp_urls, _ = get_stat_urls("BP", scrape_year)
     pp_urls, _ = get_stat_urls("PP", scrape_year)
@@ -617,7 +621,19 @@ class Stats:
         )
 
         # Grab new, non percentile, non error columns that we don't calculate from gsheet to merge
-        bad_gsheet_cols = ["Unnamed", "pctl", "null", "pitId", "qualified", "K-BB%"]
+        bad_gsheet_cols = [
+            "Unnamed",
+            "pctl",
+            "null",
+            "pitId",
+            "qualified",
+            "K-BB%",
+            "Count",
+            "BIP",
+            "Usage",
+            "Avg Velo",
+            "Max Velo",
+        ]
         new_gsheet_cols = []
         for col in gsheet_df.columns.to_list():
             if (
@@ -626,13 +642,13 @@ class Stats:
                 new_gsheet_cols.append(col)
         gsheet_df = gsheet_df[new_gsheet_cols]
 
-        # Standardize percentage stats to whole numbers for Streamlit (Tablepress's conversion in rescale_pct_stats())
+        # Standardize percentage stats to whole numbers for calculations
         for col in gsheet_df.columns.to_list():
             # Most new columns that need rescaling end in % except for HR/FB
             if "%" in col or col == "HR/FB":
                 # If there are entries under 1.0, then we need to rescale to whole number format
                 col_max = gsheet_df[col].max()
-                if pd.notna(col_max) and col_max < 1.0:
+                if pd.notna(col_max) and col_max <= 1.0:
                     gsheet_df[col] = gsheet_df[col] * 100
 
         # Merge only needed columns from gsheet_df
@@ -708,7 +724,34 @@ class Stats:
         )
 
         # Grab new, non percentile, non error columns that we don't calculate from gsheet to merge
-        bad_gsheet_cols = ["Unnamed", "pctl", "null", "batId", "qualified", "K-BB%"]
+        bad_gsheet_cols = [
+            "Unnamed",
+            "pctl",
+            "null",
+            "batId",
+            "qualified",
+            "K-BB%",
+            "IP",
+            "Count",
+            "FB Velo",
+            "Ball%",
+            "Strike%",
+            "F-Str%",
+            "PAR%",
+            "Behind%",
+            "Zone%",
+            "Glove%",
+            "Arm%",
+            "High%",
+            "Low%",
+            "MM%",
+            "Sec%",
+            "BIP",
+            "Usage",
+            "Avg Velo",
+            "Max Velo",
+            "Grade",
+        ]
         new_gsheet_cols = []
         for col in gsheet_df.columns.to_list():
             if (
@@ -717,13 +760,13 @@ class Stats:
                 new_gsheet_cols.append(col)
         gsheet_df = gsheet_df[new_gsheet_cols]
 
-        # Standardize percentage stats to whole numbers for Streamlit (Tablepress's conversion in rescale_pct_stats())
+        # Standardize percentage stats to whole numbers for calculations
         for col in gsheet_df.columns.to_list():
             # Most new columns that need rescaling end in % except for HR/FB
             if "%" in col or col == "HR/FB":
                 # If there are entries under 1.0, then we need to rescale to whole number format
                 col_max = gsheet_df[col].max()
-                if pd.notna(col_max) and col_max < 1.0:
+                if pd.notna(col_max) and col_max <= 1.0:
                     gsheet_df[col] = gsheet_df[col] * 100
 
         # Merge only needed columns from gsheet_df
@@ -737,21 +780,41 @@ class Stats:
         # Calculate new stats based off of GSheet stats
         self.df["GB/FB"] = self.df["GB%"] / self.df["FB%"]
 
-    def rescale_pct_stats(self):
-        """
-        Rescales percentage statistics.
+    def rescale_pct_stats(self, mode):
+        """Rescales percentage statistics in the dataframe.
 
-        Google Sheets and other data contains percentages as whole numbers (e.g., 50 for 50%).
-        This method converts them to decimal format (e.g., 0.50) for proper percentage
-        display in the final Tablepress output files.
+        Google Sheets and other data sources store percentages as whole numbers
+        (e.g., 50 for 50%). This method converts them between decimal and
+        whole-number formats depending on the target output mode.
+
+        Args:
+            mode (str): Determines the direction of rescaling.
+                - "tablepress": Converts whole numbers to decimals
+                  (e.g., 50 -> 0.50) for Tablepress/CSV output files.
+                  Only scales columns where the max value exceeds 1.0.
+                - "streamlit": Converts decimals to whole numbers
+                  (e.g., 0.50 -> 50) for Streamlit display.
+                  Only scales columns where the max value is 1.0 or below.
+
+        Returns:
+            None: Modifies self.df in place.
         """
-        for col in self.df.columns.to_list():
-            # Most new columns that need rescaling end in % except for HR/FB
-            if "%" in col or col == "HR/FB":
-                # If there are entries over 1.0, then we need to rescale to decimal format
-                col_max = self.df[col].max()
-                if pd.notna(col_max) and col_max > 1.0:
-                    self.df[col] = self.df[col] / 100
+        if mode == "tablepress":
+            for col in self.df.columns.to_list():
+                # Most new columns that need rescaling end in % except for HR/FB
+                if "%" in col or col == "HR/FB":
+                    # If there are entries over 1.0, then rescale to decimal format
+                    col_max = self.df[col].max()
+                    if pd.notna(col_max) and col_max > 1.0:
+                        self.df[col] = self.df[col] / 100
+        elif mode == "streamlit":
+            for col in self.df.columns.to_list():
+                # Most new columns that need rescaling end in % except for HR/FB
+                if "%" in col or col == "HR/FB":
+                    # If there are entries under 1.0, then rescale to whole number format
+                    col_max = self.df[col].max()
+                    if pd.notna(col_max) and col_max <= 1.0:
+                        self.df[col] = self.df[col] * 100
 
 
 class PlayerData(Stats):
@@ -793,8 +856,8 @@ class PlayerData(Stats):
         get_team_games():
             Combines team games played into a single DataFrame for IP/PA
             calculations.
-        append_positions(field_df, pitch_df):
-            Adds the primary position of a player to the player DataFrame."""
+        append_farm_positions(field_df, pitch_df):
+            Adds the primary position of a farm player to the player DataFrame."""
 
     def __init__(self, stats_dir, year_dir, suffix, year):
         super().__init__(stats_dir, year_dir, suffix, year)
@@ -842,6 +905,8 @@ class PlayerData(Stats):
         self.df = self.df.drop(
             self.df.columns[self.df.columns.str.contains("Unnamed")], axis=1
         )
+        # Standardize all percent columns to whole number format for Streamlit
+        self.rescale_pct_stats("streamlit")
 
         # Calculate leaders for Streamlit
         leader_df = self.determine_qualifiers()
@@ -1015,7 +1080,7 @@ class PlayerData(Stats):
         5. Adds roster data (age, position, batting arm) for regular/farm stats.
         6. Reorders columns to a standard layout based on suffix and year.
         7. Applies manual revisions from the revisions CSV file."""
-        self.rescale_pct_stats()
+        self.rescale_pct_stats("tablepress")
         # Number formatting
         format_maps = {
             "BB%": "{:.1%}",
@@ -1204,7 +1269,7 @@ class PlayerData(Stats):
         8. Removes HLD column for farm stats.
         9. Applies manual revisions from the revisions CSV file."""
         # Data cleaning/reformatting
-        self.rescale_pct_stats()
+        self.rescale_pct_stats("tablepress")
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
         # Number formatting
@@ -1474,54 +1539,52 @@ class PlayerData(Stats):
         # constFile = ip_pa_df.to_string(new_csv_name)
         return ip_pa_df
 
-    def append_positions(self, field_df, pitch_df):
-        """Adds the primary position of a player to the player dataframe
+    def append_farm_positions(self, field_df, pitch_df):
+        """Adds the primary position of a farm player to the player dataframe
 
         Parameters:
         field_df (pandas dataframe): Holds an entire NPB league's fielding stats
         pitch_df (pandas dataframe): Holds an entire NPB league's individual
         pitching stats"""
-        if "Pos" not in self.df.columns:
-            self.df["Pos"] = ""
-        # Create a temp df with players as rows and all pos they play as cols
-        pivot_df = field_df.pivot_table(
-            index="Player",
-            columns="Pos",
-            values="Inn",
-            aggfunc="sum",
-            fill_value=0,
-        )
-        # Append team names to help differentiate players after pitching merge
-        pivot_df = pd.merge(
-            pivot_df,
-            field_df[["Player", "Team"]].drop_duplicates(),
-            on="Player",
-            how="outer",
-        )
-        # Append IP for position 1 (pitchers) as a new column "1"
-        pivot_df = pd.merge(
-            pivot_df,
-            pitch_df[["Pitcher", "IP", "Team"]].rename(
-                columns={"Pitcher": "Player", "IP": "1"}
-            ),
-            on=["Player", "Team"],
-            how="outer",
-        )
-        # Fill NaN values in all colums with 0 (if needed)
-        pivot_df = pivot_df.fillna(0)
-        # Get primary positions
-        pivot_df["Pos"] = pivot_df.apply(assign_primary_or_utl, axis=1)
-        # Extract only the player name, team, and primary_position:
-        temp_primary_df = pivot_df[["Player", "Pos", "Team"]]
-        # Then merge if needed:
-        self.df = pd.merge(self.df, temp_primary_df, on=["Player", "Team"], how="left")
-        # Swap temp Pos with updated Pos, drop placeholder Pos, rename
-        self.df["Pos_x"], self.df["Pos_y"] = self.df["Pos_y"], self.df["Pos_x"]
-        self.df = self.df.drop("Pos_y", axis=1)
-        self.df = self.df.rename(columns={"Pos_x": "Pos"})
-        # NaN means player wasn't on fielding df and pitching df (N/A data) OR
-        # was a pinch hitter
-        self.df["Pos"] = self.df["Pos"].fillna("")
+        # Farm uses inputted fielding and pitching dfs for now
+        if self.suffix == "BF" and field_df is not None and pitch_df is not None:
+            # Create a temp df with players as rows and all pos they play as cols
+            pivot_df = field_df.pivot_table(
+                index="Player",
+                columns="Pos",
+                values="Inn",
+                aggfunc="sum",
+                fill_value=0,
+            )
+            # Append team names to help differentiate players after pitching merge
+            pivot_df = pd.merge(
+                pivot_df,
+                field_df[["Player", "Team"]].drop_duplicates(),
+                on="Player",
+                how="outer",
+            )
+            # Append IP for position 1 (pitchers) as a new column "1"
+            pivot_df = pd.merge(
+                pivot_df,
+                pitch_df[["Pitcher", "IP", "Team"]].rename(
+                    columns={"Pitcher": "Player", "IP": "1"}
+                ),
+                on=["Player", "Team"],
+                how="outer",
+            )
+            # Fill NaN values in all colums with 0 (if needed)
+            pivot_df = pivot_df.fillna(0)
+            # Get primary positions
+            pivot_df["Pos"] = pivot_df.apply(assign_primary_or_utl, axis=1)
+            # Extract only the player name, team, and primary_position:
+            temp_primary_df = pivot_df[["Player", "Pos", "Team"]]
+            # Then merge if needed:
+            self.df = pd.merge(
+                self.df, temp_primary_df, on=["Player", "Team"], how="left"
+            )
+            # NaN means player wasn't on fielding df and pitching df (N/A data) OR
+            # was a pinch hitter
+            self.df["Pos"] = self.df["Pos"].fillna("")
 
 
 class TeamData(Stats):
@@ -2065,7 +2128,7 @@ class TeamData(Stats):
         manual revisions from the revisions CSV file."""
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
-        self.rescale_pct_stats()
+        self.rescale_pct_stats("tablepress")
         # Number formatting
         format_maps = {
             "BB%": "{:.1%}",
@@ -2157,7 +2220,7 @@ class TeamData(Stats):
         manual revisions from the revisions CSV file."""
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
-        self.rescale_pct_stats()
+        self.rescale_pct_stats("tablepress")
         # Number formatting
         format_maps = {
             "BB%": "{:.1%}",
@@ -2672,6 +2735,65 @@ class FieldingData(Stats):
         # Apply manual revisions
         self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
+    def update_roster_pos(self, bat_df, pitch_df):
+        """Adds the primary position of a player to the roster data file
+
+        Parameters:
+        bat_df (pandas dataframe): Holds an entire NPB league's individual batting stats
+        pitch_df (pandas dataframe): Holds an entire NPB league's individual
+        pitching stats"""
+        temp_bat_df = bat_df.copy(deep=True)
+        # Create a temp df with players as rows and all pos they play as cols
+        pivot_df = self.df.pivot_table(
+            index="Player",
+            columns="Pos",
+            values="Inn",
+            aggfunc="sum",
+            fill_value=0,
+        )
+        # Append team names to help differentiate players after pitching merge
+        pivot_df = pd.merge(
+            pivot_df,
+            temp_bat_df[["Player", "Team"]].drop_duplicates(),
+            on="Player",
+            how="outer",
+        )
+        # Append IP for position 1 (pitchers) as a new column "1"
+        pivot_df = pd.merge(
+            pivot_df,
+            pitch_df[["Pitcher", "IP", "Team"]].rename(
+                columns={"Pitcher": "Player", "IP": "1"}
+            ),
+            on=["Player", "Team"],
+            how="outer",
+        )
+        # Fill NaN values in all columns with 0 (if needed)
+        pivot_df = pivot_df.fillna(0)
+        # Get primary positions
+        pivot_df["Pos"] = pivot_df.apply(assign_primary_or_utl, axis=1)
+        # Extract only the player name, team, and primary_position:
+        temp_primary_df = pivot_df[["Player", "Pos", "Team"]]
+        # Then merge if needed:
+        temp_bat_df = pd.merge(
+            temp_bat_df, temp_primary_df, on=["Player", "Team"], how="left"
+        )
+        # NaN means player wasn't on fielding df/pitching df (N/A data) OR is a pinch hitter
+        temp_bat_df["Pos"] = temp_bat_df["Pos"].fillna("")
+
+        # Save positions to roster data
+        rel_dir = os.path.dirname(__file__)
+        roster_data_file = rel_dir + "/input/" + self.year + "/roster_data.csv"
+        roster_df = pd.read_csv(roster_data_file)
+        if "Pos" in roster_df.columns:
+            roster_df = roster_df.drop(["Pos"], axis=1)
+        roster_df = pd.merge(
+            temp_bat_df[["Player", "Team", "Pos"]],
+            roster_df,
+            on=["Player", "Team"],
+            how="right",
+        )
+        roster_df.to_csv(roster_data_file, index=False)
+
 
 class TeamFieldingData(Stats):
     """A class to handle team fielding statistics for NPB and Farm League.
@@ -3011,7 +3133,7 @@ class TeamSummaryData(Stats):
             ]
         ]
         # Number formatting
-        self.rescale_pct_stats()
+        self.rescale_pct_stats("tablepress")
         format_maps = {
             "PCT": "{:.3f}",
             "HR": "{:.0f}",
@@ -3402,13 +3524,7 @@ class CareerData(Stats):
             self.org_player_bat(self.suffix, year)
 
             # Standardize all percentages for Streamlit display
-            for col in self.df.columns.to_list():
-                # Most new columns that need rescaling end in % except for HR/FB
-                if "%" in col or col == "HR/FB":
-                    # If there are entries under 1.0, then we need to rescale to whole number format
-                    col_max = self.df[col].max()
-                    if pd.notna(col_max) and col_max <= 1.0:
-                        self.df[col] = self.df[col] * 100
+            self.rescale_pct_stats("streamlit")
 
             # Add positions from fielding
             self.append_career_bat_positions(year)
@@ -3493,13 +3609,7 @@ class CareerData(Stats):
             self.org_player_pitch(self.suffix, year)
 
             # Standardize all percentages for Streamlit display
-            for col in self.df.columns.to_list():
-                # Most new columns that need rescaling end in % except for HR/FB
-                if "%" in col or col == "HR/FB":
-                    # If there are entries under 1.0, then we need to rescale to whole number format
-                    col_max = self.df[col].max()
-                    if pd.notna(col_max) and col_max <= 1.0:
-                        self.df[col] = self.df[col] * 100
+            self.rescale_pct_stats("streamlit")
 
             # Store the processed year dataframe
             processed_dfs.append(self.df.copy())
@@ -4053,9 +4163,11 @@ def get_gsheets_data(input_dir, year_dir, suffix, year, stat_type):
     year (string): The desired NPB year to scrape"""
     # Google sheet stats not available before 2021, so return immediately
     if int(year) < 2021:
+        print("Google Sheets data not available before 2021, skipping...")
         return
-    # Google sheet team stats not available before 2025, so return
-    if int(year) < 2025 and stat_type == "team":
+    # Google sheet team stats not available before 2023, so return
+    if int(year) < 2024 and stat_type == "team":
+        print("Google Sheets Team data not available before 2024, skipping...")
         return
 
     gsheet_df = pd.read_csv(os.path.join(input_dir, "google_sheet_urls.csv"))
@@ -5289,28 +5401,33 @@ def add_roster_data(df, suffix, year):
     Parameters:
     df (pandas dataframe): A dataframe containing entries with player names
     suffix (string): Indicates the data to add:
-    "BR" = regular season batting arm data
-    "BP" = postseason (regular season batting arm data)
+    "BR" = regular season batting arm + pos data
+    "BP" = postseason (regular season batting arm + pos data)
     "BF" = farm batting arm data
     "PR" = regular season throwing arm data
     "PP" = postseason (regular season batting arm data)
     "PF" = farm throwing arm data
+    "R" = fielding (age only, arm data is skipped)
 
     Returns:
     df (pandas dataframe): The inputted dataframe with the appended throwing
     arms and ages"""
     rel_dir = os.path.dirname(__file__)
     roster_data_file = rel_dir + "/input/" + year + "/roster_data.csv"
-
-    # Player throwing/batting arms
     roster_df = pd.read_csv(roster_data_file)
-    convert_col = df.iloc[:, 0].name
-    tb_col = ""
-    if suffix in ("BR", "BF", "PR", "PF", "PP", "BP"):
-        if suffix in ("PR", "PF", "PP"):
-            tb_col = "T"
-        elif suffix in ("BR", "BF", "BP"):
-            tb_col = "B"
+
+    if suffix in ("PR", "PF", "PP"):
+        convert_col = "Pitcher"
+        tb_col = "T"
+    elif suffix in ("BR", "BF", "BP", "R"):
+        convert_col = "Player"
+        tb_col = "B"
+    else:
+        convert_col = df.iloc[:, 0].name
+        tb_col = ""
+
+    # Player throwing/batting arms (Excludes fielding)
+    if suffix not in ("R", "F"):
         # Create dict of Player Name,Team:T/B arm tag
         player_arm_dict = dict(
             zip((zip(roster_df["Player"], roster_df["Team"])), roster_df[tb_col])
@@ -5318,6 +5435,17 @@ def add_roster_data(df, suffix, year):
         df["keys"] = list(zip(df[convert_col], df["Team"]))
         df[tb_col] = (
             df["keys"].map(player_arm_dict).infer_objects().fillna("").astype(str)
+        )
+
+    # Player positions
+    if suffix in ("BP", "BR"):
+        # Create dict of Player Name,Team:Pos tag
+        player_pos_dict = dict(
+            zip((zip(roster_df["Player"], roster_df["Team"])), roster_df["Pos"])
+        )
+        df["keys"] = list(zip(df[convert_col], df["Team"]))
+        df["Pos"] = (
+            df["keys"].map(player_pos_dict).infer_objects().fillna("").astype(str)
         )
 
     # Player age
@@ -5334,6 +5462,7 @@ def add_roster_data(df, suffix, year):
     # Remove trailing zeroes from age
     df["Age"] = df["Age"].astype(str)
     df["Age"] = df["Age"].str.replace(".0", "")
+
     # Drop temp keys col
     df = df.drop("keys", axis=1)
     return df
