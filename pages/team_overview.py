@@ -57,6 +57,7 @@ def main():
         st.stop()
 
     create_team_header(central_df, pacific_df, user_team)
+    create_team_splits(central_df, pacific_df, user_team)
 
     # Aggregate all of a player's fielding into 1 row
     agg_field_df = field_df.groupby(["Player", "Team"], as_index=False).agg(
@@ -1110,6 +1111,49 @@ def create_team_header(central_df: pd.DataFrame, pacific_df: pd.DataFrame, team)
         divider="grey",
         icon=emoji_dict[team],
     )
+
+
+def create_team_splits(central_df: pd.DataFrame, pacific_df: pd.DataFrame, team):
+    # Determine title/subtitle contents
+    vs_team_dict = {
+        "vs B": "vs ORIX 🐃",
+        "vs C": "vs Hiroshima 🎏",
+        "vs D": "vs Chunichi 🐉",
+        "vs DB": "vs DeNA 🌟",
+        "vs E": "vs Rakuten 🦅",
+        "vs F": "vs Nipponham 🦊",
+        "vs G": "vs Yomiuri 🐰",
+        "vs H": "vs SoftBank 🪶",
+        "vs L": "vs Seibu 🦁",
+        "vs M": "vs Lotte ⚓",
+        "vs S": "vs Yakult 🐧",
+        "vs T": "vs Hanshin 🐯",
+        "Inter": "Interleague 🔁",
+        "Home": "Home 🏠",
+        "Road": "Road 🚗",
+    }
+
+    if team in central_df["Team"].values:
+        chosen_df = central_df
+    else:
+        chosen_df = pacific_df
+    chosen_df = chosen_df.rename(columns=vs_team_dict)
+
+    # Look at only 1 team
+    chosen_df = chosen_df.drop(chosen_df[chosen_df.Team != team].index)
+
+    with st.expander("***Record Splits***", type="default"):
+        cols = st.columns(8, gap="xxsmall")
+        i = 0
+        for col in chosen_df.columns:
+            # Distribute dataframes into each column
+            chosen_col = cols[i]
+            if ("Home 🏠" in col or "Interleague 🔁" in col or "Road 🚗" in col) or (
+                "vs" in col and chosen_df.iloc[0][col] != "--"
+            ):
+                with chosen_col:
+                    st.metric(label=col, value=chosen_df.iloc[0][col])
+                    i += 1
 
 
 if __name__ == "__main__":

@@ -4,5 +4,5 @@ numpy==2.5.3
 pandas==3.0.6
 playwright==1.63.0
 requests==2.34.2
-streamlit==1.64.0
+streamlit==1.65.0
 urllib3==2.8.0
