@@ -1246,6 +1246,10 @@ class PlayerData(Stats):
                 "Team",
                 "League",
             ]
+            # Reordering for age and throwing arm if correct year
+            self.df = add_roster_data(self.df, self.suffix, self.year)
+            col_order.insert(-1, "Age")
+            col_order.insert(-1, "B")
             self.df = self.df.fillna("")
         else:
             col_order = self.df.columns.tolist()
@@ -1306,6 +1310,7 @@ class PlayerData(Stats):
                 self.df[col] = self.df[col].astype(str).replace("nan%", "")
             if self.df[col].astype(str).str.contains("inf").any():
                 self.df[col] = self.df[col].astype(str).replace("inf", "")
+
         # Reordering columns
         if self.suffix in ("PR", "PF"):
             col_order = [
@@ -1373,7 +1378,6 @@ class PlayerData(Stats):
             self.df = add_roster_data(self.df, self.suffix, self.year)
             col_order.insert(-1, "Age")
             col_order.insert(-1, "T")
-
         elif self.suffix == "PP":
             col_order = [
                 "Pitcher",
@@ -1409,6 +1413,10 @@ class PlayerData(Stats):
                 "Team",
                 "League",
             ]
+            # Reordering for age and throwing arm if correct year
+            self.df = add_roster_data(self.df, self.suffix, self.year)
+            col_order.insert(-1, "Age")
+            col_order.insert(-1, "T")
         self.df = self.df[col_order]
         # Apply manual revisions
         self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
@@ -3998,6 +4006,8 @@ def get_post_season_stats(year_dir, suffix, year):
                         entry_text = entry_text.replace("　", " ")
                     if entry_text.find("*"):
                         entry_text = entry_text.replace("*", "")
+                    entry_text = entry_text.replace("\n", "")
+                    entry_text = entry_text.replace("+", "")
                     # Write output in csv file format
                     output_file.write(entry_text + ",")
 
@@ -4930,7 +4940,6 @@ def get_roster_data(year_dir, suffix, year):
 
 
 # TODO: fuzzy translate remaining untranslated players with no rosters (oisix and hayate)?
-# TODO: make it so unique entries are not overwritten (I.E. we can add original roster_data.csv rows and it doesn't get overwritten)
 def org_roster_data(year_dir, rel_dir, year):
     """Organizes and merges raw roster data files into a cumulative roster_data.csv.
 
@@ -4990,6 +4999,24 @@ def org_roster_data(year_dir, rel_dir, year):
     all_roster_data_df["jpPlayer"] = all_roster_data_df["jpPlayer"].str.replace(
         "　", " "
     )
+
+    # Preserve unique translations from the loaded roster (existing roster_data.csv)
+    # so they are not overwritten in the merged final roster
+    if os.path.exists(roster_data_filename):
+        existing_roster_df = pd.read_csv(roster_data_filename, dtype=str)
+        new_player_jp_names = set(all_roster_data_df["jpPlayer"])
+        unique_existing = existing_roster_df[
+            ~existing_roster_df["jpPlayer"].isin(new_player_jp_names)
+        ]
+        if not unique_existing.empty:
+            # Align columns before concatenation
+            for col in all_roster_data_df.columns:
+                if col not in unique_existing.columns:
+                    unique_existing[col] = ""
+            unique_existing = unique_existing[all_roster_data_df.columns]
+            all_roster_data_df = pd.concat(
+                [all_roster_data_df, unique_existing], ignore_index=True
+            )
 
     # Drop coaches and invalid entries (entries with no batting/throwing hands)
     all_roster_data_df = all_roster_data_df.dropna(subset=["T", "B"])
