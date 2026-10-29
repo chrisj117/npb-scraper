@@ -18,7 +18,6 @@ from playwright.sync_api import sync_playwright
 
 
 # TODO: check that roster_revisions.csv can trickle to career (or rework roster_revisions.csv)
-# TODO: declutter main() by putting most scraping/org functions in a separate function + redoing get_user_input()
 # TODO: need more robust error checking surrounding scrape and org functions
 # TODO: split into multiple class files for organization
 # TODO: make one encompassing "format stat" function
@@ -64,39 +63,7 @@ def main():
     if not os.path.exists(stats_dir):
         os.mkdir(stats_dir)
 
-    # Check for scrape_year command line arg
-    if len(sys.argv) == 2:
-        print("ARGUMENTS DETECTED: " + str(sys.argv))
-        # "-a" scrapes current year, else scrape for given year
-        if sys.argv[1] == "-a":
-            print("Setting year to: " + str(datetime.now().year))
-            scrape_year = get_scrape_year(str(datetime.now().year))
-        else:
-            print("Setting year to: " + str(sys.argv[1]))
-            scrape_year = get_scrape_year(sys.argv[1])
-        # Bypass all user input functions and set flags for scraping
-        arg_bypass = True
-        npb_scrape_yn = "Y"
-        farm_scrape_yn = "Y"
-        post_scrape_yn = "Y"
-        stat_zip_yn = "N"
-        roster_data_yn = "Y"
-        career_yn = "N"
-    elif len(sys.argv) > 2:
-        print(
-            "ERROR: Too many arguments. Try using the desired stat year or use '-a' to scrape for the current year."
-        )
-        sys.exit("Exiting...")
-    else:
-        # Give user control if a year argument isn't passed in
-        arg_bypass = False
-        scrape_year = get_scrape_year()
-        npb_scrape_yn = get_user_choice("R")
-        farm_scrape_yn = get_user_choice("F")
-        post_scrape_yn = get_user_choice("P")
-        stat_zip_yn = get_user_choice("Z")
-        roster_data_yn = get_user_choice("RD")
-        career_yn = get_user_choice("career")
+    scrape_year, arg_bypass, flags = get_run_options(sys.argv)
 
     # TODO: place after year_dir creation?
     input_dir = os.path.join(rel_dir, "input")
@@ -109,36 +76,138 @@ def main():
     if not os.path.exists(year_dir):
         os.mkdir(year_dir)
 
-    # Roster data update
-    if roster_data_yn == "Y":
-        if scrape_year != str(datetime.now().year):
-            print(
-                "WARNING: scrape year does not match current year, skipping roster update."
-            )
-        # else:
-        print("Updating roster_data.csv...")
-        # TODO: put a year check so old raw files dont get overwritten
-        get_roster_data(year_dir, "en", scrape_year)
-        get_roster_data(year_dir, "jp", scrape_year)
-        org_roster_data(year_dir, rel_dir, scrape_year)
+    if flags["roster"] == "Y":
+        update_roster_data(rel_dir, year_dir, scrape_year)
     else:
         print("Skipping roster update...")
 
-    if npb_scrape_yn == "Y":
-        # Scrape regular season batting and pitching URLs
-        get_stats(input_dir, year_dir, "BR", scrape_year)
-        get_stats(input_dir, year_dir, "PR", scrape_year)
-        get_gsheets_data(input_dir, year_dir, "BR", scrape_year, "player")
-        get_gsheets_data(input_dir, year_dir, "PR", scrape_year, "player")
-        get_gsheets_data(input_dir, year_dir, "BR", scrape_year, "team")
-        get_gsheets_data(input_dir, year_dir, "PR", scrape_year, "team")
-        get_standings(year_dir, "C_npb", scrape_year)
-        get_standings(year_dir, "P_npb", scrape_year)
-        get_fielding(year_dir, "R", scrape_year)
+    if flags["npb"] == "Y":
+        scrape_npb_regular_season(input_dir, year_dir, scrape_year)
+    organize_npb_regular_season(stats_dir, year_dir, scrape_year)
+
+    if flags["farm"] == "Y":
+        scrape_farm(input_dir, year_dir, scrape_year)
+    organize_farm(stats_dir, year_dir, scrape_year)
+
+    # If there are no post season URLs in npb_urls.csv, skip post season
+    bp_urls, _ = get_stat_urls("BP", scrape_year)
+    pp_urls, _ = get_stat_urls("PP", scrape_year)
+    if len(bp_urls) > 0 and len(pp_urls) > 0:
+        if flags["post"] == "Y":
+            scrape_post_season(year_dir, scrape_year)
+        organize_post_season(stats_dir, year_dir, scrape_year)
+    else:
+        print("No post season URLs detected in npb_urls.csv, skipping...")
+
+    # Make upload zips for manual uploads/debugging
+    if flags["zip"] == "Y":
+        print("Creating upload zip for given year.")
+        make_zip(year_dir, "S", scrape_year)
+
+    organize_career_data(stats_dir, rel_dir, scrape_year, flags["career"])
+
+    if arg_bypass is False:
+        _ = input("Press Enter to exit. ")
+        return 1
+    return 0
+
+
+def get_run_options(argv):
+    """Gets the scrape year and task flags from command line arguments or user
+    input
+
+    Parameters:
+    argv (list): The command line arguments (sys.argv)
+
+    Returns:
+    tuple: (scrape_year, arg_bypass, flags) where scrape_year (str) is the
+    year to scrape, arg_bypass (bool) is True if command line arguments were
+    used, and flags (dict) maps each task to "Y" or "N"."""
+    if len(argv) == 2:
+        print("ARGUMENTS DETECTED: " + str(argv))
+        # "-a" scrapes current year, else scrape for given year
+        if argv[1] == "-a":
+            print("Setting year to: " + str(datetime.now().year))
+            scrape_year = get_scrape_year(str(datetime.now().year))
+        else:
+            print("Setting year to: " + str(argv[1]))
+            scrape_year = get_scrape_year(argv[1])
+        # Bypass all user input functions and set flags for scraping
+        flags = {
+            "npb": "Y",
+            "farm": "Y",
+            "post": "Y",
+            "zip": "N",
+            "roster": "Y",
+            "career": "N",
+        }
+        return scrape_year, True, flags
+    if len(argv) > 2:
+        print(
+            "ERROR: Too many arguments. Try using the desired stat year or use '-a' to scrape for the current year."
+        )
+        sys.exit("Exiting...")
+    # Give user control if a year argument isn't passed in
+    scrape_year = get_scrape_year()
+    flags = {
+        "npb": get_user_choice("R"),
+        "farm": get_user_choice("F"),
+        "post": get_user_choice("P"),
+        "zip": get_user_choice("Z"),
+        "roster": get_user_choice("RD"),
+        "career": get_user_choice("career"),
+    }
+    return scrape_year, False, flags
+
+
+def update_roster_data(rel_dir, year_dir, scrape_year):
+    """Scrapes the NPB team rosters and updates roster_data.csv
+
+    Parameters:
+    rel_dir (str): The relative directory holding the project
+    year_dir (str): The directory holding the year's raw stat files
+    scrape_year (str): The year being scraped"""
+    if scrape_year != str(datetime.now().year):
+        print(
+            "WARNING: scrape year does not match current year, skipping roster update."
+        )
+        return
+    print("Updating roster_data.csv...")
+    get_roster_data(year_dir, "en", scrape_year)
+    get_roster_data(year_dir, "jp", scrape_year)
+    org_roster_data(year_dir, rel_dir, scrape_year)
+
+
+def scrape_npb_regular_season(input_dir, year_dir, scrape_year):
+    """Scrapes regular season NPB stats, standings, fielding, and daily scores
+    (current year only)
+
+    Parameters:
+    input_dir (str): The directory holding the input files
+    year_dir (str): The directory holding the year's raw stat files
+    scrape_year (str): The year being scraped"""
+    get_stats(input_dir, year_dir, "BR", scrape_year)
+    get_stats(input_dir, year_dir, "PR", scrape_year)
+    get_gsheets_data(input_dir, year_dir, "BR", scrape_year, "player")
+    get_gsheets_data(input_dir, year_dir, "PR", scrape_year, "player")
+    get_gsheets_data(input_dir, year_dir, "BR", scrape_year, "team")
+    get_gsheets_data(input_dir, year_dir, "PR", scrape_year, "team")
+    get_standings(year_dir, "C_npb", scrape_year)
+    get_standings(year_dir, "P_npb", scrape_year)
+    get_fielding(year_dir, "R", scrape_year)
+    if scrape_year == str(datetime.now().year):
+        get_daily_scores(year_dir, "R", scrape_year)
+
+
+def organize_npb_regular_season(stats_dir, year_dir, scrape_year):
+    """Organizes and outputs regular season NPB stats from the raw files
+
+    Parameters:
+    stats_dir (str): The directory holding all stat output
+    year_dir (str): The directory holding the year's raw stat files
+    scrape_year (str): The year being organized"""
     # NPB Daily Scores (only executes on current year)
     if scrape_year == str(datetime.now().year):
-        if npb_scrape_yn == "Y":
-            get_daily_scores(year_dir, "R", scrape_year)
         npb_daily_scores = DailyScoresData(stats_dir, year_dir, "R", scrape_year)
         npb_daily_scores.output_final()
     # NPB Individual Fielding
@@ -189,14 +258,30 @@ def main():
     npb_team_summary.output_final()
     print("Regular season statistics finished!\n")
 
-    if farm_scrape_yn == "Y":
-        get_stats(input_dir, year_dir, "BF", scrape_year)
-        get_stats(input_dir, year_dir, "PF", scrape_year)
-        get_standings(year_dir, "E_farm", scrape_year)
-        get_standings(year_dir, "W_farm", scrape_year)
-        if int(scrape_year) >= 2026:
-            get_standings(year_dir, "C_farm", scrape_year)
-        get_fielding(year_dir, "F", scrape_year)
+
+def scrape_farm(input_dir, year_dir, scrape_year):
+    """Scrapes Farm League stats, standings, and fielding
+
+    Parameters:
+    input_dir (str): The directory holding the input files
+    year_dir (str): The directory holding the year's raw stat files
+    scrape_year (str): The year being scraped"""
+    get_stats(input_dir, year_dir, "BF", scrape_year)
+    get_stats(input_dir, year_dir, "PF", scrape_year)
+    get_standings(year_dir, "E_farm", scrape_year)
+    get_standings(year_dir, "W_farm", scrape_year)
+    if int(scrape_year) >= 2026:
+        get_standings(year_dir, "C_farm", scrape_year)
+    get_fielding(year_dir, "F", scrape_year)
+
+
+def organize_farm(stats_dir, year_dir, scrape_year):
+    """Organizes and outputs Farm League stats from the raw files
+
+    Parameters:
+    stats_dir (str): The directory holding all stat output
+    year_dir (str): The directory holding the year's raw stat files
+    scrape_year (str): The year being organized"""
     # Farm Fielding
     farm_fielding = FieldingData(stats_dir, year_dir, "F", scrape_year)
     # NPB Team Fielding
@@ -243,55 +328,52 @@ def main():
     farm_team_fielding.output_final()
     print("Farm statistics finished!\n")
 
-    # If there are no post season URLs in npb_urls.csv, skip post season
-    bp_urls, _ = get_stat_urls("BP", scrape_year)
-    pp_urls, _ = get_stat_urls("PP", scrape_year)
-    if len(bp_urls) > 0 and len(pp_urls) > 0:
-        # Post season stat scraping
-        if post_scrape_yn == "Y":
-            get_post_season_stats(year_dir, "BP", scrape_year)
-            get_post_season_stats(year_dir, "PP", scrape_year)
-        # Post season player stats
-        post_bat_player_stats = PlayerData(stats_dir, year_dir, "BP", scrape_year)
-        post_pitch_player_stats = PlayerData(stats_dir, year_dir, "PP", scrape_year)
-        # Post season team stats
-        post_bat_team_stats = TeamData(
-            post_bat_player_stats.df, stats_dir, year_dir, "BP", scrape_year
-        )
-        post_pitch_team_stats = TeamData(
-            post_pitch_player_stats.df, stats_dir, year_dir, "PP", scrape_year
-        )
-        # Post season output
-        post_bat_player_stats.output_final()
-        post_pitch_player_stats.output_final()
-        post_bat_team_stats.output_final()
-        post_pitch_team_stats.output_final()
-        print("Post season statistics finished!\n")
-    else:
-        print("No post season URLs detected in npb_urls.csv, skipping...")
 
-    # Make upload zips for manual uploads/debugging
-    if stat_zip_yn == "Y":
-        print("Creating upload zip for given year.")
-        make_zip(year_dir, "S", scrape_year)
+def scrape_post_season(year_dir, scrape_year):
+    """Scrapes post season batting and pitching stats
 
-    # Career data scrape and organize
+    Parameters:
+    year_dir (str): The directory holding the year's raw stat files
+    scrape_year (str): The year being scraped"""
+    get_post_season_stats(year_dir, "BP", scrape_year)
+    get_post_season_stats(year_dir, "PP", scrape_year)
+
+
+def organize_post_season(stats_dir, year_dir, scrape_year):
+    """Organizes and outputs post season stats from the raw files
+
+    Parameters:
+    stats_dir (str): The directory holding all stat output
+    year_dir (str): The directory holding the year's raw stat files
+    scrape_year (str): The year being organized"""
+    post_bat_player_stats = PlayerData(stats_dir, year_dir, "BP", scrape_year)
+    post_pitch_player_stats = PlayerData(stats_dir, year_dir, "PP", scrape_year)
+    post_bat_team_stats = TeamData(
+        post_bat_player_stats.df, stats_dir, year_dir, "BP", scrape_year
+    )
+    post_pitch_team_stats = TeamData(
+        post_pitch_player_stats.df, stats_dir, year_dir, "PP", scrape_year
+    )
+    post_bat_player_stats.output_final()
+    post_pitch_player_stats.output_final()
+    post_bat_team_stats.output_final()
+    post_pitch_team_stats.output_final()
+    print("Post season statistics finished!\n")
+
+
+def organize_career_data(stats_dir, rel_dir, scrape_year, career_yn):
+    """Scrapes (if requested) and organizes career stats across all years
+
+    Parameters:
+    stats_dir (str): The directory holding all stat output
+    rel_dir (str): The relative directory holding the project
+    scrape_year (str): The year being organized
+    career_yn (str): "Y" to scrape career data before organizing"""
     if career_yn == "Y":
         get_career_data(rel_dir, scrape_year)
-    career_bio_df = CareerData(
-        stats_dir, os.path.join(stats_dir, "all"), "bio", scrape_year
-    )
-    career_bat_df = CareerData(
-        stats_dir, os.path.join(stats_dir, "all"), "B", scrape_year
-    )
-    career_pitch_df = CareerData(
-        stats_dir, os.path.join(stats_dir, "all"), "P", scrape_year
-    )
-
-    if arg_bypass is False:
-        _ = input("Press Enter to exit. ")
-        return 1
-    return 0
+    CareerData(stats_dir, os.path.join(stats_dir, "all"), "bio", scrape_year)
+    CareerData(stats_dir, os.path.join(stats_dir, "all"), "B", scrape_year)
+    CareerData(stats_dir, os.path.join(stats_dir, "all"), "P", scrape_year)
 
 
 class Stats:
@@ -5295,67 +5377,67 @@ def get_scrape_year(args_in=None):
     return str(args_in)
 
 
-# TODO: update with multiple returns rather than a single return for each input
 def get_user_choice(suffix):
-    """Gets user input for whether or not to undergo scraping and whether to
-    place relevant files in a zip
+    """Gets user input for whether or not to undergo a scraping or organizing
+    task
 
     Parameters:
-    suffix (string): Indicates the option being asked about (can be farm
-    scraping "F", regular season scraping "R", stat zip file creation "Z"
+    suffix (string): Indicates the option being asked about: farm scraping
+    "F", regular season scraping "R", post season scraping "P", stat zip file
+    creation "Z", roster scraping "RD", or career scraping "career"
 
     Returns:
     user_in (string): Returns "Y" or "N" (if "Q" is chosen, program terminates)
     """
+    # Prompt text for each option: (intro message or None, question)
+    prompts = {
+        "F": (
+            "Choose whether to pull new farm stats from npb.jp or "
+            "only reorganize existing stat files.\nWARNING: EXISTING "
+            "RAW FILES MUST BE PRESENT TO SKIP SCRAPING.",
+            "Scrape farm stats? (Y/N): ",
+        ),
+        "R": (
+            "Choose whether to pull new regular season stats from "
+            "npb.jp or only reorganize existing stat files.\nWARNING: "
+            "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING.",
+            "Scrape regular season stats? (Y/N): ",
+        ),
+        "P": (
+            "Choose whether to pull new post season stats from "
+            "npb.jp or only reorganize existing stat files.\nWARNING: "
+            "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING.",
+            "Scrape post season stats? (Y/N): ",
+        ),
+        "Z": (None, "Output stats in a zip file? (Y/N): "),
+        "RD": (None, "Scrape team rosters for NPB player URLs? (Y/N): "),
+        "career": (
+            "WARNING: THIS PROCESS CAN TAKE 30~ MINUTES",
+            "Scrape NPB.jp team pages for player career data? (Y/N): ",
+        ),
+    }
+
+    if suffix not in prompts:
+        sys.exit("Exiting...")
+    intro, question = prompts[suffix]
+    if intro is not None:
+        print(intro)
+
     # Loop ends for valid choice/exit
     while True:
-        if suffix == "F":
-            print(
-                "Choose whether to pull new farm stats from npb.jp or "
-                "only reorganize existing stat files.\nWARNING: EXISTING "
-                "RAW FILES MUST BE PRESENT TO SKIP SCRAPING."
-            )
-            user_in = input("Scrape farm stats? (Y/N): ")
-        elif suffix == "R":
-            print(
-                "Choose whether to pull new regular season stats from "
-                "npb.jp or only reorganize existing stat files.\nWARNING: "
-                "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING."
-            )
-            user_in = input("Scrape regular season stats? (Y/N): ")
-        elif suffix == "P":
-            print(
-                "Choose whether to pull new post season stats from "
-                "npb.jp or only reorganize existing stat files.\nWARNING: "
-                "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING."
-            )
-            user_in = input("Scrape post season stats? (Y/N): ")
-        elif suffix == "Z":
-            user_in = input("Output stats in a zip file? (Y/N): ")
-        elif suffix == "RD":
-            user_in = input("Scrape team rosters for NPB player URLs? (Y/N): ")
-        elif suffix == "career":
-            user_in = input(
-                "WARNING: THIS PROCESS CAN TAKE 30~ MINUTES\nScrape NPB.jp team pages for player career data? (Y/N): "
-            )
-        else:
-            user_in = "Q"
-
+        user_in = input(question)
         if user_in == "Q":
             sys.exit("Exiting...")
         elif user_in == "Y":
             print("Continuing...")
-            break
+            return user_in
         elif user_in == "N":
             print("Skipping...")
-            break
-        else:
-            print(
-                "Invalid input - enter (Y/N) to determine whether to continue "
-                "or (Q) to quit."
-            )
-            continue
-    return user_in
+            return user_in
+        print(
+            "Invalid input - enter (Y/N) to determine whether to continue "
+            "or (Q) to quit."
+        )
 
 
 def convert_team_to_html(df, year, mode=None):
