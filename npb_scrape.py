@@ -1,21 +1,23 @@
 """Scrapes NPB and Farm League statistics from various sources"""
 
-from time import sleep
-from random import randint
-from datetime import datetime
-from urllib.error import HTTPError, URLError
+import io
 import os
-import sys
+import re
 import shutil
+import sys
 import tempfile
-import requests
-import pandas as pd
+from datetime import datetime
+from random import randint
+from time import sleep
+from urllib.error import HTTPError, URLError
+
 import numpy as np
+import pandas as pd
+import requests
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from playwright.sync_api import sync_playwright
-
 
 # TODO: check that roster_revisions.csv can trickle to career (or rework roster_revisions.csv)
 # TODO: need more robust error checking surrounding scrape and org functions
@@ -31,6 +33,19 @@ from playwright.sync_api import sync_playwright
 # TODO: move input dir creation here (main)?
 # TODO: change playwright to selenium
 # TODO: update github tests to use fedora instead of ubuntu
+
+HF_NPB_REPO = "Ramos-Ramos/npb_data_app"
+HF_TOP_LEVEL_PLAYER_FILES = {
+    "players.parquet",
+    "players_translated.parquet",
+    "players_translated_manual.parquet",
+}
+HF_CONSOLIDATED_PATTERN = (
+    r"(\d{4}/)?(pbp_data|pbp_aux|pbp_text|schedule|aux_schedule"
+    r"|players|players_translated|players_translated_manual)\.parquet"
+)
+
+
 def main():
     """The main function for the NPB/Farm League Statistic Scraper.
 
@@ -46,10 +61,15 @@ def main():
        and bypasses user input if arguments are provided.
     4. Prompts the user for input if no command-line arguments are given,
        allowing for manual control over scraping and data organization.
+       The Hugging Face import question is asked last, after all other
+       prompts. It is never asked when command-line arguments are given.
     5. Scrapes and organizes statistics for regular season and farm league
        games, including batting, pitching, fielding, standings, and daily
        scores.
     6. Optionally zips the output files for easier distribution.
+    7. If the user chose the Hugging Face import, downloads the NPB
+       consolidated tables for the scrape year and stores them as CSVs in
+       stats/all/raw.
 
     Returns:
         int:
@@ -106,6 +126,9 @@ def main():
 
     organize_career_data(stats_dir, rel_dir, scrape_year, flags["career"])
 
+    if flags["hf_import"] == "Y":
+        scrape_hf_npb_data(scrape_year, os.path.join(stats_dir, "all", "raw"))
+
     if arg_bypass is False:
         _ = input("Press Enter to exit. ")
         return 1
@@ -140,6 +163,7 @@ def get_run_options(argv):
             "zip": "N",
             "roster": "Y",
             "career": "N",
+            "hf_import": "N",
         }
         return scrape_year, True, flags
     if len(argv) > 2:
@@ -156,6 +180,7 @@ def get_run_options(argv):
         "zip": get_user_choice("Z"),
         "roster": get_user_choice("RD"),
         "career": get_user_choice("career"),
+        "hf_import": get_user_choice("hf_import"),
     }
     return scrape_year, False, flags
 
@@ -1098,12 +1123,12 @@ class PlayerData(Stats):
             # Pitching TeamAlt and Team file location outputs
             if self.suffix in ("PP", "BP"):
                 print(
-                    "The final organized team pitching results will be stored "
-                    "in: " + new_csv_final
+                    "The final organized team pitching results will be stored in: "
+                    + new_csv_final
                 )
                 print(
-                    "An alternative view of team pitching results will be stored "
-                    "in: " + new_csv_alt
+                    "An alternative view of team pitching results will be stored in: "
+                    + new_csv_alt
                 )
 
     def determine_qualifiers(self):
@@ -1141,11 +1166,11 @@ class PlayerData(Stats):
             # Drop all players below the IP/PA threshold (PA gets rounded down)
             if self.suffix == "BF":
                 leader_df = leader_df.drop(
-                    leader_df[leader_df.PA < np.floor((leader_df["GTeam"] * 2.7))].index
+                    leader_df[leader_df.PA < np.floor(leader_df["GTeam"] * 2.7)].index
                 )
             else:
                 leader_df = leader_df.drop(
-                    leader_df[leader_df.PA < np.floor((leader_df["GTeam"] * 3.1))].index
+                    leader_df[leader_df.PA < np.floor(leader_df["GTeam"] * 3.1)].index
                 )
             leader_df.drop(["GTeam"], axis=1, inplace=True)
 
@@ -3912,11 +3937,7 @@ def get_stats(input_dir, year_dir, suffix, year):
     # Grab URLs to scrape
     url_arr, version = get_stat_urls(suffix, year)
     # Create header row
-    if suffix == "BR":
-        output_file.write(
-            "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
-        )
-    elif suffix == "BF":
+    if suffix == "BR" or suffix == "BF":
         output_file.write(
             "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
         )
@@ -4526,14 +4547,14 @@ def get_career_data(rel_dir, year):
             os.path.join(rel_dir, "stats", "all", "raw", "raw_career_bio.csv"),
             index_col=0,
         )
-    except Exception as e:
+    except Exception:
         print("Unable to load a raw_career_bio.csv, creating new file...")
         bio_df = pd.DataFrame()
     try:
         bat_stat_df = pd.read_csv(
             os.path.join(rel_dir, "stats", "all", "raw", "raw_career_bat.csv")
         )
-    except Exception as e:
+    except Exception:
         print("Unable to load a raw_career_bat.csv, creating new file...")
         bat_stat_df = pd.DataFrame(
             columns=[
@@ -4568,7 +4589,7 @@ def get_career_data(rel_dir, year):
         pitch_stat_df = pd.read_csv(
             os.path.join(rel_dir, "stats", "all", "raw", "raw_career_pitch.csv")
         )
-    except Exception as e:
+    except Exception:
         print("Unable to load a raw_career_pitch.csv, creating new file...")
         pitch_stat_df = pd.DataFrame(
             columns=[
@@ -5392,21 +5413,27 @@ def get_user_choice(suffix):
     # Prompt text for each option: (intro message or None, question)
     prompts = {
         "F": (
-            "Choose whether to pull new farm stats from npb.jp or "
-            "only reorganize existing stat files.\nWARNING: EXISTING "
-            "RAW FILES MUST BE PRESENT TO SKIP SCRAPING.",
+            (
+                "Choose whether to pull new farm stats from npb.jp or "
+                "only reorganize existing stat files.\nWARNING: EXISTING "
+                "RAW FILES MUST BE PRESENT TO SKIP SCRAPING."
+            ),
             "Scrape farm stats? (Y/N): ",
         ),
         "R": (
-            "Choose whether to pull new regular season stats from "
-            "npb.jp or only reorganize existing stat files.\nWARNING: "
-            "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING.",
+            (
+                "Choose whether to pull new regular season stats from "
+                "npb.jp or only reorganize existing stat files.\nWARNING: "
+                "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING."
+            ),
             "Scrape regular season stats? (Y/N): ",
         ),
         "P": (
-            "Choose whether to pull new post season stats from "
-            "npb.jp or only reorganize existing stat files.\nWARNING: "
-            "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING.",
+            (
+                "Choose whether to pull new post season stats from "
+                "npb.jp or only reorganize existing stat files.\nWARNING: "
+                "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING."
+            ),
             "Scrape post season stats? (Y/N): ",
         ),
         "Z": (None, "Output stats in a zip file? (Y/N): "),
@@ -5415,6 +5442,7 @@ def get_user_choice(suffix):
             "WARNING: THIS PROCESS CAN TAKE 30~ MINUTES",
             "Scrape NPB.jp team pages for player career data? (Y/N): ",
         ),
+        "hf_import": (None, "Import Hugging Face NPB data? (Y/N): "),
     }
 
     if suffix not in prompts:
@@ -6049,7 +6077,7 @@ def build_html(row, name_col):
     html_line (str): The <a> tag if there is a link, else just the team/player
     name"""
     if pd.notna(row["Link"]) and str(row["Link"]).strip() != "":
-        html_line = f'<a href={row["Link"]}>{row[name_col]}</a>'
+        html_line = f"<a href={row['Link']}>{row[name_col]}</a>"
     else:
         html_line = row[name_col]
     return html_line
@@ -6191,6 +6219,110 @@ def store_dataframe(df, store_dir, filename, mode):
     elif mode == "alt":
         df.to_string(store_path)
     return store_path
+
+
+def list_hf_dataset_files(year, repo_id=HF_NPB_REPO, session=None):
+    """Lists the consolidated parquet files for one year in a Hugging Face dataset.
+
+    Per-game play-by-play files are skipped. The consolidated yearly tables
+    (pbp_*, schedule, aux_schedule) are included only from the given year's
+    folder. The three top-level players* tables are always included,
+    regardless of year.
+
+    Parameters:
+        year (str): The year to list, e.g. "2024".
+        repo_id (str): The Hugging Face dataset repo id (owner/name).
+        session (requests.Session): Optional session; one is created if None.
+
+    Returns:
+        list[str]: Relative paths of the matching files within the dataset.
+    """
+    session = session or make_session()
+    api_url = f"https://huggingface.co/api/datasets/{repo_id}"
+    response = session.get(api_url, timeout=30)
+    response.raise_for_status()
+    siblings = response.json().get("siblings", [])
+    pattern = re.compile(HF_CONSOLIDATED_PATTERN)
+    return sorted(
+        s["rfilename"]
+        for s in siblings
+        if (
+            (
+                pattern.fullmatch(s["rfilename"])
+                and s["rfilename"].startswith(f"{year}/")
+            )
+            or s["rfilename"] in HF_TOP_LEVEL_PLAYER_FILES
+        )
+    )
+
+
+def download_hf_parquet(rel_path, repo_id=HF_NPB_REPO, session=None):
+    """Downloads one parquet file from a Hugging Face dataset into a DataFrame.
+
+    Parameters:
+        rel_path (str): Path of the file within the dataset repo.
+        repo_id (str): The Hugging Face dataset repo id (owner/name).
+        session (requests.Session): Optional session; one is created if None.
+
+    Returns:
+        pandas.DataFrame: The parquet file's contents.
+    """
+    session = session or make_session()
+    file_url = f"https://huggingface.co/datasets/{repo_id}/resolve/main/{rel_path}"
+    print("Downloading: " + file_url)
+    response = session.get(file_url, timeout=(10, 300))
+    response.raise_for_status()
+    return pd.read_parquet(io.BytesIO(response.content))
+
+
+def hf_csv_filename(rel_path):
+    """Builds the raw CSV filename used for a Hugging Face dataset file.
+
+    Parameters:
+        rel_path (str): Path of the file within the dataset repo, e.g.
+        "2026/pbp_data.parquet".
+
+    Returns:
+        str: The CSV filename, e.g. "raw_hf_2026_pbp_data.csv".
+    """
+    stem = rel_path.replace("/", "_").replace(".parquet", "")
+    return f"raw_hf_{stem}.csv"
+
+
+def scrape_hf_npb_data(year, raw_dir=None, repo_id=HF_NPB_REPO):
+    """Scrapes one year of NPB consolidated tables from Hugging Face and stores
+    them as CSVs.
+
+    Each parquet file for the year is downloaded, converted to a DataFrame,
+    and written to raw_dir as raw_hf_<path>.csv (e.g. raw_hf_2026_pbp_data.csv).
+
+    Parameters:
+        year (str): The year to import, e.g. "2024". Only that year's files
+        are downloaded.
+        raw_dir (str): Directory to write CSVs into. Defaults to
+        stats/all/raw next to this script.
+        repo_id (str): The Hugging Face dataset repo id (owner/name).
+
+    Returns:
+        list[str]: Full paths of the CSV files written.
+    """
+    if raw_dir is None:
+        raw_dir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "stats", "all", "raw"
+        )
+    session = make_session()
+    stored_paths = []
+    rel_paths = list_hf_dataset_files(str(year), repo_id, session)
+    if not rel_paths:
+        print(f"No Hugging Face NPB files found for {year}, skipping...")
+        return stored_paths
+    for rel_path in rel_paths:
+        df = download_hf_parquet(rel_path, repo_id, session)
+        stored_paths.append(
+            store_dataframe(df, raw_dir, hf_csv_filename(rel_path), "csv")
+        )
+        print(f"Stored {len(df)} rows to {stored_paths[-1]}")
+    return stored_paths
 
 
 if __name__ == "__main__":
