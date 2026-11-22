@@ -85,7 +85,7 @@ def main():
         cumulative_df = pd.merge(bat_df, agg_field_df, how="left")
     except ValueError:
         st.error(
-            "Error: Batting and fielding dataframes failed to merge. Check Age 
+            "Error: Batting and fielding dataframes failed to merge. Check Age "
             + "columns and update name translation + roster data if necessary!"
         )
         st.stop()

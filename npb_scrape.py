@@ -3893,52 +3893,50 @@ def make_session():
 def get_daily_scores(year_dir, suffix, year):
     """The main daily scores scraping function that produces Raw daily scores files"""
     # Make output file
-    output_file = make_raw_daily_scores_file(year_dir, suffix, year)
-    output_file.write("HomeTeam,RunsHome,RunsAway,AwayTeam\n")
-    # Grab URLs to scrape
-    url = "https://npb.jp/bis/eng/" + year + "/games/"
-    # Make GET request
-    r = get_url(url)
-    # Create the soup for parsing the html content
-    soup = BeautifulSoup(r.content, "html.parser")
+    raw_csv_name = make_raw_daily_scores_file(year_dir, suffix, year)
+    with open(raw_csv_name, mode="w", encoding="utf-8") as output_file:
+        output_file.write("HomeTeam,RunsHome,RunsAway,AwayTeam\n")
+        # Grab URLs to scrape
+        url = "https://npb.jp/bis/eng/" + year + "/games/"
+        # Make GET request
+        r = get_url(url)
+        # Create the soup for parsing the html content
+        soup = BeautifulSoup(r.content, "html.parser")
 
-    if int(year) < 2026:
-        game_divs = soup.find_all("div", class_="contentsgame")
-        # Extract table rows from npb.jp daily game stats
-        for result in game_divs:
-            teams = result.find_all(class_="contentsTeam")
-            runs = result.find_all(class_="contentsRuns")
-            i = 0
-            while i < len(teams):
-                team1 = teams[i].get_text()
-                team1_runs = runs[i].get_text()
-                team2 = teams[i + 1].get_text()
-                team2_runs = runs[i + 1].get_text()
-                i += 2
-                output_file.write(
-                    team1 + "," + team1_runs + "," + team2_runs + "," + team2 + "\n"
-                )
-    else:
-        games = soup.find_all("div", class_="unit")
-        # Extract table rows from npb.jp daily game stats
-        for result in games:
-            teams = result.find_all(class_="team_name")
-            left_team_runs = result.find_all(class_="score_text score_left")
-            right_team_runs = result.find_all(class_="score_text score_right")
-            i = 0
-            while i < len(teams):
-                team1 = teams[i].get_text()
-                team1_runs = left_team_runs[i].get_text()
-                team2 = teams[i + 1].get_text()
-                team2_runs = right_team_runs[i].get_text()
-                i += 2
-                output_file.write(
-                    team1 + "," + team1_runs + "," + team2_runs + "," + team2 + "\n"
-                )
-
-    # After all URLs are scraped, close output file
-    r.close()
-    output_file.close()
+        if int(year) < 2026:
+            game_divs = soup.find_all("div", class_="contentsgame")
+            # Extract table rows from npb.jp daily game stats
+            for result in game_divs:
+                teams = result.find_all(class_="contentsTeam")
+                runs = result.find_all(class_="contentsRuns")
+                i = 0
+                while i < len(teams):
+                    team1 = teams[i].get_text()
+                    team1_runs = runs[i].get_text()
+                    team2 = teams[i + 1].get_text()
+                    team2_runs = runs[i + 1].get_text()
+                    i += 2
+                    output_file.write(
+                        team1 + "," + team1_runs + "," + team2_runs + "," + team2 + "\n"
+                    )
+        else:
+            games = soup.find_all("div", class_="unit")
+            # Extract table rows from npb.jp daily game stats
+            for result in games:
+                teams = result.find_all(class_="team_name")
+                left_team_runs = result.find_all(class_="score_text score_left")
+                right_team_runs = result.find_all(class_="score_text score_right")
+                i = 0
+                while i < len(teams):
+                    team1 = teams[i].get_text()
+                    team1_runs = left_team_runs[i].get_text()
+                    team2 = teams[i + 1].get_text()
+                    team2_runs = right_team_runs[i].get_text()
+                    i += 2
+                    output_file.write(
+                        team1 + "," + team1_runs + "," + team2_runs + "," + team2 + "\n"
+                    )
+        r.close()
 
 
 def get_stats(input_dir, year_dir, suffix, year):
@@ -3958,97 +3956,96 @@ def get_stats(input_dir, year_dir, suffix, year):
     # if the current year doesnt match the scrape year (maybe remove
     # google_sheet_urls.csv entirely?)
     # Make output file
-    output_file = make_raw_player_file(year_dir, suffix, year)
-    # Grab URLs to scrape
-    url_arr, version = get_stat_urls(suffix, year)
-    # Create header row
-    if suffix == "BR" or suffix == "BF":
-        output_file.write(
-            "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
-        )
-    elif suffix == "PR" and version == "v1":
-        output_file.write(
-            "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
-        )
-    elif suffix == "PR" and version == "v2":
-        output_file.write(
-            "Pitcher,G,W,L,SV,HLD,HP,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
-        )
-    elif suffix == "PF" and version == "v1":
-        output_file.write(
-            "Pitcher,G,W,L,SV,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
-        )
-    elif suffix == "PF" and version == "v2":
-        output_file.write(
-            "Pitcher,G,W,L,SV,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
-        )
+    raw_csv_name = make_raw_player_file(year_dir, suffix, year)
+    with open(raw_csv_name, mode="w", encoding="utf-8") as output_file:
+        # Grab URLs to scrape
+        url_arr, version = get_stat_urls(suffix, year)
+        # Create header row
+        if suffix == "BR" or suffix == "BF":
+            output_file.write(
+                "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
+            )
+        elif suffix == "PR" and version == "v1":
+            output_file.write(
+                "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
+            )
+        elif suffix == "PR" and version == "v2":
+            output_file.write(
+                "Pitcher,G,W,L,SV,HLD,HP,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
+            )
+        elif suffix == "PF" and version == "v1":
+            output_file.write(
+                "Pitcher,G,W,L,SV,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
+            )
+        elif suffix == "PF" and version == "v2":
+            output_file.write(
+                "Pitcher,G,W,L,SV,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
+            )
 
-    # Loop through all team stat pages in url_arr
-    for url in url_arr:
-        # Make GET request
-        r = get_url(url)
-        # Create the soup for parsing the html content
-        soup = BeautifulSoup(r.content, "html.parser")
+        # Loop through all team stat pages in url_arr
+        for url in url_arr:
+            # Make GET request
+            r = get_url(url)
+            # Create the soup for parsing the html content
+            soup = BeautifulSoup(r.content, "html.parser")
 
-        if version == "v1":
-            # Since header row was created, skip to stat rows
-            iter_soup = iter(soup.table)
-            # Left handed pitcher/batter and switch hitter row skip
-            next(iter_soup)
-            # npb.jp header row skip
-            next(iter_soup)
-            # Extract table rows from npb.jp team stats
-            for table_row in iter_soup:
-                # Skip first column for left handed batter/pitcher or switch hitter
-                iter_table = iter(table_row)
-                next(iter_table)
-                # Write output in csv file format
-                for entry in iter_table:
-                    # Remove commas in first and last names
-                    entry_text = entry.get_text()
-                    if entry_text.find(","):
+            if version == "v1":
+                # Since header row was created, skip to stat rows
+                iter_soup = iter(soup.table)
+                # Left handed pitcher/batter and switch hitter row skip
+                next(iter_soup)
+                # npb.jp header row skip
+                next(iter_soup)
+                # Extract table rows from npb.jp team stats
+                for table_row in iter_soup:
+                    # Skip first column for left handed batter/pitcher or switch hitter
+                    iter_table = iter(table_row)
+                    next(iter_table)
+                    # Write output in csv file format
+                    for entry in iter_table:
+                        # Remove commas in first and last names
+                        entry_text = entry.get_text()
+                        if entry_text.find(","):
+                            entry_text = entry_text.replace(",", "")
+                        # Write output in csv file format
+                        output_file.write(entry_text + ",")
+
+                    # Get team
+                    title_div = soup.find(id="stdivtitle")
+                    year_title_str = revise_year_title_str(
+                        title_div.h1.get_text(), suffix, year
+                    )
+                    # Append as last entry and move to next row
+                    output_file.write(year_title_str + ",\n")
+
+            # New 2025 post season and onwards table type
+            elif version == "v2":
+                player_stat_rows = iter(soup.find_all("tr"))
+                # Skip header row
+                next(player_stat_rows)
+                for row in player_stat_rows:
+                    for entry in row.find_all("td"):
+                        # TODO: remove if statements? text filtering possibly handled in
+                        # later code
+                        entry_text = entry.get_text()
+                        entry_text = entry_text.strip()
                         entry_text = entry_text.replace(",", "")
-                    # Write output in csv file format
-                    output_file.write(entry_text + ",")
+                        entry_text = entry_text.replace("　", " ")
+                        entry_text = entry_text.replace("*", "")
+                        entry_text = entry_text.replace("+", "")
+                        # Write output in csv file format
+                        output_file.write(entry_text + ",")
 
-                # Get team
-                title_div = soup.find(id="stdivtitle")
-                year_title_str = revise_year_title_str(
-                    title_div.h1.get_text(), suffix, year
-                )
-                # Append as last entry and move to next row
-                output_file.write(year_title_str + ",\n")
-
-        # New 2025 post season and onwards table type
-        elif version == "v2":
-            player_stat_rows = iter(soup.find_all("tr"))
-            # Skip header row
-            next(player_stat_rows)
-            for row in player_stat_rows:
-                for entry in row.find_all("td"):
-                    # TODO: remove if statements? text filtering possibly handled in
-                    # later code
-                    entry_text = entry.get_text()
-                    entry_text = entry_text.strip()
-                    entry_text = entry_text.replace(",", "")
-                    entry_text = entry_text.replace("　", " ")
-                    entry_text = entry_text.replace("*", "")
-                    entry_text = entry_text.replace("+", "")
-                    # Write output in csv file format
-                    output_file.write(entry_text + ",")
-
-                # Get team
-                title = soup.find("span")
-                year_title_str = revise_year_title_str(str(title.string), suffix, year)
-                # Append as last entry and move to next row
-                output_file.write(year_title_str + ",\n")
-
-        # Close request
-        r.close()
-        # Pace requests to npb.jp to avoid excessive requests
-        sleep(randint(1, 3))
-    # After all URLs are scraped, close output file
-    output_file.close()
+                    # Get team
+                    title = soup.find("span")
+                    year_title_str = revise_year_title_str(
+                        str(title.string), suffix, year
+                    )
+                    # Append as last entry and move to next row
+                    output_file.write(year_title_str + ",\n")
+            r.close()
+            # Pace requests to npb.jp to avoid excessive requests
+            sleep(randint(1, 3))
 
 
 def get_post_season_stats(year_dir, suffix, year):
@@ -4068,90 +4065,90 @@ def get_post_season_stats(year_dir, suffix, year):
 
     Returns: N/A"""
     # Make output file
-    output_file = make_raw_player_file(year_dir, suffix, year)
-    # Grab URLs to scrape
-    url_arr, version = get_stat_urls(suffix, year)
-    # Create header row
-    if suffix == "BP":
-        output_file.write(
-            "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
-        )
-    if suffix == "PP" and version == "v1":
-        output_file.write(
-            "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
-        )
-    if suffix == "PP" and version == "v2":
-        output_file.write(
-            "Pitcher,G,W,L,SV,HLD,HP,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
-        )
+    raw_csv_name = make_raw_player_file(year_dir, suffix, year)
+    with open(raw_csv_name, mode="w", encoding="utf-8") as output_file:
+        # Grab URLs to scrape
+        url_arr, version = get_stat_urls(suffix, year)
+        # Create header row
+        if suffix == "BP":
+            output_file.write(
+                "Player,G,PA,AB,R,H,2B,3B,HR,TB,RBI,SB,CS,SH,SF,BB,IBB,HP,SO,GDP,AVG,SLG,OBP,Team,\n"
+            )
+        if suffix == "PP" and version == "v1":
+            output_file.write(
+                "Pitcher,G,W,L,SV,HLD,CG,SHO,PCT,BF,IP,,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
+            )
+        if suffix == "PP" and version == "v2":
+            output_file.write(
+                "Pitcher,G,W,L,SV,HLD,HP,CG,SHO,NBBG,PCT,BF,IP,H,HR,BB,IBB,HB,SO,WP,BK,R,ER,ERA,Team,\n"
+            )
 
-    # Loop through all team stat pages in url_arr
-    for url in url_arr:
-        # Make GET request
-        r = get_url(url)
-        # Create the soup for parsing the html content
-        soup = BeautifulSoup(r.content, "html.parser")
-        if version == "v1":
-            # Since header row was created, skip to stat rows
-            iter_soup = iter(soup.table)
-            # Left handed pitcher/batter and switch hitter row skip
-            next(iter_soup)
-            # npb.jp header row skip
-            next(iter_soup)
-            # Extract table rows from npb.jp team stats
-            for table_row in iter_soup:
-                # Skip first column for left handed batter/pitcher or switch hitter
-                iter_table = iter(table_row)
-                next(iter_table)
-                # Write output in csv file format
-                for entry in iter_table:
-                    # Remove commas in first and last names
-                    entry_text = entry.get_text()
-                    if entry_text.find(","):
-                        entry_text = entry_text.replace(",", "")
+        # Loop through all team stat pages in url_arr
+        for url in url_arr:
+            # Make GET request
+            r = get_url(url)
+            # Create the soup for parsing the html content
+            soup = BeautifulSoup(r.content, "html.parser")
+            if version == "v1":
+                # Since header row was created, skip to stat rows
+                iter_soup = iter(soup.table)
+                # Left handed pitcher/batter and switch hitter row skip
+                next(iter_soup)
+                # npb.jp header row skip
+                next(iter_soup)
+                # Extract table rows from npb.jp team stats
+                for table_row in iter_soup:
+                    # Skip first column for left handed batter/pitcher or switch hitter
+                    iter_table = iter(table_row)
+                    next(iter_table)
                     # Write output in csv file format
-                    output_file.write(entry_text + ",")
+                    for entry in iter_table:
+                        # Remove commas in first and last names
+                        entry_text = entry.get_text()
+                        if entry_text.find(","):
+                            entry_text = entry_text.replace(",", "")
+                        # Write output in csv file format
+                        output_file.write(entry_text + ",")
 
-                # Get team
-                title_div = soup.find(id="stdivtitle")
-                year_title_str = revise_year_title_str(
-                    title_div.h1.get_text(), suffix, year
-                )
-                # Append as last entry and move to next row
-                output_file.write(year_title_str + ",\n")
+                    # Get team
+                    title_div = soup.find(id="stdivtitle")
+                    year_title_str = revise_year_title_str(
+                        title_div.h1.get_text(), suffix, year
+                    )
+                    # Append as last entry and move to next row
+                    output_file.write(year_title_str + ",\n")
 
-        # New 2025 post season and onwards table type
-        elif version == "v2":
-            player_stat_rows = iter(soup.find_all("tr"))
-            # Skip header row
-            next(player_stat_rows)
-            for row in player_stat_rows:
-                for entry in row.find_all("td"):
-                    # TODO: remove if statements? text filtering possibly handled in
-                    # later code
-                    entry_text = entry.get_text()
-                    if entry_text.find(","):
-                        entry_text = entry_text.replace(",", "")
-                    if entry_text.find("　"):
-                        entry_text = entry_text.replace("　", " ")
-                    if entry_text.find("*"):
-                        entry_text = entry_text.replace("*", "")
-                    entry_text = entry_text.replace("\n", "")
-                    entry_text = entry_text.replace("+", "")
-                    # Write output in csv file format
-                    output_file.write(entry_text + ",")
+            # New 2025 post season and onwards table type
+            elif version == "v2":
+                player_stat_rows = iter(soup.find_all("tr"))
+                # Skip header row
+                next(player_stat_rows)
+                for row in player_stat_rows:
+                    for entry in row.find_all("td"):
+                        # TODO: remove if statements? text filtering possibly handled in
+                        # later code
+                        entry_text = entry.get_text()
+                        if entry_text.find(","):
+                            entry_text = entry_text.replace(",", "")
+                        if entry_text.find("　"):
+                            entry_text = entry_text.replace("　", " ")
+                        if entry_text.find("*"):
+                            entry_text = entry_text.replace("*", "")
+                        entry_text = entry_text.replace("\n", "")
+                        entry_text = entry_text.replace("+", "")
+                        # Write output in csv file format
+                        output_file.write(entry_text + ",")
 
-                # Get team
-                title = soup.find("span")
-                year_title_str = revise_year_title_str(str(title.string), suffix, year)
-                # Append as last entry and move to next row
-                output_file.write(year_title_str + ",\n")
-        # Close request
-        r.close()
-        # Pace requests to npb.jp to avoid excessive requests
-        sleep(randint(3, 5))
-    # After all URLs are scraped, close output file
-    output_file.close()
+                    # Get team
+                    title = soup.find("span")
+                    year_title_str = revise_year_title_str(
+                        str(title.string), suffix, year
+                    )
+                    # Append as last entry and move to next row
+                    output_file.write(year_title_str + ",\n")
+            r.close()
+            # Pace requests to npb.jp to avoid excessive requests
+            sleep(randint(3, 5))
 
 
 def revise_year_title_str(year_title_str, suffix, year):
@@ -4369,93 +4366,89 @@ def get_standings(year_dir, suffix, year):
     Scrapes the official NPB standings page, extracts team statistics (G, W, L, PCT,
     etc.), and writes them to a raw CSV file for later processing into PA/IP drop
     constants."""
-    output_file = make_raw_standings_file(year_dir, suffix, year)
-    # Get URL to scrape
-    if suffix in ("C_farm", "E_farm", "W_farm") and int(year) >= 2026:
-        url_suffix = suffix.replace("_farm", "").lower()
-        url = f"https://npb.jp/bis/eng/{year}/stats/std_2{url_suffix}.html"
-    else:
-        url_suffix = suffix.replace("_farm", "").lower()
-        url_suffix = url_suffix.replace("_npb", "").lower()
-        url = f"https://npb.jp/bis/eng/{year}/stats/std_{url_suffix}.html"
-    r = get_url(url)
-    # Create the soup for parsing the html content
-    soup = BeautifulSoup(r.content, "html.parser")
+    raw_csv_name = make_raw_standings_file(year_dir, suffix, year)
+    with open(raw_csv_name, mode="w", encoding="utf-8") as output_file:
+        # Get URL to scrape
+        if suffix in ("C_farm", "E_farm", "W_farm") and int(year) >= 2026:
+            url_suffix = suffix.replace("_farm", "").lower()
+            url = f"https://npb.jp/bis/eng/{year}/stats/std_2{url_suffix}.html"
+        else:
+            url_suffix = suffix.replace("_farm", "").lower()
+            url_suffix = url_suffix.replace("_npb", "").lower()
+            url = f"https://npb.jp/bis/eng/{year}/stats/std_{url_suffix}.html"
+        r = get_url(url)
+        # Create the soup for parsing the html content
+        soup = BeautifulSoup(r.content, "html.parser")
 
-    # Grab all rows in the first subtable on the page (pre 2026 tables)
-    version = "v1"
-    if len(soup.find_all("table")) >= 2 and int(year) < 2026:
-        table = soup.find_all("table")[1].find_all("tr")
-    # (post 2026 tables)
-    elif soup.find_all("table", {"class": "tablefix2"}):
-        version = "v2"
-        table = soup.find("table", {"class": "tablefix2"})
-    # Stop running if no table is available
-    else:
-        # Close request and output file
-        r.close()
-        output_file.close()
-        return
+        # Grab all rows in the first subtable on the page (pre 2026 tables)
+        version = "v1"
+        if len(soup.find_all("table")) >= 2 and int(year) < 2026:
+            table = soup.find_all("table")[1].find_all("tr")
+        # (post 2026 tables)
+        elif soup.find_all("table", {"class": "tablefix2"}):
+            version = "v2"
+            table = soup.find("table", {"class": "tablefix2"})
+        # Stop running if no table is available
+        else:
+            r.close()
+            return
 
-    if version == "v1":
-        # Create header row
-        iter_table = iter(table)
-        tr = next(iter_table)
-        # Loop through each td in a table row
-        for td in tr:
-            entry_text = td.get_text()
-            # Skip empty column
-            if entry_text == "":
-                continue
-            # Insert each entry using csv format
-            output_file.write(entry_text + ",")
-        output_file.write("\n")
-
-        # Since header row was created, skip to stat rows
-        for tr in iter_table:
+        if version == "v1":
+            # Create header row
+            iter_table = iter(table)
+            tr = next(iter_table)
             # Loop through each td in a table row
             for td in tr:
                 entry_text = td.get_text()
-                # Standardize blank spots in the csv
-                if entry_text == "***":
-                    entry_text = "--"
-                # Skip empty columns
+                # Skip empty column
                 if entry_text == "":
                     continue
                 # Insert each entry using csv format
                 output_file.write(entry_text + ",")
-            # Skip duplicate named table row
-            next(iter_table)
             output_file.write("\n")
-    elif version == "v2":
-        # Loop through each th in the header table row
-        for th in table.find_all("th"):
-            entry_text = th.get_text()
-            # Skip empty column
-            if entry_text == "":
-                continue
-            # Insert each entry using csv format
-            output_file.write(entry_text + ",")
 
-        # Process stat rows
-        for tr in table.find_all("tr"):
-            for td in tr.find_all("td"):
-                entry_text = td.get_text()
-                # Standardize blank spots in the csv
-                if entry_text == "***":
-                    entry_text = "--"
-                # Skip empty columns
+            # Since header row was created, skip to stat rows
+            for tr in iter_table:
+                # Loop through each td in a table row
+                for td in tr:
+                    entry_text = td.get_text()
+                    # Standardize blank spots in the csv
+                    if entry_text == "***":
+                        entry_text = "--"
+                    # Skip empty columns
+                    if entry_text == "":
+                        continue
+                    # Insert each entry using csv format
+                    output_file.write(entry_text + ",")
+                # Skip duplicate named table row
+                next(iter_table)
+                output_file.write("\n")
+        elif version == "v2":
+            # Loop through each th in the header table row
+            for th in table.find_all("th"):
+                entry_text = th.get_text()
+                # Skip empty column
                 if entry_text == "":
                     continue
                 # Insert each entry using csv format
                 output_file.write(entry_text + ",")
-            # Skip duplicate named table row
-            # next(iter_table)
-            output_file.write("\n")
 
-    # Close request and output file
-    r.close()
-    output_file.close()
+            # Process stat rows
+            for tr in table.find_all("tr"):
+                for td in tr.find_all("td"):
+                    entry_text = td.get_text()
+                    # Standardize blank spots in the csv
+                    if entry_text == "***":
+                        entry_text = "--"
+                    # Skip empty columns
+                    if entry_text == "":
+                        continue
+                    # Insert each entry using csv format
+                    output_file.write(entry_text + ",")
+                # Skip duplicate named table row
+                # next(iter_table)
+                output_file.write("\n")
+        r.close()
     # Pace requests to npb.jp to avoid excessive requests
     sleep(randint(1, 3))
 
@@ -4482,56 +4475,54 @@ def get_fielding(year_dir, suffix, year):
     df = df.drop(df[df.League != fielding_league].index)
     fielding_url = df["Link"].iloc[0]
 
-    output_file = make_raw_fielding_file(year_dir, suffix, year)
-
-    # Pre 2026/pre migration to https://npbbasement.com/fielding
-    if "bo-no05.hatenadiary.org" in fielding_url:
-        r = get_url(fielding_url)
-        soup = BeautifulSoup(r.content, "html.parser")
-        # Grab all fielding table entries
-        fielding_tr = soup.find_all("tr")
-        for tr in fielding_tr:
-            if tr.get_text() == "":
-                continue
-            for td in tr:
-                entry_text = td.get_text()
-                entry_text = entry_text.strip()
-                if entry_text == "":
+    raw_csv_name = make_raw_fielding_file(year_dir, suffix, year)
+    with open(raw_csv_name, mode="w", encoding="utf-8") as output_file:
+        # Pre 2026/pre migration to https://npbbasement.com/fielding
+        if "bo-no05.hatenadiary.org" in fielding_url:
+            r = get_url(fielding_url)
+            soup = BeautifulSoup(r.content, "html.parser")
+            # Grab all fielding table entries
+            fielding_tr = soup.find_all("tr")
+            for tr in fielding_tr:
+                if tr.get_text() == "":
                     continue
-                output_file.write(entry_text + ",")
-            output_file.write("\n")
-        r.close()
+                for td in tr:
+                    entry_text = td.get_text()
+                    entry_text = entry_text.strip()
+                    if entry_text == "":
+                        continue
+                    output_file.write(entry_text + ",")
+                output_file.write("\n")
+            r.close()
 
-    # Post 2026/migration to https://npbbasement.com/fielding
-    if "npbbasement.com" in fielding_url:
-        division = "farm" if "F" in suffix else "top"
-        with sync_playwright() as pw:
-            browser = pw.chromium.launch(headless=True)
-            page = browser.new_page()
-            print(f"Connecting to: {fielding_url}")
-            page.goto(fielding_url, wait_until="networkidle", timeout=30000)
-            sleep(3)
-            # Select division (top = NPB regular season, farm = farm league)
-            page.locator("select").first.select_option(division)
-            sleep(1)
-            # Select year
-            page.locator("select").nth(1).select_option(year)
-            sleep(1)
-            # Download CSV via button click
-            with page.expect_download(timeout=30000) as download_info:
-                page.locator("button:has-text('DOWNLOAD CSV')").click()
-            download = download_info.value
-            # Read downloaded file content, strip BOM, write to output
-            download_path = download.path()
-            with open(download_path, "r", encoding="utf-8-sig") as dl_file:
-                csv_content = dl_file.read()
-            output_file.write(csv_content)
-            browser.close()
+        # Post 2026/migration to https://npbbasement.com/fielding
+        if "npbbasement.com" in fielding_url:
+            division = "farm" if "F" in suffix else "top"
+            with sync_playwright() as pw:
+                browser = pw.chromium.launch(headless=True)
+                page = browser.new_page()
+                print(f"Connecting to: {fielding_url}")
+                page.goto(fielding_url, wait_until="networkidle", timeout=30000)
+                sleep(3)
+                # Select division (top = NPB regular season, farm = farm league)
+                page.locator("select").first.select_option(division)
+                sleep(1)
+                # Select year
+                page.locator("select").nth(1).select_option(year)
+                sleep(1)
+                # Download CSV via button click
+                with page.expect_download(timeout=30000) as download_info:
+                    page.locator("button:has-text('DOWNLOAD CSV')").click()
+                download = download_info.value
+                # Read downloaded file content, strip BOM, write to output
+                download_path = download.path()
+                with open(download_path, "r", encoding="utf-8-sig") as dl_file:
+                    csv_content = dl_file.read()
+                output_file.write(csv_content)
+                browser.close()
 
-    # Pace requests to avoid excessive requests
-    sleep(randint(1, 3))
-    # After all URLs are scraped, close output file
-    output_file.close()
+        # Pace requests to avoid excessive requests
+        sleep(randint(1, 3))
 
 
 def get_career_data(rel_dir, year):
@@ -4577,14 +4568,14 @@ def get_career_data(rel_dir, year):
             os.path.join(rel_dir, "stats", "all", "raw", "raw_career_bio.csv"),
             index_col=0,
         )
-    except Exception:
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
         print("Unable to load a raw_career_bio.csv, creating new file...")
         bio_df = pd.DataFrame()
     try:
         bat_stat_df = pd.read_csv(
             os.path.join(rel_dir, "stats", "all", "raw", "raw_career_bat.csv")
         )
-    except Exception:
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
         print("Unable to load a raw_career_bat.csv, creating new file...")
         bat_stat_df = pd.DataFrame(
             columns=[
@@ -4619,7 +4610,7 @@ def get_career_data(rel_dir, year):
         pitch_stat_df = pd.read_csv(
             os.path.join(rel_dir, "stats", "all", "raw", "raw_career_pitch.csv")
         )
-    except Exception:
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
         print("Unable to load a raw_career_pitch.csv, creating new file...")
         pitch_stat_df = pd.DataFrame(
             columns=[
@@ -4657,10 +4648,7 @@ def get_career_data(rel_dir, year):
     players_scraped = 0
     # Loads previously scraped players from raw_career_bio.csv in set if possible
     # TODO: make it possible to refresh players that have already been scraped
-    try:
-        processed_urls = set[str](bio_df.index.tolist())
-    except:
-        processed_urls = set[str]()
+    processed_urls = set[str](bio_df.index.tolist())
 
     for team, url in team_url_dict.items():
         print(f"Scraping {team} {year} NPB.jp team roster...")
@@ -4708,19 +4696,13 @@ def get_career_data(rel_dir, year):
                         print(f"  Found unscraped player: {player_name}")
 
                         # Scrape career stats from individual player page
-                        try:
-                            scrape_player_career_stats(
-                                bio_df,
-                                bat_stat_df,
-                                pitch_stat_df,
-                                player_url,
-                                player_name,
-                            )
-                        except Exception as e:
-                            print(
-                                f"    Warning: Could not fetch stats for "
-                                f"{player_name}: {e}"
-                            )
+                        scrape_player_career_stats(
+                            bio_df,
+                            bat_stat_df,
+                            pitch_stat_df,
+                            player_url,
+                            player_name,
+                        )
                         players_scraped += 1
                         # Pace requests to NPB
                         sleep(randint(1, 3))
@@ -4811,9 +4793,14 @@ def scrape_player_career_stats(
                             continue
                         temp_row.append(cell.get_text(strip=True))
                     df.loc[len(df)] = temp_row
-
         r.close()
-    except Exception as e:
+    except (
+        requests.RequestException,
+        AttributeError,
+        ValueError,
+        KeyError,
+        IndexError,
+    ) as e:
         print(f"    Error scraping {player_name}: {e}")
 
 
@@ -5065,50 +5052,50 @@ def get_roster_data(year_dir, suffix, year):
         roster_url_dict = {}
     """
 
-    output_file = make_raw_roster_data_file(year_dir, suffix, year)
+    raw_csv_name = make_raw_roster_data_file(year_dir, suffix, year)
+    with open(raw_csv_name, mode="a", encoding="utf-8") as output_file:
+        # Loop through all roster URLs passed in
+        for url, team in roster_url_dict.items():
+            # Make GET request
+            # r = get_url(url)
+            # TODO: debug, making session to connect
+            s = make_session()
+            print("Current team: " + team + " - Connecting to: " + url)
+            r = s.get(url, timeout=(10, 45))
+            r.raise_for_status()
+            # r = session_r.text
 
-    # Loop through all roster URLs passed in
-    for url, team in roster_url_dict.items():
-        # Make GET request
-        # r = get_url(url)
-        # TODO: debug, making session to connect
-        s = make_session()
-        print("Current team: " + team + " - Connecting to: " + url)
-        r = s.get(url, timeout=(10, 45))
-        r.raise_for_status()
-        # r = session_r.text
+            # Create the soup for parsing the html content
+            soup = BeautifulSoup(r.content, "html.parser")
 
-        # Create the soup for parsing the html content
-        soup = BeautifulSoup(r.content, "html.parser")
+            # Grab all player name table entries
+            player_tr = soup.find_all("tr", {"class": ["rosterPlayer", "rosterRetire"]})
+            # Loop through and grab player names + links
+            for tr in player_tr:
+                for td in tr:
+                    entry_text = td.get_text()
+                    if entry_text.find(","):
+                        entry_text = entry_text.replace(",", "")
+                    # If there is an <a> tag, there is a link to scrape
+                    if td.a is not None:
+                        # Write name in csv file format
+                        output_file.write(entry_text + ",")
+                        # Get URL associated with player
+                        href = td.a.get("href")
+                        # Write full URL in csv file format
+                        output_file.write("https://npb.jp" + href + ",")
+                    else:
+                        output_file.write(entry_text + ",")
+                        continue
+                # Add team name then move to next row
+                output_file.write(team)
+                output_file.write("\n")
 
-        # Grab all player name table entries
-        player_tr = soup.find_all("tr", {"class": ["rosterPlayer", "rosterRetire"]})
-        # Loop through and grab player names + links
-        for tr in player_tr:
-            for td in tr:
-                entry_text = td.get_text()
-                if entry_text.find(","):
-                    entry_text = entry_text.replace(",", "")
-                # If there is an <a> tag, there is a link to scrape
-                if td.a is not None:
-                    # Write name in csv file format
-                    output_file.write(entry_text + ",")
-                    # Get URL associated with player
-                    href = td.a.get("href")
-                    # Write full URL in csv file format
-                    output_file.write("https://npb.jp" + href + ",")
-                else:
-                    output_file.write(entry_text + ",")
-                    continue
-            # Add team name then move to next row
-            output_file.write(team)
-            output_file.write("\n")
-
-        # TODO: debug
-        # r.close()
-        # Pace requests to npb.jp to avoid excessive requests
-        # sleep(randint(3, 5))
-        sleep(10.0)
+            # TODO: debug
+            # r.close()
+            # Pace requests to npb.jp to avoid excessive requests
+            # sleep(randint(3, 5))
+            sleep(10.0)
 
 
 # TODO: fuzzy translate remaining untranslated players with no rosters (oisix and
@@ -5263,11 +5250,7 @@ def make_raw_roster_data_file(year_dir, suffix, year):
         year (str): The NPB season year for which roster data is being scraped.
 
     Returns:
-        file stream object: An opened file object in write mode for the raw roster data.
-
-    Example:
-        >>> file = make_raw_roster_data_file("/path/to/stats/2025", "en", "2025")
-        >>> # File created at: /path/to/stats/2025/raw/2025raw_roster_data_en.csv
+        str: Path to the raw roster data file, with its header row already written.
     """
     raw_dir = os.path.join(year_dir, "raw")
     # TODO: make sure all make_raw_X() have this check
@@ -5275,11 +5258,13 @@ def make_raw_roster_data_file(year_dir, suffix, year):
         os.makedirs(raw_dir)
     raw_csv_name = raw_dir + "/" + year + "raw_roster_data_" + suffix + ".csv"
     print("Player URLs scraped in this session will be stored in: " + raw_csv_name)
-    raw_roster_data_file = open(raw_csv_name, mode="w", encoding="utf-8")
-    raw_roster_data_file.write(
-        "PlayerNum," + suffix + "Player,Link,BirthDate,Height,Weight,T,B,Note,Team\n"
-    )
-    return raw_roster_data_file
+    with open(raw_csv_name, mode="w", encoding="utf-8") as raw_roster_data_file:
+        raw_roster_data_file.write(
+            "PlayerNum,"
+            + suffix
+            + "Player,Link,BirthDate,Height,Weight,T,B,Note,Team\n"
+        )
+    return raw_csv_name
 
 
 def make_raw_player_file(write_dir, suffix, year):
@@ -5302,13 +5287,9 @@ def make_raw_player_file(write_dir, suffix, year):
         year (str): The NPB season year for which statistics are being scraped.
 
     Returns:
-        file stream object: An opened file object in write mode for the raw statistics.
-
-    Example:
-        >>> file = make_raw_player_file("/path/to/stats/2025", "BR", "2025")
-        >>> # File created at: /path/to/stats/2025/raw/2025StatsRawBR.csv
+        str: Path to the raw statistics file. The caller opens it for writing.
     """
-    # Open and return the file object in write mode
+    # Create the raw directory if needed and return the file path
     raw_dir = os.path.join(write_dir, "raw")
     if not os.path.exists(raw_dir):
         os.mkdir(raw_dir)
@@ -5325,8 +5306,7 @@ def make_raw_player_file(write_dir, suffix, year):
         print("Raw post season batting results will be stored in: " + new_csv_name)
     if suffix == "PP":
         print("Raw post season pitching results will be stored in: " + new_csv_name)
-    new_file = open(new_csv_name, "w", encoding="utf-8")
-    return new_file
+    return new_csv_name
 
 
 def make_raw_daily_scores_file(write_dir, suffix, year):
@@ -5338,16 +5318,15 @@ def make_raw_daily_scores_file(write_dir, suffix, year):
     year (string): The desired npb year to scrape
 
     Returns:
-    new_file (file stream object): An opened file in /year/raw/ named
+    new_csv_name (str): Path to a file in /year/raw/ named
             "[Year]DailyScoresRaw[Suffix].csv"""
-    # Open and return the file object in write mode
+    # Create the raw directory if needed and return the file path
     raw_dir = os.path.join(write_dir, "raw")
     if not os.path.exists(raw_dir):
         os.mkdir(raw_dir)
     new_csv_name = raw_dir + "/" + year + "DailyScoresRaw" + suffix + ".csv"
     print("Raw daily scores will be stored in: " + new_csv_name)
-    new_file = open(new_csv_name, "w", encoding="utf-8")
-    return new_file
+    return new_csv_name
 
 
 def make_raw_standings_file(write_dir, suffix, year):
@@ -5364,9 +5343,9 @@ def make_raw_standings_file(write_dir, suffix, year):
     year (string): The desired npb year to scrape
 
     Returns:
-    new_file (file stream object): An opened file in /year/raw/ formatted as
+    new_csv_name (str): Path to a file in /year/raw/ formatted as
             "[Year][Standings][Suffix].csv"""
-    # Open and return the file object in write mode
+    # Create the raw directory if needed and return the file path
     raw_dir = os.path.join(write_dir, "raw")
     if not os.path.exists(raw_dir):
         os.mkdir(raw_dir)
@@ -5385,8 +5364,7 @@ def make_raw_standings_file(write_dir, suffix, year):
         print("Raw Eastern League farm standings will be stored in: " + new_csv_name)
     elif suffix == "W":
         print("Raw Western League farm standings will be stored in: " + new_csv_name)
-    new_file = open(new_csv_name, "w", encoding="utf-8")
-    return new_file
+    return new_csv_name
 
 
 def make_raw_fielding_file(write_dir, suffix, year):
@@ -5401,10 +5379,10 @@ def make_raw_fielding_file(write_dir, suffix, year):
     year (string): The desired npb year to scrape
 
     Return:
-    new_file (file stream object): An opened file in /year/raw/ named
+    new_csv_name (str): Path to a file in /year/raw/ named
             "[Year]FieldingRaw[Suffix].csv"
     """
-    # Open and return the file object in write mode
+    # Create the raw directory if needed and return the file path
     raw_dir = os.path.join(write_dir, "raw")
     if not os.path.exists(raw_dir):
         os.mkdir(raw_dir)
@@ -5413,8 +5391,7 @@ def make_raw_fielding_file(write_dir, suffix, year):
         print("Raw regular season fielding results will be stored in: " + new_csv_name)
     if suffix == "F":
         print("Raw farm fielding results will be stored in: " + new_csv_name)
-    new_file = open(new_csv_name, "w", encoding="utf-8")
-    return new_file
+    return new_csv_name
 
 
 def get_scrape_year(args_in=None):
@@ -6181,16 +6158,20 @@ def make_zip(year_dir, suffix, year):
     print("Zip created at: " + output_filename + ".zip")
 
 
-def check_input_files(rel_dir, scrape_year=str(datetime.now().year)):
+def check_input_files(rel_dir, scrape_year=None):
     """Checks that all input files are in the /input/ folder
 
     Parameters:
     rel_dir (str): The relative directory holding the project
-    scrape_year (str): The year to check for year-specific files
+    scrape_year (str): The year to check for year-specific files;
+        defaults to the current year
 
     Returns:
     bool: True if any required files are missing, False otherwise
     """
+    if scrape_year is None:
+        scrape_year = str(datetime.now().year)
+
     # Validate inputs
     if not rel_dir or not isinstance(rel_dir, str):
         raise ValueError("rel_dir must be a non-empty string")

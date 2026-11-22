@@ -1,9 +1,10 @@
 """Performs basic functionality tests on npb_scrape.py"""
 
-from datetime import datetime
 import os
-import unittest
 import shutil
+import unittest
+from datetime import datetime
+
 import npb_scrape
 
 
@@ -24,9 +25,7 @@ class TestNpbScrape(unittest.TestCase):
         if not os.path.exists(self.temp_stats_dir):
             os.mkdir(self.temp_stats_dir)
 
-        self.temp_year_dir = os.path.join(
-            self.temp_stats_dir, self.scrape_year
-        )
+        self.temp_year_dir = os.path.join(self.temp_stats_dir, self.scrape_year)
         if not os.path.exists(self.temp_year_dir):
             os.mkdir(self.temp_year_dir)
 
@@ -62,23 +61,17 @@ class TestNpbScrape(unittest.TestCase):
         self.assertTrue(is_exist, msg="No raw player stat BR file")
 
         npb_scrape.get_stats(self.temp_year_dir, "PR", self.scrape_year)
-        pitch_npb = (
-            self.temp_raw_dir + "/" + self.scrape_year + "StatsRawPR.csv"
-        )
+        pitch_npb = self.temp_raw_dir + "/" + self.scrape_year + "StatsRawPR.csv"
         is_exist = os.path.exists(pitch_npb)
         self.assertTrue(is_exist, msg="No raw player stat PR file")
 
         npb_scrape.get_stats(self.temp_year_dir, "BF", self.scrape_year)
-        bat_farm = (
-            self.temp_raw_dir + "/" + self.scrape_year + "StatsRawBF.csv"
-        )
+        bat_farm = self.temp_raw_dir + "/" + self.scrape_year + "StatsRawBF.csv"
         is_exist = os.path.exists(bat_farm)
         self.assertTrue(is_exist, msg="No raw player stat BF file")
 
         npb_scrape.get_stats(self.temp_year_dir, "PF", self.scrape_year)
-        pitch_farm = (
-            self.temp_raw_dir + "/" + self.scrape_year + "StatsRawPF.csv"
-        )
+        pitch_farm = self.temp_raw_dir + "/" + self.scrape_year + "StatsRawPF.csv"
         is_exist = os.path.exists(pitch_farm)
         self.assertTrue(is_exist, msg="No raw player stat PF file")
 
@@ -86,30 +79,22 @@ class TestNpbScrape(unittest.TestCase):
         """test_get_standings() tests existence of standings stat files after
         running get_standings()"""
         npb_scrape.get_standings(self.temp_year_dir, "C", self.scrape_year)
-        std_c = (
-            self.temp_raw_dir + "/" + self.scrape_year + "StandingsRawC.csv"
-        )
+        std_c = self.temp_raw_dir + "/" + self.scrape_year + "StandingsRawC.csv"
         is_exist = os.path.exists(std_c)
         self.assertTrue(is_exist, msg="No raw standings C file")
 
         npb_scrape.get_standings(self.temp_year_dir, "E", self.scrape_year)
-        std_e = (
-            self.temp_raw_dir + "/" + self.scrape_year + "StandingsRawE.csv"
-        )
+        std_e = self.temp_raw_dir + "/" + self.scrape_year + "StandingsRawE.csv"
         is_exist = os.path.exists(std_e)
         self.assertTrue(is_exist, msg="No raw standings E file")
 
         npb_scrape.get_standings(self.temp_year_dir, "P", self.scrape_year)
-        std_p = (
-            self.temp_raw_dir + "/" + self.scrape_year + "StandingsRawP.csv"
-        )
+        std_p = self.temp_raw_dir + "/" + self.scrape_year + "StandingsRawP.csv"
         is_exist = os.path.exists(std_p)
         self.assertTrue(is_exist, msg="No raw standings P file")
 
         npb_scrape.get_standings(self.temp_year_dir, "W", self.scrape_year)
-        std_w = (
-            self.temp_raw_dir + "/" + self.scrape_year + "StandingsRawW.csv"
-        )
+        std_w = self.temp_raw_dir + "/" + self.scrape_year + "StandingsRawW.csv"
         is_exist = os.path.exists(std_w)
         self.assertTrue(is_exist, msg="No raw standings W file")
 
@@ -117,16 +102,12 @@ class TestNpbScrape(unittest.TestCase):
         """test_get_daily_stats() tests existence of fielding stat files after
         running get_fielding()"""
         npb_scrape.get_fielding(self.temp_year_dir, "R", self.scrape_year)
-        field_npb = (
-            self.temp_raw_dir + "/" + self.scrape_year + "FieldingRawR.csv"
-        )
+        field_npb = self.temp_raw_dir + "/" + self.scrape_year + "FieldingRawR.csv"
         is_exist = os.path.exists(field_npb)
         self.assertTrue(is_exist, msg="No raw fielding R file")
 
         npb_scrape.get_fielding(self.temp_year_dir, "F", self.scrape_year)
-        field_farm = (
-            self.temp_raw_dir + "/" + self.scrape_year + "FieldingRawF.csv"
-        )
+        field_farm = self.temp_raw_dir + "/" + self.scrape_year + "FieldingRawF.csv"
         is_exist = os.path.exists(field_farm)
         self.assertTrue(is_exist, msg="No raw fielding F file")
 
@@ -135,14 +116,10 @@ class TestNpbScrape(unittest.TestCase):
         running get_daily_scores() (only if the test year is the current year)
         """
         if self.scrape_year != str(datetime.now().year):
-            self.skipTest(
-                "get_daily_stats() skipped, test year is not current year"
-            )
+            self.skipTest("get_daily_stats() skipped, test year is not current year")
 
         npb_scrape.get_daily_scores(self.temp_year_dir, "R", self.scrape_year)
-        daily = (
-            self.temp_raw_dir + "/" + self.scrape_year + "DailyScoresRawR.csv"
-        )
+        daily = self.temp_raw_dir + "/" + self.scrape_year + "DailyScoresRawR.csv"
         is_exist = os.path.exists(daily)
         self.assertTrue(is_exist, msg="No raw daily scores R file")
 
