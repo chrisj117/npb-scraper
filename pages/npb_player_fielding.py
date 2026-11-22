@@ -1,6 +1,7 @@
 """Displays NPB fielding data with Streamlit"""
 
 import streamlit as st
+
 import pages.helper as hp
 
 
@@ -80,10 +81,7 @@ def main():
         bold_cols.append("Team")
     if "Player" in user_cols:
         bold_cols.append("Player")
-    styler = styler.set_properties(
-        subset=bold_cols,
-        **{"font-weight": "bold"}
-    )
+    styler = styler.set_properties(subset=bold_cols, **{"font-weight": "bold"})
     st.dataframe(
         styler,
         width="stretch",

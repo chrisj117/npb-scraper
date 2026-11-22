@@ -1,8 +1,9 @@
 """Displays top players, lineup, rotation, and bullpen data with Streamlit"""
 
 import altair as alt
-import streamlit as st
 import pandas as pd
+import streamlit as st
+
 import pages.helper as hp
 
 
@@ -15,14 +16,20 @@ def main():
     reserve batters, starting rotation, bullpen, and team statistics.
 
     Functions called:
-        - create_top_pos_players(cumulative_df): Shows the team's top 10 position players by IMPACT metric.
-        - create_lineup(cumulative_df, field_df, advanced_view): Shows the team's starting lineup and reserve batters.
-        - create_bench(cumulative_df, lineup_df, advanced_view): Shows the team's bench/reserve batters.
-        - create_top_pitchers(pitch_df): Shows the team's top 10 pitchers by IMPACT metric.
+        - create_top_pos_players(cumulative_df): Shows the team's top 10 position
+          players by IMPACT metric.
+        - create_lineup(cumulative_df, field_df, advanced_view): Shows the team's
+          starting lineup and reserve batters.
+        - create_bench(cumulative_df, lineup_df, advanced_view): Shows the team's
+          bench/reserve batters.
+        - create_top_pitchers(pitch_df): Shows the team's top 10 pitchers by IMPACT
+          metric.
         - create_rotation(pitch_df, advanced_view): Shows the team's starting rotation.
         - create_bullpen(pitch_df, advanced_view): Shows the team's bullpen.
-        - create_team_bat_stats(team_bat_df, team_field_df, user_team, user_year): Shows team batting stats compared to League Average.
-        - create_team_pitch_stats(team_pitch_df, user_team, user_year): Shows team pitching stats compared to League Average.
+        - create_team_bat_stats(team_bat_df, team_field_df, user_team, user_year): Shows
+          team batting stats compared to League Average.
+        - create_team_pitch_stats(team_pitch_df, user_team, user_year): Shows team
+          pitching stats compared to League Average.
 
     Returns:
         None
@@ -50,9 +57,9 @@ def main():
         team_pitch_df.loc[team_pitch_df["Team"] == "League Average", "IP"].iloc[0] < 225
     ):
         st.warning(
-            "League average minimum IP or PA is not met. This year's team overview "
-            "is unavailable until a larger sample is obtained. Choose a previous year or "
-            "check back later!"
+            "League average minimum IP or PA is not met. This year's team "
+            + "overview is unavailable until a larger sample is obtained. Choose a "
+            + "previous year or check back later!"
         )
         st.stop()
 
@@ -78,9 +85,8 @@ def main():
         cumulative_df = pd.merge(bat_df, agg_field_df, how="left")
     except ValueError:
         st.error(
-            "Error: Batting and fielding dataframes failed to merge. "
-            "Check Age columns and update name translation + roster data if "
-            "necessary!"
+            "Error: Batting and fielding dataframes failed to merge. Check Age 
+            + "columns and update name translation + roster data if necessary!"
         )
         st.stop()
 
@@ -140,7 +146,8 @@ def create_lineup(cumulative_df, field_df, advanced_view):
     position. Formats the lineup table with basic or advanced statistics.
 
     Parameters:
-        cumulative_df (DataFrame): Merged batting and fielding data for the selected team.
+        cumulative_df (DataFrame): Merged batting and fielding data for the selected
+        team.
         field_df (DataFrame): Fielding data for the selected team.
         advanced_view (bool): Whether to display advanced statistics columns.
 
@@ -156,7 +163,8 @@ def create_lineup(cumulative_df, field_df, advanced_view):
         filter_pos_rows = ["DH", "RF", "CF", "LF", "SS", "3B", "2B", "1B", "C"]
     for pos in filter_pos_rows:
         field_pos_df = field_df.drop(field_df[field_df["Pos"] != pos].index)
-        # Use field_df to get whoever has most innings at that position (cumulative_df has innings aggregated across all positions)
+        # Use field_df to get whoever has most innings at that position (cumulative_df
+        # has innings aggregated across all positions)
         starter_field = field_pos_df.sort_values("Inn", ascending=False)
         # If a player is already in lineup_df, get the next available player
         starter_player = starter_field["Player"].iloc[0]
@@ -247,8 +255,10 @@ def create_bench(cumulative_df, lineup_df, advanced_view):
     and displays the bench table in Streamlit.
 
     Parameters:
-        cumulative_df (DataFrame): Merged batting and fielding data for the selected team.
-        lineup_df (DataFrame): The starting lineup dataframe returned by create_lineup().
+        cumulative_df (DataFrame): Merged batting and fielding data for the selected
+        team.
+        lineup_df (DataFrame): The starting lineup dataframe returned by
+        create_lineup().
         advanced_view (bool): Whether to display advanced statistics columns.
 
     Returns:
@@ -334,7 +344,8 @@ def create_bench(cumulative_df, lineup_df, advanced_view):
 
 def create_top_pos_players(cumulative_df):
     """
-    Displays the top 10 position players by an approximation of WAR for the selected team.
+    Displays the top 10 position players by an approximation of WAR for the selected
+    team.
 
     Calculates a WAR metric based on OPS+, wSB, defensive metrics (TZR, Pos Adj,
     Framing, Blocking), and playing time (PA). Sorts players by WAR, ranks the
@@ -342,7 +353,8 @@ def create_top_pos_players(cumulative_df):
     thresholds, and displays the results in a Streamlit table.
 
     Parameters:
-        cumulative_df (DataFrame): Merged batting and fielding data for the selected team.
+        cumulative_df (DataFrame): Merged batting and fielding data for the selected
+        team.
 
     Returns:
         None
@@ -358,7 +370,8 @@ def create_top_pos_players(cumulative_df):
         + (cumulative_df["PA"] / 30)
     ) / 10
     top_pos_player_df = cumulative_df.sort_values(by="IMPACT", ascending=False).head(10)
-    # Some players have inf/" " BB/K values causing the column to be string, so manually force BB/K to float
+    # Some players have inf/" " BB/K values causing the column to be string, so manually
+    # force BB/K to float
     top_pos_player_df["BB/K"] = top_pos_player_df["BB/K"].astype(float)
 
     # Create archetypes for players
@@ -410,19 +423,27 @@ def create_top_pos_players(cumulative_df):
 
     with st.expander("***Top Position Players***"):
         st.write(
-            "Players are ranked using a simplified value metric that measures impact through park-adjusted offensive production, base stealing efficiency, defense, positional difficulty, catcher framing and blocking, and playing time, with a small multiplier that rewards strong batting performance."
+            "Players are ranked using a simplified value metric that measures impact "
+            + "through park-adjusted offensive production, base stealing efficiency, "
+            + "defense, positional difficulty, catcher framing and blocking, and "
+            + "playing time, with a small multiplier that rewards strong batting "
+            + "performance."
         )
         st.write(":yellow-badge[All-Rounder ⭐]")
         st.write(
-            "A star position player with an OPS+ above 130, a K% below 20.0%, and a TZR/143 above 5.0."
+            "A star position player with an OPS+ above 130, a K% below 20.0%, and a "
+            + "TZR/143 above 5.0."
         )
         st.write(":grey-badge[Defensive Specialist 🛡️]")
         st.write(
-            "A fielder with a TZR/143 above 8.0, or a catcher with a Framing/143 above 8.0. Primary first basemen and designated hitters are excluded."
+            "A fielder with a TZR/143 above 8.0, or a catcher with a Framing/143 "
+            + "above 8.0. Primary first basemen and designated hitters are excluded."
         )
         st.write(":green-badge[Run Threat 💨]")
         st.write(
-            "A dangerous base stealer with either more than 10 stolen bases and a wSB above 1.0, or is on pace for more than 25 stolen base attempts over a full season."
+            "A dangerous base stealer with either more than 10 stolen bases and a wSB "
+            + "above 1.0, or is on pace for more than 25 stolen base attempts over a "
+            + "full season."
         )
         st.write(":red-badge[Slugger 💥]")
         st.write("A power hitter with an ISO above .150 and an HR/FB% above 9.0%.")
@@ -432,11 +453,13 @@ def create_top_pos_players(cumulative_df):
         st.write("A high-contact hitter with a K% below 17.5% and a SwStr% below 9.0%")
         st.write(":blue-badge[Slap Hitter 🖐️]")
         st.write(
-            "A non-power hitter with a GB% above 50.0%, an Oppo% above 25.0%, and a HR/FB% below 5.0%."
+            "A non-power hitter with a GB% above 50.0%, an Oppo% above 25.0%, and a "
+            + "HR/FB% below 5.0%."
         )
         st.write(":violet-badge[Disciplined 👁️]")
         st.write(
-            "A selective hitter with an OBP above .330, a BB% above 7.5%, and a Chase% below 27.5%."
+            "A selective hitter with an OBP above .330, a BB% above 7.5%, and a "
+            + "Chase% below 27.5%."
         )
         st.write(":violet-badge[Pesky 🪰]")
         st.write("A feisty hitter with an O-Con% above 67.0% and a BB/K above 0.60.")
@@ -446,7 +469,8 @@ def create_top_pos_players(cumulative_df):
         )
         st.write(":orange-badge[Dead Pull 💀]")
         st.write(
-            "A hitter with an extreme pull-side approach with a Pull% above 45.0% and an Oppo% below 20.0%."
+            "A hitter with an extreme pull-side approach with a Pull% above 45.0% and "
+            + "an Oppo% below 20.0%."
         )
 
     st.table(
@@ -530,15 +554,19 @@ def create_top_pitchers(pitch_df):
 
     with st.expander("***Top Pitchers***"):
         st.write(
-            "Pitchers are ranked using a simplified value metric that measures impact through innings pitched and earned-run prevention, with a small multiplier that rewards strong strikeout-to-walk ratios."
+            "Pitchers are ranked using a simplified value metric that measures impact "
+            + "through innings pitched and earned-run prevention, with a small "
+            + "multiplier that rewards strong strikeout-to-walk ratios."
         )
         st.write(":yellow-badge[Ace ♠️]")
         st.write(
-            "A frontline starter with an ERA+ above 120, a K-BB% above 15.0%, and more than 6.0 innings per game."
+            "A frontline starter with an ERA+ above 120, a K-BB% above 15.0%, and "
+            + "more than 6.0 innings per game."
         )
         st.write(":green-badge[Workhorse 🐎]")
         st.write(
-            "A durable starter who averages more than 7.0 innings per game or has thrown more than two complete games."
+            "A durable starter who averages more than 7.0 innings per game or has "
+            + "thrown more than two complete games."
         )
         st.write(":orange-badge[Fireman 🧯]")
         st.write("A dominant reliever with an ERA+ above 140 and a SwStr% above 12.0%.")
@@ -550,11 +578,13 @@ def create_top_pitchers(pitch_df):
         st.write("A skilled pitcher with a K% above 22.5% and a Putaway% above 20.0%.")
         st.write(":blue-badge[Control Specialist 🎯]")
         st.write(
-            "A strike-thrower who limits free passes with a BB% below 6.0% and a Zone% above 53.0%."
+            "A strike-thrower who limits free passes with a BB% below 6.0% and a "
+            + "Zone% above 53.0%."
         )
         st.write(":blue-badge[Count Setter ⏩]")
         st.write(
-            "A decisive pitcher who gets ahead of the count often with a F-Str% above 65.0% and a Behind% below 10.0%."
+            "A decisive pitcher who gets ahead of the count often with a F-Str% above "
+            + "65.0% and a Behind% below 10.0%."
         )
         st.write(":violet-badge[Finesse Pitcher 🧠]")
         st.write(
@@ -588,7 +618,8 @@ def create_rotation(pitch_df, advanced_view):
 
     Filters pitching data for starting pitchers by dropping those with high save/hold
     totals (HLDSV >= 7) and high game-to-IP ratio (GIP > 0.66), indicating relievers.
-    Sorts by innings pitched and takes top 7, assigning roles SP1-SP7. Formats and renames
+    Sorts by innings pitched and takes top 7, assigning roles SP1-SP7. Formats and
+    renames
     columns for display, then shows the rotation in a Streamlit dataframe.
 
     Parameters:
@@ -684,8 +715,10 @@ def create_bullpen(pitch_df, advanced_view):
     Displays the projected bullpen for the selected team.
 
     Identifies the closer (top by SV) and relievers (top 6 by HLD with non-zero holds).
-    Assigns roles: CL (closer), SU (setup), and RP (relief pitcher) for remaining relievers.
-    Formats and renames columns for display, then shows the bullpen in a Streamlit dataframe.
+    Assigns roles: CL (closer), SU (setup), and RP (relief pitcher) for remaining
+    relievers.
+    Formats and renames columns for display, then shows the bullpen in a Streamlit
+    dataframe.
 
     Parameters:
         pitch_df (DataFrame): Pitching data for all players on the team.
@@ -1039,7 +1072,8 @@ def create_team_pitch_stats(team_pitch_df, team, year):
 
 def create_team_header(central_df: pd.DataFrame, pacific_df: pd.DataFrame, team):
     """
-    Displays a team header with record, run differential, league, and standings placement.
+    Displays a team header with record, run differential, league, and standings
+    placement.
 
     Concatenates Central and Pacific league standings to determine the selected
     team's rank within its league, then displays a formatted subheader showing
@@ -1071,7 +1105,8 @@ def create_team_header(central_df: pd.DataFrame, pacific_df: pd.DataFrame, team)
     }
 
     all_standings_df = pd.concat([central_df, pacific_df])
-    # Preserve index team is at before reindexing (index contains placement in their league)
+    # Preserve index team is at before reindexing (index contains placement in their
+    # league)
     all_standings_df.index += 1
     league_rank = all_standings_df[all_standings_df.Team == team].index
     all_standings_df = all_standings_df.reset_index(drop=True)
@@ -1098,7 +1133,7 @@ def create_team_header(central_df: pd.DataFrame, pacific_df: pd.DataFrame, team)
         + "-"
         + all_standings_df["T"].astype(str).values[0]
         + " ("
-        + f"{all_standings_df["PCT"].values[0]:.3f}"
+        + f"{all_standings_df['PCT'].values[0]:.3f}"
         + ")"
         + " · Run Diff: "
         + all_standings_df["Diff"].astype(str).values[0]

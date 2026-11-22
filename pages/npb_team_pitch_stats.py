@@ -1,7 +1,8 @@
 """Displays NPB team batting data with Streamlit"""
 
-import streamlit as st
 import altair as alt
+import streamlit as st
+
 import pages.helper as hp
 
 
@@ -34,7 +35,8 @@ def main():
             # Drop unwanted columns and reorder (must be before sort filters are made)
             team_pitch_df = hp.prepare_streamlit_col_order(team_pitch_df, "team_pitch")
 
-            # Only display postseason toggle if there is a dataframe, else make sure it's False
+            # Only display postseason toggle if there is a dataframe, else make sure
+            # it's False
             if postseason_team_pitch_df is not None:
                 postseason_view = st.toggle("Postseason")
                 if postseason_view is True:
@@ -178,7 +180,8 @@ def generate_team_pitching_plots(original_df, display_df, user_year):
 
     Args:
         original_df (pandas.DataFrame): Unfiltered pitching statistics dataframe
-        display_df (pandas.DataFrame): Filtered pitching statistics dataframe based on user selections
+        display_df (pandas.DataFrame): Filtered pitching statistics dataframe based on
+        user selections
         user_year (str): The selected NPB season year for chart titles
 
     Returns:

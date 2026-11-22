@@ -1,6 +1,7 @@
 """Displays NPB pitcher percentiles with Streamlit"""
 
 import streamlit as st
+
 import pages.helper as hp
 
 

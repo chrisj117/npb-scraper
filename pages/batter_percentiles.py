@@ -1,7 +1,8 @@
 """Displays NPB batter percentiles with Streamlit"""
 
-import streamlit as st
 import pandas as pd
+import streamlit as st
+
 import pages.helper as hp
 
 

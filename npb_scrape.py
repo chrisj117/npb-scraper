@@ -19,14 +19,17 @@ from playwright.sync_api import sync_playwright
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-# TODO: check that roster_revisions.csv can trickle to career (or rework roster_revisions.csv)
+# TODO: check that roster_revisions.csv can trickle to career (or rework
+# roster_revisions.csv)
 # TODO: need more robust error checking surrounding scrape and org functions
 # TODO: split into multiple class files for organization
 # TODO: make one encompassing "format stat" function
-# TODO: implement @st.cache_data for streamlit page functions that do expensive transformations
+# TODO: implement @st.cache_data for streamlit page functions that do expensive
+# transformations
 # TODO: update github docs
 # TODO: add streamlit career page description on home page
-# TODO: implement streamlit ttl and max entries in @st.cache_data(ttl=21600, show_spinner=False)?
+# TODO: implement streamlit ttl and max entries in @st.cache_data(ttl=21600,
+# show_spinner=False)?
 # TODO: put read in check before every google sheet raw to better avoid errors
 # TODO: change farm 2026 fielding "League" to "Division" *
 # TODO: refactor daily scores
@@ -41,8 +44,9 @@ HF_TOP_LEVEL_PLAYER_FILES = {
     "players_translated_manual.parquet",
 }
 HF_CONSOLIDATED_PATTERN = (
-    r"(\d{4}/)?(pbp_data|pbp_aux|pbp_text|schedule|aux_schedule"
-    r"|players|players_translated|players_translated_manual)\.parquet"
+    r"(\d{4}/)?"
+    r"(pbp_data|pbp_aux|pbp_text|schedule|aux_schedule|players"
+    r"|players_translated|players_translated_manual)\.parquet"
 )
 
 
@@ -57,19 +61,17 @@ def main():
     Workflow:
     1. Initializes the directory structure for storing scraped data.
     2. Validates the presence of required input files.
-    3. Processes command-line arguments to determine the year to scrape
-       and bypasses user input if arguments are provided.
-    4. Prompts the user for input if no command-line arguments are given,
-       allowing for manual control over scraping and data organization.
-       The Hugging Face import question is asked last, after all other
-       prompts. It is never asked when command-line arguments are given.
-    5. Scrapes and organizes statistics for regular season and farm league
-       games, including batting, pitching, fielding, standings, and daily
-       scores.
+    3. Processes command-line arguments to determine the year to scrape and bypasses
+           user input if arguments are provided.
+    4. Prompts the user for input if no command-line arguments are given, allowing
+           for manual control over scraping and data organization. The Hugging Face
+           import question is asked last, after all other prompts. It is never asked
+           when command-line arguments are given.
+    5. Scrapes and organizes statistics for regular season and farm league games,
+           including batting, pitching, fielding, standings, and daily scores.
     6. Optionally zips the output files for easier distribution.
-    7. If the user chose the Hugging Face import, downloads the NPB
-       consolidated tables for the scrape year and stores them as CSVs in
-       stats/all/raw.
+    7. If the user chose the Hugging Face import, downloads the NPB consolidated
+           tables for the scrape year and stores them as CSVs in stats/all/raw.
 
     Returns:
         int:
@@ -88,7 +90,7 @@ def main():
     # TODO: place after year_dir creation?
     input_dir = os.path.join(rel_dir, "input")
     if check_input_files(rel_dir, scrape_year) is True:
-        _ = input("Press Enter to exit. ")
+        input("Press Enter to exit. ")
         return -1
 
     # Create year directory
@@ -130,22 +132,21 @@ def main():
         scrape_hf_npb_data(scrape_year, os.path.join(stats_dir, "all", "raw"))
 
     if arg_bypass is False:
-        _ = input("Press Enter to exit. ")
+        input("Press Enter to exit. ")
         return 1
     return 0
 
 
 def get_run_options(argv):
-    """Gets the scrape year and task flags from command line arguments or user
-    input
+    """Gets the scrape year and task flags from command line arguments or user input
 
     Parameters:
     argv (list): The command line arguments (sys.argv)
 
     Returns:
-    tuple: (scrape_year, arg_bypass, flags) where scrape_year (str) is the
-    year to scrape, arg_bypass (bool) is True if command line arguments were
-    used, and flags (dict) maps each task to "Y" or "N"."""
+    tuple: (scrape_year, arg_bypass, flags) where scrape_year (str) is the year to
+        scrape, arg_bypass (bool) is True if command line arguments were used, and
+        flags (dict) maps each task to "Y" or "N"."""
     if len(argv) == 2:
         print("ARGUMENTS DETECTED: " + str(argv))
         # "-a" scrapes current year, else scrape for given year
@@ -168,7 +169,8 @@ def get_run_options(argv):
         return scrape_year, True, flags
     if len(argv) > 2:
         print(
-            "ERROR: Too many arguments. Try using the desired stat year or use '-a' to scrape for the current year."
+            "ERROR: Too many arguments. Input the desired stat year or use '-a' to "
+            + "scrape for the current year.",
         )
         sys.exit("Exiting...")
     # Give user control if a year argument isn't passed in
@@ -204,8 +206,8 @@ def update_roster_data(rel_dir, year_dir, scrape_year):
 
 
 def scrape_npb_regular_season(input_dir, year_dir, scrape_year):
-    """Scrapes regular season NPB stats, standings, fielding, and daily scores
-    (current year only)
+    """Scrapes regular season NPB stats, standings, fielding, and daily scores (current
+    year only)
 
     Parameters:
     input_dir (str): The directory holding the input files
@@ -244,7 +246,8 @@ def organize_npb_regular_season(stats_dir, year_dir, scrape_year):
         npb_fielding.df, stats_dir, year_dir, "R", scrape_year
     )
     # NPB Standings
-    # NOTE: standings must be organized before any player stats to calculate correct IP/PA drop consts
+    # NOTE: standings must be organized before player stats to calculate correct IP/PA
+    # drop consts
     npb_central_standings = StandingsData(stats_dir, year_dir, "C_npb", scrape_year)
     npb_pacific_standings = StandingsData(stats_dir, year_dir, "P_npb", scrape_year)
     # NPB Player stats
@@ -423,8 +426,8 @@ class Stats:
         TeamSummaryData: Combined team summary statistics.
 
     Purpose: Centralizes dataframe storage and common statistical operations
-    (e.g., park factor selection, league filtering, percentage rescaling)
-    across all statistic types."""
+        (e.g., park factor selection, league filtering, percentage rescaling)
+        across all statistic types."""
 
     def __init__(self, stats_dir, year_dir, suffix, year):
         self.stats_dir = stats_dir
@@ -435,14 +438,14 @@ class Stats:
         self.df = pd.DataFrame()
 
     def __str__(self):
-        """Outputs the Alt view of the associated dataframe (no HTML team or
-        player names, no csv formatting, shows entire df instead of only
-        Leaders if applicable)"""
+        """Outputs the Alt view of the associated dataframe (no HTML team or player
+        names, no csv formatting, shows entire df instead of only Leaders if
+        applicable)"""
         return self.df.to_string()
 
     def get_csv(self):
-        """Outputs the csv of the associated dataframe (no HTML team or
-        player names shows entire df instead of only Leaders if applicable)"""
+        """Outputs the csv of the associated dataframe (no HTML team or player names
+        shows entire df instead of only Leaders if applicable)"""
         return self.df.to_csv()
 
     def org_player_bat(self, suffix, year):
@@ -528,8 +531,8 @@ class Stats:
         self.df["WHIP"] = (self.df["BB"] + self.df["H"]) / self.df["IP"]
         self.df["HR%"] = (self.df["HR"] / self.df["BF"]) * 100
 
-        # Skip if older than 2014 - player data is missing, creating bad sums/avgs
-        # 2014 was chosen since it was the earliest team rosters we scraped
+        # Skip if older than 2014 - player data is missing, creating bad sums/avgs 2014
+        # was chosen since it was the earliest team rosters we scraped
         if int(year) >= 2014:
             # Counting stat column totals
             total_era = 9 * (self.df["ER"].sum() / self.df["IP"].sum())
@@ -569,16 +572,16 @@ class Stats:
         self.df["IP"] = convert_ip_column_out(self.df, "IP")
 
     def calculate_fip_const(self):
-        """
-        Calculate the FIP (Fielding Independent Pitching) constant for a league.
+        """Calculate the FIP (Fielding Independent Pitching) constant for a league.
 
         The FIP constant adjusts the FIP formula to align with actual ERA. It is
         calculated using the formula: FIP_const = lg_RA - (numerator / IP), where
-        lg_RA is the league's runs allowed per inning and the numerator combines
-        home runs, walks, hit-by-pitch, and strikeouts.
+        lg_RA is the league's runs allowed per inning and the numerator combines home
+        runs, walks, hit-by-pitch, and strikeouts.
 
         Returns:
-        fip_const (float): The FIP constant for the given year and league (NPB or Farm).
+            fip_const (float): The FIP constant for the given year and league (NPB or
+                Farm).
 
         Process:
             1. Reads the fallback FIP constants from input/fip_const.csv.
@@ -588,8 +591,7 @@ class Stats:
                - Computes league runs allowed per 9 innings (lg_ra)
                - Applies the FIP formula numerator
                - Stores the calculated value back to the CSV for future use
-            4. Otherwise, falls back to the pre-existing value from the CSV.
-        """
+            4. Otherwise, falls back to the pre-existing value from the CSV."""
         fip_df = pd.read_csv(os.path.dirname(__file__) + "/input/fip_const.csv")
         if self.suffix in ("BF", "PF"):
             fip_suffix = "Farm"
@@ -629,8 +631,7 @@ class Stats:
 
     def fix_raw_pitch_col(self):
         """Converts IP and ERA cols to appropriate float types"""
-        # Some IP entries can be '+', replace with 0 for conversions and
-        # calculations
+        # Some IP entries can be '+', replace with 0 for conversions and calculations
         self.df["IP"] = self.df["IP"].astype(str).replace("+", "0")
         # For tables past post season 2025 (new table doesnt split IP into 2 cols)
         if (self.suffix in ("PR", "PF") and int(self.year) >= 2026) or (
@@ -668,8 +669,8 @@ class Stats:
             self.df["IP"] = self.df["IP"].fillna(0)
             # Drop column that held IP column decimals
             self.df = self.df.drop(["IP_2"], axis=1)
-        # Some ERA entries can be '----', replace with 0 and convert to float
-        # for calculations
+        # Some ERA entries can be '----', replace with 0 and convert to float for
+        # calculations
         self.df["ERA"] = self.df["ERA"].astype(str).replace("----", "inf")
         self.df["ERA"] = self.df["ERA"].astype(float)
         # IP ".0 .1 .2" fix
@@ -678,10 +679,10 @@ class Stats:
     def append_gsheets_pitcher_data(self, year):
         """Appends Google Sheets pitcher data to the main dataframe.
 
-        Reads raw Google Sheets pitcher data from a CSV file, standardizes
-        team and player column names, maps abbreviated team names to full
-        names, filters out percentile, null, and error columns, and merges
-        the resulting data with the main dataframe on Pitcher and Team.
+        Reads raw Google Sheets pitcher data from a CSV file, standardizes team and
+        player column names, maps abbreviated team names to full names,
+        filters out percentile, null, and error columns, and merges the
+        resulting data with the main dataframe on Pitcher and Team.
 
         Args:
             year (str): The season year used to locate the raw CSV file.
@@ -727,7 +728,8 @@ class Stats:
             .astype(str)
         )
 
-        # Grab new, non percentile, non error columns that we don't calculate from gsheet to merge
+        # Grab new, non percentile, non error columns that we don't calculate
+        # from gsheet to merge
         bad_gsheet_cols = [
             "Unnamed",
             "pctl",
@@ -753,7 +755,8 @@ class Stats:
         for col in gsheet_df.columns.to_list():
             # Most new columns that need rescaling end in % except for HR/FB
             if "%" in col or col == "HR/FB":
-                # If there are entries under 1.0, then we need to rescale to whole number format
+                # If there are entries under 1.0, then we need to rescale to whole
+                # number format
                 col_max = gsheet_df[col].max()
                 if pd.notna(col_max) and col_max <= 1.0:
                     gsheet_df[col] = gsheet_df[col] * 100
@@ -778,10 +781,10 @@ class Stats:
     def append_gsheets_batter_data(self, year):
         """Appends Google Sheets batter data to the main dataframe.
 
-        Reads raw Google Sheets batter data from a CSV file, standardizes
-        team and player column names, maps abbreviated team names to full
-        names, filters out percentile, null, and error columns, and merges
-        the resulting data with the main dataframe on Player and Team.
+        Reads raw Google Sheets batter data from a CSV file, standardizes team and
+        player column names, maps abbreviated team names to full names,
+        filters out percentile, null, and error columns, and merges the
+        resulting data with the main dataframe on Player and Team.
 
         Args:
             year (str): The season year used to locate the raw CSV file.
@@ -830,7 +833,8 @@ class Stats:
             .astype(str)
         )
 
-        # Grab new, non percentile, non error columns that we don't calculate from gsheet to merge
+        # Grab new, non percentile, non error columns that we don't calculate
+        # from gsheet to merge
         bad_gsheet_cols = [
             "Unnamed",
             "pctl",
@@ -871,7 +875,8 @@ class Stats:
         for col in gsheet_df.columns.to_list():
             # Most new columns that need rescaling end in % except for HR/FB
             if "%" in col or col == "HR/FB":
-                # If there are entries under 1.0, then we need to rescale to whole number format
+                # If there are entries under 1.0, then we need to rescale to whole
+                # number format
                 col_max = gsheet_df[col].max()
                 if pd.notna(col_max) and col_max <= 1.0:
                     gsheet_df[col] = gsheet_df[col] * 100
@@ -895,17 +900,15 @@ class Stats:
         whole-number formats depending on the target output mode.
 
         Args:
-            mode (str): Determines the direction of rescaling.
-                - "tablepress": Converts whole numbers to decimals
-                  (e.g., 50 -> 0.50) for Tablepress/CSV output files.
-                  Only scales columns where the max value exceeds 1.0.
-                - "streamlit": Converts decimals to whole numbers
-                  (e.g., 0.50 -> 50) for Streamlit display.
-                  Only scales columns where the max value is 1.0 or below.
+            mode (str): Determines the direction of rescaling. - "tablepress":
+                Converts whole numbers to decimals (e.g., 50 -> 0.50) for Tablepress/CSV
+                output files. Only scales columns where the max value exceeds 1.0. -
+                "streamlit": Converts decimals to whole numbers (e.g., 0.50 -> 50) for
+                Streamlit display. Only scales columns where the max value is 1.0 or
+                below.
 
         Returns:
-            None: Modifies self.df in place.
-        """
+            None: Modifies self.df in place."""
         if mode == "tablepress":
             for col in self.df.columns.to_list():
                 # Most new columns that need rescaling end in % except for HR/FB
@@ -918,7 +921,8 @@ class Stats:
             for col in self.df.columns.to_list():
                 # Most new columns that need rescaling end in % except for HR/FB
                 if "%" in col or col == "HR/FB":
-                    # If there are entries under 1.0, then rescale to whole number format
+                    # If there are entries under 1.0, then rescale to whole number
+                    # format
                     col_max = self.df[col].max()
                     if pd.notna(col_max) and col_max <= 1.0:
                         self.df[col] = self.df[col] * 100
@@ -928,43 +932,40 @@ class PlayerData(Stats):
     """A class to handle individual player statistics for NPB and Farm League.
 
     This class extends the `Stats` class and is responsible for organizing,
-    processing, and outputting individual player statistics for batting and
-    pitching. On initialization, it reads raw stat CSV files, calls the
-    appropriate organization method based on suffix, and calculates
-    additional statistics for final output.
+    processing, and outputting individual player statistics for batting and pitching.
+    On initialization, it reads raw stat CSV files, calls the appropriate
+    organization method based on suffix, and calculates additional statistics for
+    final output.
 
     Attributes:
         df (pandas.DataFrame): Holds an entire league's individual batting or
             pitching statistics.
-        stats_dir (str): The directory that holds all year stats and player
-            URL files.
+        stats_dir (str): The directory that holds all year stats and player URL
+            files.
         year_dir (str): The directory to store relevant year statistics.
-        suffix (str): Indicates the type of statistics (e.g., "BR" for regular
-            season batting, "PR" for regular season pitching).
+        suffix (str): Indicates the type of statistics (e.g., "BR" for regular season
+            batting, "PR" for regular season pitching).
         year (str): The year that the statistics cover.
 
     Methods:
         output_final():
             Outputs the final organized statistics to CSV files for upload.
         format_player_pitch():
-            Applies number formatting, removes temporary columns, reorders
-            columns, and applies manual revisions to pitching stats.
+            Applies number formatting, removes temporary columns, reorders columns,
+            and applies manual revisions to pitching stats.
         format_player_bat():
-            Applies number formatting, rescales percentages, reorders columns,
-            and applies manual revisions to batting stats.
+            Applies number formatting, rescales percentages, reorders columns, and
+            applies manual revisions to batting stats.
         org_post_pitch():
-            Preprocesses raw post season pitching stat csv for
-            org_player_pitch().
+            Preprocesses raw post season pitching stat csv for org_player_pitch().
         org_post_player_bat():
-            Preprocesses raw post season batting stat csv for
-            org_player_bat().
+            Preprocesses raw post season batting stat csv for org_player_bat().
         fix_raw_pitch_col():
             Homogenizes IP and ERA columns in pitching stats for calculations.
         get_team_games():
             Combines team games played into a single DataFrame for IP/PA
-            calculations.
-        append_farm_positions(field_df, pitch_df):
-            Adds the primary position of a farm player to the player DataFrame."""
+            calculations. append_farm_positions(field_df, pitch_df): Adds the primary
+            position of a farm player to the player DataFrame."""
 
     def __init__(self, stats_dir, year_dir, suffix, year):
         super().__init__(stats_dir, year_dir, suffix, year)
@@ -991,8 +992,8 @@ class PlayerData(Stats):
             self.org_post_pitch()
 
     def output_final(self):
-        """Outputs final files for upload using the filtered and organized
-        stat dataframes (NOTE: IP and PA drop constants are determined in this
+        """Outputs final files for upload using the filtered and organized stat
+        dataframes (NOTE: IP and PA drop constants are determined in this
         function)"""
         # Make dir that will store alt views of the dataframes
         alt_dir = os.path.join(self.year_dir, "alt")
@@ -1018,9 +1019,11 @@ class PlayerData(Stats):
         # Calculate leaders for Streamlit
         leader_df = self.determine_qualifiers()
 
-        # Store normal + leader df without HTML, rounding, rank col, etc and with more gsheet stats for Streamlit
+        # Store normal + leader df without some formatting and with more gsheet stats
+        # for Streamlit
         streamlit_df = self.df.copy()
-        # Apply some functions to Streamlit df without going into format_player_x() functions (which rounds stats)
+        # Apply functions to Streamlit df without format_player_x() functions
+        # (which rounds stats)
         streamlit_df = add_roster_data(streamlit_df, self.suffix, self.year)
         streamlit_df = revise_stats(streamlit_df, os.path.dirname(__file__), self.year)
         streamlit_dir = os.path.join(self.year_dir, "streamlit_src")
@@ -1049,7 +1052,8 @@ class PlayerData(Stats):
         self.df["#"] = ""
         move_col = self.df.pop("#")
         self.df.insert(0, "#", move_col)
-        # Make deep copy of original df to avoid HTML in df's team/player names for determine_qualifiers()
+        # Make deep copy to avoid HTML in df's team/player names for
+        # determine_qualifiers()
         final_df = self.df.copy()
         # Convert player/team names to HTML that contains appropriate URLs
         if int(self.year) == datetime.now().year:
@@ -1059,7 +1063,8 @@ class PlayerData(Stats):
         final_filename = self.year + "StatsFinal" + self.suffix + ".csv"
         final_filename = store_dataframe(final_df, upload_dir, final_filename, "csv")
 
-        # Calculate leaders again after Tablepress formatting and extra cols were applied
+        # Calculate leaders again after Tablepress formatting and extra cols were
+        # applied
         leader_df = self.determine_qualifiers()
 
         # Leader file output
@@ -1076,8 +1081,8 @@ class PlayerData(Stats):
 
             print("The pitching leaders file will be stored in: " + leader_filename)
             print(
-                "An alternative view of the pitching results will be stored "
-                "in: " + alt_filename
+                "An alternative view of the pitching results will be stored in: "
+                + alt_filename
             )
             print(
                 "The final organized pitching results will be stored in: "
@@ -1098,8 +1103,8 @@ class PlayerData(Stats):
 
             print("The batting leaders file will be stored in: " + leader_filename)
             print(
-                "An alternative view of the batting results will be stored "
-                "in: " + alt_filename
+                "An alternative view of the batting results will be stored in: "
+                + alt_filename
             )
             print(
                 "The final organized batting results will be stored in: "
@@ -1132,20 +1137,22 @@ class PlayerData(Stats):
                 )
 
     def determine_qualifiers(self):
-        """Filters player statistics to only qualify leaders based on playing time thresholds.
+        """Filters player statistics to only qualify leaders based on playing time
+        thresholds.
 
         Creates a copy of the main dataframe and filters out players who do not
         meet the minimum playing time required to qualify as a statistical leader.
         Thresholds are based on team games played:
         - Pitchers (PR/PF): Must exceed team games played (Farm uses 0.8x).
-        - Batters (BR/BF): Must exceed 2.7x (Farm) or 3.1x (NPB) team games played (PA rounded down).
-        Post-season suffixes (BP/PP) skip qualification filtering.
+        - Batters (BR/BF): Must exceed 2.7x (Farm) or 3.1x (NPB) team games played
+        (PA rounded down). Post-season suffixes (BP/PP) skip qualification
+        filtering.
 
         Returns:
             pandas.DataFrame: Filtered dataframe containing only qualified players.
         """
         leader_df = self.df.copy()
-        # Get df with number of games played by each team for IP/PA drop consts (Post season stats = skip PA/IP drop)
+        # Get df with number of games played by each team for IP/PA drop consts
         if self.suffix not in ("BP", "PP"):
             game_df = self.get_team_games()
             # Add new column (called 'GTeam') for team's games played
@@ -1529,7 +1536,8 @@ class PlayerData(Stats):
         self.df = revise_stats(self.df, os.path.dirname(__file__), self.year)
 
     def org_post_pitch(self):
-        """Preprocesses the raw post season's pitching stat csv for org_player_pitch()"""
+        """Preprocesses the raw post season's pitching stat csv for
+        org_player_pitch()"""
         # Combine duplicate player entries
         agg_functions = {
             "Pitcher": "first",
@@ -1610,19 +1618,19 @@ class PlayerData(Stats):
         self.org_player_bat(self.suffix, self.year)
 
     def get_team_games(self):
-        """Combines Central and Pacific (NPB) or Eastern and Western (farm)
-        team games played into a single dataframe
+        """Combines Central and Pacific (NPB) or Eastern and Western (farm) team games
+        played into a single dataframe
 
         Returns:
-        ip_pa_df (pandas dataframe): A dataframe with 2 columns: team name and
-        # of games that team has played"""
+            ip_pa_df (pandas dataframe): A dataframe with 2 columns: team name and
+                # of games that team has played"""
         # Make new raw const file in write mode (made in writeStandingsStats())
         const_dir = os.path.join(self.year_dir, "drop_const")
         if not os.path.exists(const_dir):
             os.mkdir(const_dir)
 
-        # Read in the correct raw const files for reg season or farm
-        # Regular season team,game files
+        # Read in the correct raw const files for reg season or farm Regular season
+        # team,game files
         # TODO: refactor the mess below
         # TODO: rename past year standings files
         ip_pa_df = pd.DataFrame()
@@ -1658,9 +1666,9 @@ class PlayerData(Stats):
         """Adds the primary position of a farm player to the player dataframe
 
         Parameters:
-        field_df (pandas dataframe): Holds an entire NPB league's fielding stats
-        pitch_df (pandas dataframe): Holds an entire NPB league's individual
-        pitching stats"""
+            field_df (pandas dataframe): Holds an entire NPB league's fielding stats
+            pitch_df (pandas dataframe): Holds an entire NPB league's individual
+                pitching stats"""
         # Farm uses inputted fielding and pitching dfs for now
         if self.suffix == "BF" and field_df is not None and pitch_df is not None:
             # Create a temp df with players as rows and all pos they play as cols
@@ -1697,8 +1705,8 @@ class PlayerData(Stats):
             self.df = pd.merge(
                 self.df, temp_primary_df, on=["Player", "Team"], how="left"
             )
-            # NaN means player wasn't on fielding df and pitching df (N/A data) OR
-            # was a pinch hitter
+            # NaN means player wasn't on fielding df and pitching df (N/A data) OR was a
+            # pinch hitter
             self.df["Pos"] = self.df["Pos"].fillna("")
 
 
@@ -1707,17 +1715,17 @@ class TeamData(Stats):
 
     This class extends the `Stats` class and is responsible for organizing,
     processing, and outputting team statistics for batting and pitching. It
-    aggregates individual player statistics to calculate team-level metrics
-    and formats the data for final output.
+    aggregates individual player statistics to calculate team-level metrics and
+    formats the data for final output.
 
     Attributes:
-        player_df (pandas.DataFrame): Holds an entire league's individual
-            batting or pitching statistics used to calculate team stats.
-        stats_dir (str): The directory that holds all year stats and player
-            URL files.
+        player_df (pandas.DataFrame): Holds an entire league's individual batting or
+            pitching statistics used to calculate team stats.
+        stats_dir (str): The directory that holds all year stats and player URL
+            files.
         year_dir (str): The directory to store relevant year statistics.
-        suffix (str): Indicates the type of statistics (e.g., "BR" for regular
-            season batting, "PR" for regular season pitching).
+        suffix (str): Indicates the type of statistics (e.g., "BR" for regular season
+            batting, "PR" for regular season pitching).
         year (str): The year that the statistics cover.
         df (pandas.DataFrame): Holds the aggregated team statistics.
 
@@ -1725,8 +1733,8 @@ class TeamData(Stats):
         output_final():
             Outputs the final organized team statistics to CSV files for upload.
         org_team_bat():
-            Aggregates individual player batting statistics to calculate team
-            batting metrics.
+            Aggregates individual player batting statistics to calculate team batting
+            metrics.
         org_team_pitch():
             Aggregates individual player pitching statistics to calculate team
             pitching metrics."""
@@ -1734,21 +1742,19 @@ class TeamData(Stats):
     def __init__(self, player_df, stats_dir, year_dir, suffix, year):
         """Initializes team statistics from individual player data.
 
-        Calls the parent Stats initializer, stores a copy of the player
-        dataframe, initializes a Google Sheets flag and column order array,
-        and delegates to org_team_bat() or org_team_pitch() depending on
-        the suffix.
+        Calls the parent Stats initializer, stores a copy of the player dataframe,
+        initializes a Google Sheets flag and column order array, and delegates to
+        org_team_bat() or org_team_pitch() depending on the suffix.
 
         Args:
-            player_df (pandas.DataFrame): Individual batting or pitching
-                stats for the league/season.
-            stats_dir (str): Directory that holds all year stats and player
-                URL files.
+            player_df (pandas.DataFrame): Individual batting or pitching stats for
+                the league/season.
+            stats_dir (str): Directory that holds all year stats and player URL
+                files.
             year_dir (str): Directory to store relevant year statistics.
-            suffix (str): Indicates the type of statistics (e.g., "BR" for
-                regular season batting, "PR" for regular season pitching).
-            year (str): The year that the statistics cover.
-        """
+            suffix (str): Indicates the type of statistics (e.g., "BR" for regular
+                season batting, "PR" for regular season pitching).
+            year (str): The year that the statistics cover."""
         super().__init__(stats_dir, year_dir, suffix, year)
         self.player_df = player_df.copy()
         self.gsheet_added = False
@@ -1854,27 +1860,26 @@ class TeamData(Stats):
         # Pitching TeamAlt and Team file location outputs
         if self.suffix in ("PR", "PF"):
             print(
-                "The final organized team pitching results will be stored "
-                "in: " + final_filename
+                "The final organized team pitching results will be stored in: "
+                + final_filename
             )
             print(
-                "An alternative view of team pitching results will be stored"
-                "in: " + alt_filename
+                "An alternative view of team pitching results will be storedin: "
+                + alt_filename
             )
 
         elif self.suffix in ("BR", "BF"):
             print(
-                "The final organized team batting results will be stored "
-                "in: " + final_filename
+                "The final organized team batting results will be stored in: "
+                + final_filename
             )
             print(
-                "An alternative view of team batting results will be stored "
-                "in: " + alt_filename
+                "An alternative view of team batting results will be stored in: "
+                + alt_filename
             )
 
     def org_team_bat(self):
-        """Outputs batting team stat files using the organized player stat
-        dataframes"""
+        """Outputs batting team stat files using the organized player stat dataframes"""
         # Initialize list to hold team stats
         team_bat_list = []
         # Form team stat rows
@@ -2014,7 +2019,8 @@ class TeamData(Stats):
             gsheet_df["Team"] = gsheet_df["Team"].map(team_dict)
             gsheet_df = gsheet_df.rename(columns={"Pull AIR%": "PullAIR%"})
 
-            # Grab new, non percentile, non error columns that we don't calculate from gsheet to merge
+            # Grab new, non percentile, non error cols that we don't calculate
+            # from gsheet to merge
             bad_gsheet_cols = ["Unnamed", "pctl", "null", "batId", "qualified", "K-BB%"]
             new_gsheet_cols = []
             for col in gsheet_df.columns.to_list():
@@ -2172,7 +2178,8 @@ class TeamData(Stats):
             }
             gsheet_df["Team"] = gsheet_df["Team"].map(team_dict)
 
-            # Grab new, non percentile, non error columns that we don't calculate from gsheet to merge
+            # Grab new, non percentile, non error cols that we don't calculate
+            # from gsheet to merge
             bad_gsheet_cols = ["Unnamed", "pctl", "null", "pitId", "qualified", "K-BB%"]
             new_gsheet_cols = []
             for col in gsheet_df.columns.to_list():
@@ -2236,11 +2243,11 @@ class TeamData(Stats):
     def format_team_bat(self):
         """Formats team batting statistics for final output.
 
-        Removes the temporary Park Factor column, rescales percentage
-        statistics from Google Sheets data, applies number formatting to all
-        statistics (e.g., AVG to 3 decimals), reorders columns to a standard
-        layout based on whether Google Sheets stats were added, and applies
-        manual revisions from the revisions CSV file."""
+        Removes the temporary Park Factor column, rescales percentage statistics from
+        Google Sheets data, applies number formatting to all statistics
+        (e.g., AVG to 3 decimals), reorders columns to a standard layout based on
+        whether Google Sheets stats were added, and applies manual revisions from the
+        revisions CSV file."""
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
         self.rescale_pct_stats("tablepress")
@@ -2328,11 +2335,11 @@ class TeamData(Stats):
     def format_team_pitch(self):
         """Formats team pitching statistics for final output.
 
-        Removes the temporary Park Factor column, rescales percentage
-        statistics from Google Sheets data, applies number formatting to all
-        statistics (e.g., ERA to 2 decimals), reorders columns to a standard
-        layout based on whether Google Sheets stats were added, and applies
-        manual revisions from the revisions CSV file."""
+        Removes the temporary Park Factor column, rescales percentage statistics from
+        Google Sheets data, applies number formatting to all statistics
+        (e.g., ERA to 2 decimals), reorders columns to a standard layout based on
+        whether Google Sheets stats were added, and applies manual revisions from the
+        revisions CSV file."""
         # Remove temp Park Factor column
         self.df.drop("ParkF", axis=1, inplace=True)
         self.rescale_pct_stats("tablepress")
@@ -2430,28 +2437,26 @@ class StandingsData(Stats):
     """A class to handle league standings data for NPB and Farm League.
 
     This class extends the `Stats` class and is responsible for organizing,
-    processing, and outputting league standings data. It also prepares data
-    for calculating player qualification thresholds (e.g., IP/PA drop
-    constants) and integrates team-level statistics.
+    processing, and outputting league standings data. It also prepares data for
+    calculating player qualification thresholds (e.g., IP/PA drop constants) and
+    integrates team-level statistics.
 
     Attributes:
         df (pandas.DataFrame): Holds the league standings data.
-        const_df (pandas.DataFrame): A two-column DataFrame containing team
-            names and the number of games they have played.
+        const_df (pandas.DataFrame): A two-column DataFrame containing team names and
+            the number of games they have played.
 
     Methods:
-        output_final(tb_df, tp_df):
-            Outputs the final organized standings data to CSV files for upload.
-        org_standings(tb_df, tp_df):
-            Organizes the standings data and calculates additional metrics
-            such as runs scored (RS), runs allowed (RA), run differential
-            (Diff), and expected winning percentage (XPCT)."""
+        output_final(tb_df, tp_df): Outputs the final organized standings data to CSV
+            files for upload. org_standings(tb_df, tp_df): Organizes the standings data
+            and calculates additional metrics such as runs scored (RS), runs allowed
+            (RA), run differential (Diff), and expected winning percentage (XPCT)."""
 
     def __init__(self, stats_dir, year_dir, suffix, year):
         """StandingsData new variables:
         df (pandas dataframe): Holds a league's standings stats
         const_df (pandas dataframe): 2 column df with team names and the games
-        they've played"""
+            they've played"""
         super().__init__(stats_dir, year_dir, suffix, year)
         # Initialize dataframe and year dir to store stats
         self.df = pd.read_csv(
@@ -2581,8 +2586,10 @@ class StandingsData(Stats):
         }
 
         print(
-            "The final " + std_dict[self.suffix] + " standings will be stored"
-            " in: " + final_filename
+            "The final "
+            + std_dict[self.suffix]
+            + " standings will be stored in: "
+            + final_filename
         )
         print(
             "An alternative view of the "
@@ -2592,8 +2599,8 @@ class StandingsData(Stats):
         )
 
     def org_standings(self, tb_df, tp_df):
-        """Organize the standings stat csv and adds new stats (RS, RA, and
-        XPCT) that incorporate team data
+        """Organize the standings stat csv and adds new stats (RS, RA, and XPCT) that
+        incorporate team data
 
         Parameters:
         tb_df (pandas dataframe): An organized NPB team batting stat dataframe
@@ -2645,24 +2652,21 @@ class StandingsData(Stats):
 
 
 class FieldingData(Stats):
-    """A class to handle individual fielding statistics for NPB and Farm
-    League.
+    """A class to handle individual fielding statistics for NPB and Farm League.
 
     This class extends the `Stats` class and is responsible for organizing,
-    processing, and outputting individual fielding statistics. It reads raw
-    CSV files, calculates additional metrics, and formats the data for final
-    output.
+    processing, and outputting individual fielding statistics. It reads raw CSV
+    files, calculates additional metrics, and formats the data for final output.
 
     Attributes:
         df (pandas.DataFrame): Holds the individual fielding statistics.
 
     Methods:
         output_final():
-            Outputs the final organized fielding statistics to CSV files for
-            upload.
+            Outputs the final organized fielding statistics to CSV files for upload.
         org_fielding():
-            Organizes raw fielding statistics and calculates additional metrics
-            such as Total Zone Rating (TZR) and TZR per 143 games (TZR/143)."""
+            Organizes raw fielding statistics and calculates additional metrics such
+            as Total Zone Rating (TZR) and TZR per 143 games (TZR/143)."""
 
     def __init__(self, stats_dir, year_dir, suffix, year):
         """FieldingData new variables:
@@ -2730,21 +2734,21 @@ class FieldingData(Stats):
 
         if self.suffix == "R":
             print(
-                "An alternative view of the regular season individual fielding"
-                " results will be stored in: " + alt_filename
+                "An alternative view of the regular season individual fielding results "
+                f"will be stored in: {alt_filename}"
             )
             print(
-                "The final organized regular season individual fielding "
-                "results will be stored in: " + final_filename
+                "The final organized regular season individual fielding results will "
+                f"be stored in: {final_filename}"
             )
         elif self.suffix == "F":
             print(
-                "An alternative view of the farm individual fielding results "
-                "will be stored in: " + alt_filename
+                "An alternative view of the farm individual fielding results will be "
+                f"stored in: {alt_filename}"
             )
             print(
-                "The final organized farm individual fielding results will be "
-                "stored in: " + final_filename
+                "The final organized farm individual fielding results will be stored "
+                f"in: {final_filename}"
             )
 
     def org_fielding(self):
@@ -2854,9 +2858,10 @@ class FieldingData(Stats):
         """Adds the primary position of a player to the roster data file
 
         Parameters:
-        bat_df (pandas dataframe): Holds an entire NPB league's individual batting stats
-        pitch_df (pandas dataframe): Holds an entire NPB league's individual
-        pitching stats"""
+            bat_df (pandas dataframe): Holds an entire NPB league's individual
+                batting stats
+            pitch_df (pandas dataframe): Holds an entire NPB league's individual
+                pitching stats"""
         temp_bat_df = bat_df.copy(deep=True)
         # Create a temp df with players as rows and all pos they play as cols
         pivot_df = self.df.pivot_table(
@@ -2892,7 +2897,8 @@ class FieldingData(Stats):
         temp_bat_df = pd.merge(
             temp_bat_df, temp_primary_df, on=["Player", "Team"], how="left"
         )
-        # NaN means player wasn't on fielding df/pitching df (N/A data) OR is a pinch hitter
+        # NaN means player wasn't on fielding df/pitching df (N/A data) OR is a pinch
+        # hitter
         temp_bat_df["Pos"] = temp_bat_df["Pos"].fillna("")
 
         # Save positions to roster data
@@ -2914,23 +2920,21 @@ class TeamFieldingData(Stats):
     """A class to handle team fielding statistics for NPB and Farm League.
 
     This class extends the `Stats` class and is responsible for organizing,
-    processing, and outputting team fielding statistics. It aggregates
-    individual player fielding statistics to calculate team-level metrics
-    and formats the data for final output.
+    processing, and outputting team fielding statistics. It aggregates individual
+    player fielding statistics to calculate team-level metrics and formats the data
+    for final output.
 
     Attributes:
-        fielding_df (pandas.DataFrame): Holds the individual fielding
-        statistics.
+        fielding_df (pandas.DataFrame): Holds the individual fielding statistics.
         df (pandas.DataFrame): Holds the aggregated team fielding statistics.
 
     Methods:
         output_final():
-            Outputs the final organized team fielding statistics to CSV files
-            for upload.
+            Outputs the final organized team fielding statistics to CSV files for
+            upload.
         org_team_fielding():
-            Aggregates individual fielding statistics to calculate team-level
-            metrics such as Total Zone Rating (TZR) and TZR per 143 games
-            (TZR/143)."""
+            Aggregates individual fielding statistics to calculate team-level metrics
+            such as Total Zone Rating (TZR) and TZR per 143 games (TZR/143)."""
 
     def __init__(self, fielding_df, stats_dir, year_dir, suffix, year):
         """TeamFieldingData new variables:
@@ -2977,26 +2981,25 @@ class TeamFieldingData(Stats):
 
         if self.suffix == "R":
             print(
-                "An alternative view of the regular season team fielding "
-                "results will be stored in: " + alt_filename
+                "An alternative view of the regular season team fielding results will "
+                f"be stored in: {alt_filename}"
             )
             print(
-                "The final organized regular season team fielding results "
-                "will be stored in: " + final_filename
+                "The final organized regular season team fielding results will be "
+                f"stored in: {final_filename}"
             )
         elif self.suffix == "F":
             print(
-                "An alternative view of the farm team fielding results will "
-                "be stored in: " + alt_filename
+                "An alternative view of the farm team fielding results will be stored "
+                f"in: {alt_filename}"
             )
             print(
-                "The final organized farm team fielding results will be stored"
-                " in: " + final_filename
+                "The final organized farm team fielding results will be stored in: "
+                f"{final_filename}"
             )
 
     def org_team_fielding(self):
-        """Organize the team fielding stat csv using the individual fielding
-        stats"""
+        """Organize the team fielding stat csv using the individual fielding stats"""
         # Convert cols that are numeric to float
         cols = self.fielding_df.columns.drop(["Team", "League"])
         self.fielding_df[cols] = self.fielding_df[cols].apply(
@@ -3075,31 +3078,29 @@ class TeamSummaryData(Stats):
     """A class to handle team summary statistics for NPB and Farm League.
 
     This class extends the `Stats` class and is responsible for aggregating,
-    organizing, and outputting team summary statistics. It combines data from
-    team fielding, standings, batting, and pitching statistics to provide a
-    comprehensive summary of team performance.
+    organizing, and outputting team summary statistics. It combines data from team
+    fielding, standings, batting, and pitching statistics to provide a comprehensive
+    summary of team performance.
 
     Attributes:
-        team_fielding_df (pandas.DataFrame): Holds the team fielding
-        statistics.
-        standings_df (pandas.DataFrame): Holds the combined league standings
-            data from two halves (e.g., Central and Pacific leagues).
+        team_fielding_df (pandas.DataFrame): Holds the team fielding statistics.
+        standings_df (pandas.DataFrame): Holds the combined league standings data
+            from two halves (e.g., Central and Pacific leagues).
         team_bat_df (pandas.DataFrame): Holds the team batting statistics.
         team_pitch_df (pandas.DataFrame): Holds the team pitching statistics.
         df (pandas.DataFrame): Holds the aggregated team summary statistics.
 
     Methods:
         output_final():
-            Outputs the final organized team summary statistics to CSV files
-            for upload.
+            Outputs the final organized team summary statistics to CSV files for
+            upload.
         org_team_summary():
             Aggregates and organizes team statistics from fielding, standings,
-            batting, and pitching data to calculate metrics such as win-loss
-            records, run differentials, and advanced metrics like OPS+ and
-            ERA+.
+            batting, and pitching data to calculate metrics such as win-loss records,
+            run differentials, and advanced metrics like OPS+ and ERA+.
         format_team_summary():
-            Rescales percentage statistics, reorders columns to a standard
-            layout, and applies number formatting for final output."""
+            Rescales percentage statistics, reorders columns to a standard layout,
+            and applies number formatting for final output."""
 
     def __init__(
         self,
@@ -3116,8 +3117,7 @@ class TeamSummaryData(Stats):
         """TeamSummaryData new variables:
         team_fielding_df (pandas dataframe): Holds the team fielding stats df
         standings_df1 (pandas dataframe): Holds the first half of the standings
-        standings_df2 (pandas dataframe): Holds the second half of the
-        standings
+        standings_df2 (pandas dataframe): Holds the second half of the standings
         team_bat_df (pandas dataframe): Holds the team batting stats df
         team_pitch_df (pandas dataframe): Holds the team pitching stats df
         df (pandas dataframe): Holds a team's summarized stats"""
@@ -3144,7 +3144,7 @@ class TeamSummaryData(Stats):
 
         # Store df without HTML, rounding, rank col for Streamlit
         streamlit_df = self.df.copy()
-        # Apply revisions to Streamlit df without going into format__team_summary() (which rounds stats)
+        # Apply revisions to Streamlit df without rounding from format_team_summary()
         streamlit_df = revise_stats(streamlit_df, os.path.dirname(__file__), self.year)
         streamlit_dir = os.path.join(self.year_dir, "streamlit_src")
         streamlit_filename = self.year + "TeamSummaryFinal" + self.suffix + ".csv"
@@ -3173,21 +3173,21 @@ class TeamSummaryData(Stats):
 
         if self.suffix == "R":
             print(
-                "An alternative view of the regular season team summary "
-                "results will be stored in: " + alt_filename
+                "An alternative view of the regular season team summary results will "
+                f"be stored in: {alt_filename}"
             )
             print(
-                "The final organized regular season team summary results will "
-                "be stored in: " + final_filename
+                "The final organized regular season team summary results will be "
+                f"stored in: {final_filename}"
             )
         elif self.suffix == "F":
             print(
-                "An alternative view of the farm team summary results will "
-                "be stored in: " + alt_filename
+                "An alternative view of the farm team summary results will be stored "
+                f"in: {alt_filename}"
             )
             print(
                 "The final organized farm team summary results will be stored "
-                "in: " + final_filename
+                f"in: {final_filename}"
             )
 
     def org_team_summary(self):
@@ -3225,8 +3225,8 @@ class TeamSummaryData(Stats):
 
         Performs the following operations on the team summary dataframe:
         1. Rescales percentage statistics from Google Sheets data.
-        2. Reorders columns to a standard layout including Team, W, L, PCT,
-           Diff, HR, SB, OPS+, ERA+, FIP-, K-BB%, and TZR.
+        2. Reorders columns to a standard layout including Team, W, L, PCT, Diff,
+           HR, SB, OPS+, ERA+, FIP-, K-BB%, and TZR.
         3. Applies number formatting to all statistics (e.g., PCT to 3 decimals,
            K-BB% to 1 decimal percentage, OPS+ and ERA+ to whole numbers)."""
         # Column reordering
@@ -3269,19 +3269,18 @@ class DailyScoresData(Stats):
     """A class to handle daily game scores for NPB and Farm League.
 
     This class extends the `Stats` class and is responsible for organizing,
-    processing, and outputting daily game scores. It reads raw CSV files,
-    formats the data, and prepares it for final output.
+    processing, and outputting daily game scores. It reads raw CSV files, formats the
+    data, and prepares it for final output.
 
     Attributes:
         df (pandas.DataFrame): Holds the daily game scores.
 
     Methods:
         output_final():
-            Outputs the final organized daily game scores to CSV files for
-            upload.
+            Outputs the final organized daily game scores to CSV files for upload.
         org_daily_scores():
-            Organizes raw daily game scores, converts team abbreviations to
-            full names, and formats the data for presentation."""
+            Organizes raw daily game scores, converts team abbreviations to full
+            names, and formats the data for presentation."""
 
     def __init__(self, stats_dir, year_dir, suffix, year):
         """DailyScores new variables:
@@ -3333,10 +3332,10 @@ class DailyScoresData(Stats):
 
         print(
             "An alternative view of the daily game scores will be stored "
-            "in: " + alt_filename
+            f"in: {alt_filename}"
         )
         print(
-            "The final organized daily game scores will be stored in: " + final_filename
+            f"The final organized daily game scores will be stored in: {final_filename}"
         )
 
     def org_daily_scores(self):
@@ -3382,20 +3381,21 @@ class CareerData(Stats):
     """A class to handle organizing cumulative career statistics and biographical data.
 
     This class extends the `Stats` class and is responsible for organizing,
-    processing, and outputting career batting, pitching, and biographical data
-    across all years. It reads raw CSV files, translates Japanese text, formats
-    the data, and prepares it for final output.
+    processing, and outputting career batting, pitching, and biographical data across
+    all years. It reads raw CSV files, translates Japanese text, formats the data,
+    and prepares it for final output.
 
     Attributes:
         df (pandas.DataFrame): Holds the career statistics or biographical data.
-        suffix (str): Type of data - "bio" (biographical), "B" (batting), or "P" (pitching).
+        suffix (str): Type of data - "bio" (biographical), "B" (batting), or "P"
+            (pitching).
         year (str): The year being processed.
 
     Methods:
         org_career_bio():
-            Organizes biographical data - translates columns, converts Japanese
-            text (birthdate, draft info, position, handedness), converts metric
-            to imperial units, and splits data into separate columns.
+            Organizes biographical data - translates columns, converts Japanese text
+            (birthdate, draft info, position, handedness), converts metric to
+            imperial units, and splits data into separate columns.
         org_career_bat():
             Organizes career batting statistics - calculates OPS+ and aggregates
             multiple years of data.
@@ -3410,8 +3410,10 @@ class CareerData(Stats):
 
         Args:
             stats_dir (str): The directory containing all yearly stats folders.
-            year_dir (str): The directory for the specific year's stats (e.g., "2024").
-            suffix (str): Type of career data - "bio" (biographical), "B" (batting), or "P" (pitching).
+            year_dir (str): The directory for the specific year's stats (e.g.,
+                "2024").
+            suffix (str): Career data type - "bio" (biographical), "B" (batting), or
+                "P" (pitching).
             year (str): The year being processed.
 
         Loads the raw CSV file based on the suffix and calls the appropriate
@@ -3446,12 +3448,14 @@ class CareerData(Stats):
         2. Renames columns from Japanese to English (Pos, T/B, Height/Weight, etc.).
         3. Translates player names from Japanese to English.
         4. Sorts players with untranslated names to the top for easy identification.
-        5. Converts birthdate from Japanese format (年月日) to ISO format (YYYY/MM/DD).
+        5. Converts birthdate from Japanese format (年月日) to ISO format
+           (YYYY/MM/DD).
         6. Translates draft information (draft type, round, high school, etc.).
         7. Translates positions (Infielder, Pitcher, Outfielder, Catcher).
         8. Translates handedness (投打) to T/B columns (R/L/S).
         9. Converts metric height/weight to imperial (feet/inches and pounds).
-        10. Splits combined columns into separate ones (Height/Weight -> Height, Weight).
+        10. Splits combined columns into separate ones (Height/Weight -> Height,
+            Weight).
         11. Reorders columns to a standard layout."""
         self.df = self.df.drop(["経歴"], axis=1)
         self.df.rename(columns={"Unnamed: 0": "Link"}, inplace=True)
@@ -3578,9 +3582,11 @@ class CareerData(Stats):
         """Organizes career batting statistics from raw career bat CSV.
 
         Performs the following transformations:
-        1. Renames columns from Japanese to English (Year, Team, PA, AB, H, HR, etc.).
+        1. Renames columns from Japanese to English (Year, Team, PA, AB, H, HR,
+           etc.).
         2. Translates player and team names from Japanese to English.
-        3. Processes each year separately to calculate year-specific stats (AVG, OBP, SLG, OPS+).
+        3. Processes each year separately to calculate year-specific stats (AVG,
+           OBP, SLG, OPS+).
         4. Adds position data from fielding for each player.
         5. Combines all years back into a single DataFrame.
         6. Outputs the processed career batting data to a Streamlit CSV file."""
@@ -3613,8 +3619,10 @@ class CareerData(Stats):
             },
             inplace=True,
         )
-        # TODO: fix so stats dont get "broken" (2016 and above are translated, 2016 and below stay jp) (likely need to make a master file)
-        # TODO: make a function to combine all roster_data.csvs? or make a mode parameter/look at suffix in translate_players()
+        # TODO: fix so stats dont get "broken" (2016 and above are translated,
+        # 2016 and below stay jp) (likely need to make a master file)
+        # TODO: make a function to combine all roster_data.csvs? or make a mode
+        # parameter/look at suffix in translate_players()
         self.df = translate_players(self.df, self.suffix, self.year, mode="career")
         self.df = translate_teams(self.df, self.suffix)
 
@@ -3660,11 +3668,13 @@ class CareerData(Stats):
         """Organizes career pitching statistics from raw career pitch CSV.
 
         Performs the following transformations:
-        1. Renames columns from Japanese to English (Year, Team, W, L, SV, IP, H, HR, etc.).
+        1. Renames columns from Japanese to English (Year, Team, W, L, SV, IP, H, HR,
+           etc.).
         2. Fixes the split IP columns and ERA values for calculations.
         3. Drops unnecessary columns (HP, 無四球).
         4. Translates player and team names from Japanese to English.
-        5. Processes each year separately to calculate year-specific stats (ERA, FIP, WHIP, ERA+).
+        5. Processes each year separately to calculate year-specific stats (ERA,
+           FIP, WHIP, ERA+).
         6. Combines all years back into a single DataFrame.
         7. Outputs the processed career pitching data to a Streamlit CSV file."""
         # Translate column names, players, and teams
@@ -3744,11 +3754,11 @@ class CareerData(Stats):
         Args:
             year (str): The year to retrieve position data from.
 
-        Reads the yearly batting stats file for the given year, extracts the
-        Player and Team columns, normalizes team names by removing HTML links,
-        and merges position data back into the career dataframe using a left
-        join on Player and Team. Prints debugging information about the number
-        of matching player-team combinations found."""
+        Reads the yearly batting stats file for the given year, extracts the Player
+        and Team columns, normalizes team names by removing HTML links, and
+        merges position data back into the career dataframe using a left join
+        on Player and Team. Prints debugging information about the number of
+                matching player-team combinations found."""
         batting_df_filename = os.path.join(
             self.stats_dir, year, "npb", (year + "StatsFinalBR.csv")
         )
@@ -3756,20 +3766,34 @@ class CareerData(Stats):
             batting_df = pd.read_csv(batting_df_filename)
 
             # Remove Tablepress link formatting and extend name for teams
+            # fmt: off
             team_dict = {
-                "<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>": "Yomiuri Giants",
-                "<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>": "Chunichi Dragons",
-                "<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>": "Hanshin Tigers",
-                "<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>": "Hiroshima Carp",
-                "<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>": "DeNA BayStars",
-                "<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>": "Yakult Swallows",
-                "<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>": "SoftBank Hawks",
-                "<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>": "Seibu Lions",
-                "<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>": "Rakuten Eagles",
-                "<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>": "Lotte Marines",
-                "<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>": "Nipponham Fighters",
-                "<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>": "ORIX Buffaloes",
+                "<a href=https://npb.jp/bis/eng/teams/index_g.html>Yomiuri</a>":
+                    "Yomiuri Giants",
+                "<a href=https://npb.jp/bis/eng/teams/index_d.html>Chunichi</a>":
+                    "Chunichi Dragons",
+                "<a href=https://npb.jp/bis/eng/teams/index_t.html>Hanshin</a>":
+                    "Hanshin Tigers",
+                "<a href=https://npb.jp/bis/eng/teams/index_c.html>Hiroshima</a>":
+                    "Hiroshima Carp",
+                "<a href=https://npb.jp/bis/eng/teams/index_db.html>DeNA</a>":
+                    "DeNA BayStars",
+                "<a href=https://npb.jp/bis/eng/teams/index_s.html>Yakult</a>":
+                    "Yakult Swallows",
+                "<a href=https://npb.jp/bis/eng/teams/index_h.html>SoftBank</a>":
+                    "SoftBank Hawks",
+                "<a href=https://npb.jp/bis/eng/teams/index_l.html>Seibu</a>":
+                    "Seibu Lions",
+                "<a href=https://npb.jp/bis/eng/teams/index_e.html>Rakuten</a>":
+                    "Rakuten Eagles",
+                "<a href=https://npb.jp/bis/eng/teams/index_m.html>Lotte</a>":
+                    "Lotte Marines",
+                "<a href=https://npb.jp/bis/eng/teams/index_f.html>Nipponham</a>":
+                    "Nipponham Fighters",
+                "<a href=https://npb.jp/bis/eng/teams/index_b.html>ORIX</a>":
+                    "ORIX Buffaloes",
             }
+            # fmt: on
             batting_df["Team"] = (
                 batting_df["Team"]
                 .map(team_dict)
@@ -3778,8 +3802,8 @@ class CareerData(Stats):
                 .astype(str)
             )
 
-            # Strip whitespace from Player and Team columns in both dataframes
-            # to ensure proper matching
+            # Strip whitespace from Player and Team columns in both dataframes to ensure
+            # proper matching
             batting_df["Player"] = batting_df["Player"].astype(str).str.strip()
             batting_df["Team"] = batting_df["Team"].astype(str).str.strip()
             self.df["Player"] = self.df["Player"].astype(str).str.strip()
@@ -3918,20 +3942,21 @@ def get_daily_scores(year_dir, suffix, year):
 
 
 def get_stats(input_dir, year_dir, suffix, year):
-    """The main stat scraping function that produces Raw stat files.
-    Saving Raw stat files allows for scraping and stat organization to be
-    independent of each other
+    """The main stat scraping function that produces Raw stat files. Saving Raw stat
+    files allows for scraping and stat organization to be independent of each
+    other
 
     Parameters:
     year_dir (string): The directory that stores the raw, scraped NPB stats
     suffix (string): Determines header row of csv file and indicates the stats
     that the URLs point to:
-    "BR" = reg season batting stat URLs passed in
-    "PR" = reg season pitching stat URLs passed in
-    "BF" = farm batting stat URLs passed in
-    "PF" = farm pitching stat URLs passed in
+    "BR" = reg season batting stat URLs passed in "PR" = reg season pitching stat
+        URLs passed in "BF" = farm batting stat URLs passed in "PF" = farm pitching
+        stat URLs passed in
     year (string): The desired NPB year to scrape"""
-    # TODO: gsheets source changes and previous years get wiped - skip this scrape if the current year doesnt match the scrape year (maybe remove google_sheet_urls.csv entirely?)
+    # TODO: gsheets source changes and previous years get wiped - skip this scrape
+    # if the current year doesnt match the scrape year (maybe remove
+    # google_sheet_urls.csv entirely?)
     # Make output file
     output_file = make_raw_player_file(year_dir, suffix, year)
     # Grab URLs to scrape
@@ -4001,7 +4026,8 @@ def get_stats(input_dir, year_dir, suffix, year):
             next(player_stat_rows)
             for row in player_stat_rows:
                 for entry in row.find_all("td"):
-                    # TODO: remove if statements? text filtering possibly handled in later code
+                    # TODO: remove if statements? text filtering possibly handled in
+                    # later code
                     entry_text = entry.get_text()
                     entry_text = entry_text.strip()
                     entry_text = entry_text.replace(",", "")
@@ -4027,17 +4053,17 @@ def get_stats(input_dir, year_dir, suffix, year):
 
 def get_post_season_stats(year_dir, suffix, year):
     # TODO: merge with get_stats?
-    """The main post season stat scraping function that makes Raw stat files.
-    Saving Raw stat files allows for scraping and stat organization to be
-    independent of each other. Different scraping schemas are used for URLs
-    before 2025 post season and after 2025 post season.
+    """The main post season stat scraping function that makes Raw stat files. Saving Raw
+    stat files allows for scraping and stat organization to be independent of
+    each other. Different scraping schemas are used for URLs before 2025 post
+    season and after 2025 post season.
 
     Parameters:
     yearDir (string): The directory that stores the raw, scraped NPB stats
     suffix (string): Determines header row of csv file and indicates the stats
     that the URLs point to:
-    "BP" = post season batting stat URLs passed in
-    "PP" = post season pitching stat URLs passed in
+    "BP" = post season batting stat URLs passed in "PP" = post season pitching stat
+        URLs passed in
     year (string): The desired npb year to scrape
 
     Returns: N/A"""
@@ -4101,7 +4127,8 @@ def get_post_season_stats(year_dir, suffix, year):
             next(player_stat_rows)
             for row in player_stat_rows:
                 for entry in row.find_all("td"):
-                    # TODO: remove if statements? text filtering possibly handled in later code
+                    # TODO: remove if statements? text filtering possibly handled in
+                    # later code
                     entry_text = entry.get_text()
                     if entry_text.find(","):
                         entry_text = entry_text.replace(",", "")
@@ -4209,7 +4236,8 @@ def revise_stats(df, rel_dir, year):
 
     Example:
         >>> revise_stats(player_df, "/path/to/project", "2025")
-        # Returns player_df with any matching revisions from roster_revisions.csv applied
+        # Returns player_df with any matching revisions from roster_revisions.csv
+        # applied
     """
     # Read in revision file
     revise_filename = os.path.join(
@@ -4269,10 +4297,9 @@ def get_gsheets_data(input_dir, year_dir, suffix, year, stat_type):
     year_dir (string): The directory that stores the raw, scraped NPB stats
     suffix (string): Determines header row of csv file and indicates the stats
     that the URLs point to:
-    "BR" = reg season batting stat URLs passed in
-    "PR" = reg season pitching stat URLs passed in
-    "BF" = farm batting stat URLs passed in
-    "PF" = farm pitching stat URLs passed in
+    "BR" = reg season batting stat URLs passed in "PR" = reg season pitching stat
+        URLs passed in "BF" = farm batting stat URLs passed in "PF" = farm pitching
+        stat URLs passed in
     year (string): The desired NPB year to scrape"""
     # Google sheet stats not available before 2021, so return immediately
     if int(year) < 2021:
@@ -4339,8 +4366,9 @@ def get_standings(year_dir, suffix, year):
             - "C_farm": Central League Farm (2026+)
         year (string): The desired standings stat year.
 
-    Scrapes the official NPB standings page, extracts team statistics (G, W, L, PCT, etc.),
-    and writes them to a raw CSV file for later processing into PA/IP drop constants."""
+    Scrapes the official NPB standings page, extracts team statistics (G, W, L, PCT,
+    etc.), and writes them to a raw CSV file for later processing into PA/IP drop
+    constants."""
     output_file = make_raw_standings_file(year_dir, suffix, year)
     # Get URL to scrape
     if suffix in ("C_farm", "E_farm", "W_farm") and int(year) >= 2026:
@@ -4438,8 +4466,8 @@ def get_fielding(year_dir, suffix, year):
     Parameters:
     year_dir (string): The directory to store relevant year statistics
     suffix (string): Indicates URL being scraped:
-    "R" = regular season fielding stats
-    "F" = farm fielding stats
+        "R" = regular season fielding stats
+        "F" = farm fielding stats
     year (string): The desired fielding stat year"""
     rel_dir = os.path.dirname(__file__)
     url_file = rel_dir + "/input/fielding_urls.csv"
@@ -4509,10 +4537,10 @@ def get_fielding(year_dir, suffix, year):
 def get_career_data(rel_dir, year):
     """Scrape all NPB team player entries and their career stats.
 
-    Navigates the NPB team player directory, extracts individual player links,
-    and scrapes career statistics from each player's personal page. The data
-    includes biographical information, batting career totals, and pitching career
-    totals for all players across all 12 NPB teams.
+    Navigates the NPB team player directory, extracts individual player links, and
+    scrapes career statistics from each player's personal page. The data includes
+    biographical information, batting career totals, and pitching career totals for
+    all players across all 12 NPB teams.
 
     Parameters:
         rel_dir (str): The directory path where year-specific statistics are stored.
@@ -4526,7 +4554,7 @@ def get_career_data(rel_dir, year):
 
     Note:
         Attempts to load existing career data files first to avoid re-scraping
-        players that already have data."""
+            players that already have data."""
     team_url_dict = {
         "Hanshin Tigers": f"https://npb.jp/bis/players/search/yearly/{year}/1961001/",
         "Hiroshima Carp": f"https://npb.jp/bis/players/search/yearly/{year}/1968001/",
@@ -4539,7 +4567,9 @@ def get_career_data(rel_dir, year):
         "SoftBank Hawks": f"https://npb.jp/bis/players/search/yearly/{year}/2005001/",
         "Rakuten Eagles": f"https://npb.jp/bis/players/search/yearly/{year}/2005003/",
         "Seibu Lions": f"https://npb.jp/bis/players/search/yearly/{year}/2008001/",
-        "Nipponham Fighters": f"https://npb.jp/bis/players/search/yearly/{year}/2004001/",
+        "Nipponham Fighters": (
+            f"https://npb.jp/bis/players/search/yearly/{year}/2004001/"
+        ),
     }
     # Grab existing bio_df if possible, else create a new one
     try:
@@ -4638,8 +4668,8 @@ def get_career_data(rel_dir, year):
         print(f"Connected successfully. Status code: {r.status_code}")
         soup = BeautifulSoup(r.content, "html.parser")
 
-        # Find all player links on the page
-        # The page structure contains player names as links to their individual stats pages
+        # Find all player links on the page The page structure contains player names as
+        # links to their individual stats pages
         player_links = soup.find_all("a", href=True)
         print(f"Total links found on page: {len(player_links)}")
 
@@ -4688,7 +4718,8 @@ def get_career_data(rel_dir, year):
                             )
                         except Exception as e:
                             print(
-                                f"    Warning: Could not fetch stats for {player_name}: {e}"
+                                f"    Warning: Could not fetch stats for "
+                                f"{player_name}: {e}"
                             )
                         players_scraped += 1
                         # Pace requests to NPB
@@ -4719,29 +4750,31 @@ def scrape_player_career_stats(
 ):
     """Scrapes career statistics from an individual NPB player page.
 
-    This function fetches the player's personal statistics page and extracts
-    their biographical information and career totals (batting and/or pitching)
-    by modifying the provided DataFrames in place.
+    This function fetches the player's personal statistics page and extracts their
+    biographical information and career totals (batting and/or pitching) by modifying
+    the provided DataFrames in place.
 
     Parameters:
         bio_df (pandas.DataFrame): DataFrame to store player biographical
             information. Player data is added as a new row indexed by player name.
         bat_stat_df (pandas.DataFrame): DataFrame to store career batting statistics.
             Each row represents one year of batting stats for a player.
-        pitch_stat_df (pandas.DataFrame): DataFrame to store career pitching statistics.
-            Each row represents one year of pitching stats for a player.
+        pitch_stat_df (pandas.DataFrame): DataFrame to store career pitching
+            statistics. Each row represents one year of pitching stats for a player.
         player_url (str): The full URL to the player's individual statistics page.
-        player_name (str): The name of the player (used for indexing and error reporting).
+        player_name (str): The name of the player (used for indexing and error
+            reporting).
 
     Returns:
-        None: This function modifies the provided DataFrames in place and does
-            not return a value.
+        None: This function modifies the provided DataFrames in place and does not
+            return a value.
 
     Side Effects:
         - Modifies bio_df by adding player biographical data as a new row
-        - Modifies bat_stat_df by adding batting statistics (if player has batting data)
-        - Modifies pitch_stat_df by adding pitching statistics (if player has pitching data)
-    """
+        - Modifies bat_stat_df by adding batting statistics (if player has batting
+          data)
+        - Modifies pitch_stat_df by adding pitching statistics (if player has
+          pitching data)"""
     try:
         print(f"    Fetching stats from: {player_url}")
         r = get_url(player_url)
@@ -4794,16 +4827,19 @@ def get_cdx_rows(
         session (requests.Session): A configured requests session.
         from_year (int, optional): Filter snapshots from this year.
         to_year (int, optional): Filter snapshots to this year.
-        limit (int, optional): Maximum number of snapshots to retrieve (default 1000).
-        timeout (tuple, optional): Request timeout as (connect timeout, read timeout).
+        limit (int, optional): Maximum number of snapshots to retrieve
+            (default 1000).
+        timeout (tuple, optional): Request timeout as (connect timeout, read
+            timeout).
 
     Returns:
-        list: A list of (score, row) tuples sorted by proximity to June 15th of from_year.
-              Higher scores indicate closer to mid-year.
+        list: A list of (score, row) tuples sorted by proximity to June 15th
+            of from_year. Higher scores indicate closer to mid-year.
 
     Note:
-        Uses the Internet Archive CDX API to find snapshots. The score is based on
-        how close each snapshot's timestamp is to June 15th of the target year."""
+        Uses the Internet Archive CDX API to find snapshots. The score is
+        based on how close each snapshot's timestamp is to June 15th of the
+        target year."""
     params = {
         "url": url,
         "output": "json",
@@ -4850,14 +4886,15 @@ def fetch_archived_html(original_url, session, timestamp, timeout=(10, 45)):
         original_url (str): The original URL that was archived.
         session (requests.Session): A configured requests session.
         timestamp (str): The archive.org timestamp (e.g., "20240615000000").
-        timeout (tuple, optional): Request timeout as (connect timeout, read timeout).
+        timeout (tuple, optional): Request timeout as (connect timeout, read
+            timeout).
 
     Returns:
         str: The HTML content of the archived page.
 
     Note:
         Uses the Wayback Machine's "id_" variant which redirects to the closest
-        available snapshot if the exact timestamp doesn't exist."""
+            available snapshot if the exact timestamp doesn't exist."""
     archive_url = f"https://web.archive.org/web/{timestamp}id_/{original_url}"
     r = session.get(archive_url, timeout=timeout)
     r.raise_for_status()
@@ -4919,78 +4956,110 @@ def get_roster_data(year_dir, suffix, year):
     else:
         roster_url_dict = {}
 
-    # TODO: make this function so this only scrapes current year, and skips automatically otherwise
+    # TODO: make this function so this only scrapes current year, and skips
+    # automatically otherwise
     # might be bad idea to post wayback machine links in an input file for github
     # TODO: remove unused wayback machine functions, integrate wayback machine scraping
     """
     # if current year doesnt equal inputted year, scrape wayback
     s = make_session()
     for url, _ in roster_url_dict.items():
-        #print(url)
-        best_archive_links = get_cdx_rows(url, s, from_year=int(year), to_year=(int(year)+1), limit=100, timeout=(10, 60))
-        #print(get_cdx_rows(url, s, from_year=int(year), to_year=(int(year)+1), limit=100, timeout=(10, 60)))
+        # print(url)
+        best_archive_links = get_cdx_rows(
+            url, s, from_year=int(year), to_year=(int(year) + 1), limit=100,
+            timeout=(10, 60),
+        )
+        # print(
+        #     get_cdx_rows(url, s, from_year=int(year), to_year=(int(year) + 1),
+        #                  limit=100, timeout=(10, 60))
+        # )
         sleep(1.0)
 
     for score, row in best_archive_links[:2]:
-        print(str(row["original"])+ str(row["timestamp"]))
-        #html = fetch_archived_html(row["original"], s, row["timestamp"])
+        print(str(row["original"]) + str(row["timestamp"]))
+        # html = fetch_archived_html(row["original"], s, row["timestamp"])
     """
 
     """
     if suffix == "en":
-        # TODO: 2023 and before (just change the first 4 digits in the timestamp part of each url)
+        # TODO: 2023 and before (just change the first 4 digits in the timestamp part of
+        # each url)
         roster_url_dict = {
             # Hanshin Tigers
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_t.html": "Hanshin Tigers",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_t.html": "Hanshin Tigers",
             # Hiroshima Toyo Carp
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_c.html": "Hiroshima Carp",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_c.html": "Hiroshima Carp",
             # YOKOHAMA DeNA BAYSTARS
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_db.html": "DeNA BayStars",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_db.html": "DeNA BayStars",
             # Yomiuri Giants
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_g.html": "Yomiuri Giants",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_g.html": "Yomiuri Giants",
             # Tokyo Yakult Swallows
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_s.html": "Yakult Swallows",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_s.html": "Yakult Swallows",
             # Chunichi Dragons
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_d.html": "Chunichi Dragons",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_d.html": "Chunichi Dragons",
             # ORIX Buffaloes
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_b.html": "ORIX Buffaloes",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_b.html": "ORIX Buffaloes",
             # China Lotte Marines
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_m.html": "Lotte Marines",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_m.html": "Lotte Marines",
             # Fukuoka SoftBank Hawks
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_h.html": "SoftBank Hawks",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_h.html": "SoftBank Hawks",
             # Tohoku Rakuten Golden Eagles
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_e.html": "Rakuten Eagles",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_e.html": "Rakuten Eagles",
             # Saitama Seibu Lions
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_l.html": "Seibu Lions",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_l.html": "Seibu Lions",
             # Hokkaido Nippon-Ham Fighters
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/teams/rst_f.html": "Nipponham Fighters",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/eng/"
+                "teams/rst_f.html": "Nipponham Fighters",
         }
     elif suffix == "jp":
         roster_url_dict = {
             # Hanshin Tigers
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_t.html": "Hanshin Tigers",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_t.html": "Hanshin Tigers",
             # Hiroshima Toyo Carp
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_c.html": "Hiroshima Carp",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_c.html": "Hiroshima Carp",
             # YOKOHAMA DeNA BAYSTARS
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_db.html": "DeNA BayStars",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_db.html": "DeNA BayStars",
             # Yomiuri Giants
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_g.html": "Yomiuri Giants",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_g.html": "Yomiuri Giants",
             # Tokyo Yakult Swallows
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_s.html": "Yakult Swallows",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_s.html": "Yakult Swallows",
             # Chunichi Dragons
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_d.html": "Chunichi Dragons",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_d.html": "Chunichi Dragons",
             # ORIX Buffaloes
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_b.html": "ORIX Buffaloes",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_b.html": "ORIX Buffaloes",
             # China Lotte Marines
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_m.html": "Lotte Marines",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_m.html": "Lotte Marines",
             # Fukuoka SoftBank Hawks
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_h.html": "SoftBank Hawks",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_h.html": "SoftBank Hawks",
             # Tohoku Rakuten Golden Eagles
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_e.html": "Rakuten Eagles",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_e.html": "Rakuten Eagles",
             # Saitama Seibu Lions
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_l.html": "Seibu Lions",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_l.html": "Seibu Lions",
             # Hokkaido Nippon-Ham Fighters
-            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/rst_f.html": "Nipponham Fighters",
+            "https://web.archive.org/web/20160702010731id_/https://npb.jp/bis/teams/"
+                "rst_f.html": "Nipponham Fighters",
         }
     else:
         roster_url_dict = {}
@@ -5042,7 +5111,8 @@ def get_roster_data(year_dir, suffix, year):
         sleep(10.0)
 
 
-# TODO: fuzzy translate remaining untranslated players with no rosters (oisix and hayate)?
+# TODO: fuzzy translate remaining untranslated players with no rosters (oisix and
+# hayate)?
 def org_roster_data(year_dir, rel_dir, year):
     """Organizes and merges raw roster data files into a cumulative roster_data.csv.
 
@@ -5069,7 +5139,8 @@ def org_roster_data(year_dir, rel_dir, year):
         >>> org_roster_data("/path/to/stats/2025", "/path/to/project", "2025")
         >>> # Updates: /path/to/project/input/2025/roster_data.csv
     """
-    # Input dir has unupdated roster_data.csv - output overwrites roster_data.csv file in input dir
+    # Input dir has unupdated roster_data.csv - output overwrites roster_data.csv file
+    # in input dir
     year_input_dir = os.path.join(rel_dir, "input", year)
     roster_data_filename = os.path.join(year_input_dir, "roster_data.csv")
 
@@ -5149,7 +5220,8 @@ def get_stat_urls(suffix, year):
 
     Returns:
         tuple: A tuple containing:
-            - url_arr (pandas.Series): A series of URLs to scrape for the specified stats
+            - url_arr (pandas.Series): A series of URLs to scrape for the specified
+              stats
             - version (numpy.ndarray): The table version indicator ("v1" or "v2")
               which determines the scraping schema to use
 
@@ -5167,8 +5239,8 @@ def get_stat_urls(suffix, year):
     url_df = url_df.drop(url_df[url_df.Suffix != suffix].index)
     # Create URL arr for that year and stat type
     url_arr = url_df["Link"]
-    # Version determines the type of table to scrape
-    # NPB changed table styling for 2025 post season and onwards
+    # Version determines the type of table to scrape NPB changed table styling for 2025
+    # post season and onwards
     version = url_df["Version"].unique()
 
     return url_arr, version
@@ -5258,8 +5330,8 @@ def make_raw_player_file(write_dir, suffix, year):
 
 
 def make_raw_daily_scores_file(write_dir, suffix, year):
-    """Opens a file to hold all player stats inside a relative /year/raw/
-    directory that is created before calling this function
+    """Opens a file to hold all player stats inside a relative /year/raw/ directory that
+    is created before calling this function
 
     Parameters:
     write_dir (string): The directory that stores the scraped NPB stats
@@ -5267,7 +5339,7 @@ def make_raw_daily_scores_file(write_dir, suffix, year):
 
     Returns:
     new_file (file stream object): An opened file in /year/raw/ named
-    "[Year]DailyScoresRaw[Suffix].csv"""
+            "[Year]DailyScoresRaw[Suffix].csv"""
     # Open and return the file object in write mode
     raw_dir = os.path.join(write_dir, "raw")
     if not os.path.exists(raw_dir):
@@ -5279,21 +5351,21 @@ def make_raw_daily_scores_file(write_dir, suffix, year):
 
 
 def make_raw_standings_file(write_dir, suffix, year):
-    """Opens a file to hold all player stats inside a relative /year/raw
-    directory that is created before calling this function
+    """Opens a file to hold all player stats inside a relative /year/raw directory that
+    is created before calling this function
 
     Parameters:
     write_dir (string): The directory that stores the scraped NPB stats
     suffix (string): Indicates the league passed in:
-    "C" = central league reg season
-    "P" = pacific league reg season
-    "E" = eastern league farm
-    "W" = western league farm
+        "C" = central league reg season
+        "P" = pacific league reg season
+        "E" = eastern league farm
+        "W" = western league farm
     year (string): The desired npb year to scrape
 
     Returns:
     new_file (file stream object): An opened file in /year/raw/ formatted as
-    "[Year][Standings][Suffix].csv"""
+            "[Year][Standings][Suffix].csv"""
     # Open and return the file object in write mode
     raw_dir = os.path.join(write_dir, "raw")
     if not os.path.exists(raw_dir):
@@ -5318,19 +5390,19 @@ def make_raw_standings_file(write_dir, suffix, year):
 
 
 def make_raw_fielding_file(write_dir, suffix, year):
-    """Opens a file to hold all fielding stats inside a relative /year/raw/
-    directory that is created before calling this function
+    """Opens a file to hold all fielding stats inside a relative /year/raw/ directory
+    that is created before calling this function
 
     Parameters:
     write_dir (string): The directory that stores the scraped NPB stats
     suffix (string): Indicates the raw stat file to create:
-    "R" = regular season fielding stats
-    "F" = farm fielding stats
+        "R" = regular season fielding stats
+        "F" = farm fielding stats
     year (string): The desired npb year to scrape
 
     Return:
     new_file (file stream object): An opened file in /year/raw/ named
-    "[Year]FieldingRaw[Suffix].csv"
+            "[Year]FieldingRaw[Suffix].csv"
     """
     # Open and return the file object in write mode
     raw_dir = os.path.join(write_dir, "raw")
@@ -5346,19 +5418,18 @@ def make_raw_fielding_file(write_dir, suffix, year):
 
 
 def get_scrape_year(args_in=None):
-    """Checks passed in arguments or gets user input for NPB stat year to
-    scrape
+    """Checks passed in arguments or gets user input for NPB stat year to scrape
 
     Parameters:
-    args_in (string): If a command line argument is given, the year is checked
-    for validity. Default (None) indicates to collect user input instead
+    args_in (string): If a command line argument is given, the year is checked for
+            validity. Default (None) indicates to collect user input instead
 
     Returns:
     args_in (string): The desired npb stat year to scrape"""
     # User input check
     if args_in is None:
-        # Infinite loop breaks when valid input obtained
-        # Either valid year or exit signal entered
+        # Infinite loop breaks when valid input obtained Either valid year or exit
+        # signal entered
         while True:
             args_in = input(
                 "Enter a NPB year between 2020-"
@@ -5386,8 +5457,8 @@ def get_scrape_year(args_in=None):
         except ValueError:
             print("Year argument must be a number (Example: 2024) or '-a'")
             sys.exit("Exiting...")
-        # Bounds for scrapable years
-        # Min year on npb.jp is 2008, but scraping is only tested until 2020
+        # Bounds for scrapable years Min year on npb.jp is 2008, but scraping is only
+        # tested until 2020
         if 2020 <= args_in <= datetime.now().year:
             pass
         else:
@@ -5399,13 +5470,12 @@ def get_scrape_year(args_in=None):
 
 
 def get_user_choice(suffix):
-    """Gets user input for whether or not to undergo a scraping or organizing
-    task
+    """Gets user input for whether or not to undergo a scraping or organizing task
 
     Parameters:
-    suffix (string): Indicates the option being asked about: farm scraping
-    "F", regular season scraping "R", post season scraping "P", stat zip file
-    creation "Z", roster scraping "RD", or career scraping "career"
+    suffix (string): Indicates the option being asked about: farm scraping "F",
+            regular season scraping "R", post season scraping "P", stat zip file
+            creation "Z", roster scraping "RD", or career scraping "career"
 
     Returns:
     user_in (string): Returns "Y" or "N" (if "Q" is chosen, program terminates)
@@ -5414,25 +5484,25 @@ def get_user_choice(suffix):
     prompts = {
         "F": (
             (
-                "Choose whether to pull new farm stats from npb.jp or "
-                "only reorganize existing stat files.\nWARNING: EXISTING "
-                "RAW FILES MUST BE PRESENT TO SKIP SCRAPING."
+                "Choose whether to pull new farm stats from npb.jp or only "
+                "reorganize existing stat files.\n"
+                "WARNING: EXISTING RAW FILES MUST BE PRESENT TO SKIP SCRAPING."
             ),
             "Scrape farm stats? (Y/N): ",
         ),
         "R": (
             (
-                "Choose whether to pull new regular season stats from "
-                "npb.jp or only reorganize existing stat files.\nWARNING: "
-                "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING."
+                "Choose whether to pull new regular season stats from npb.jp "
+                "or only reorganize existing stat files.\n"
+                "WARNING: EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING."
             ),
             "Scrape regular season stats? (Y/N): ",
         ),
         "P": (
             (
-                "Choose whether to pull new post season stats from "
-                "npb.jp or only reorganize existing stat files.\nWARNING: "
-                "EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING."
+                "Choose whether to pull new post season stats from npb.jp "
+                "or only reorganize existing stat files.\n"
+                "WARNING: EXISTING RAW STAT FILES MUST BE PRESENT TO SKIP SCRAPING."
             ),
             "Scrape post season stats? (Y/N): ",
         ),
@@ -5469,25 +5539,25 @@ def get_user_choice(suffix):
 
 
 def convert_team_to_html(df, year, mode=None):
-    """Formats the team col to include links to their npb.jp pages and adds img
-    tag col that represents the team (images from yakyucosmo.com)
+    """Formats the team col to include links to their npb.jp pages and adds img tag col
+    that represents the team (images from yakyucosmo.com)
 
     Parameters:
     df (pandas dataframe): A dataframe containing entries with NPB teams
     mode (string): Indicates whether to preserve full team names ("Full"),
-    abbrieviate names in the <a> tags ("Abb"), or convert any team names
-    found in the dataframe to linked names (None)
+            abbrieviate names in the <a> tags ("Abb"), or convert any team names
+            found in the dataframe to linked names (None)
 
     Returns:
     df (pandas dataframe): The dataframe with correct links and abbreviations
-    inserted in tags (if applicable) or normal text (if no tags can be made),
-    plus an img tag column if mode is not None"""
+            inserted in tags (if applicable) or normal text (if no tags can be made),
+            plus an img tag column if mode is not None"""
     # Check for the team link file, if missing, tell user and return
     rel_dir = os.path.dirname(__file__)
     link_df = pd.read_csv(rel_dir + "/input/team_urls.csv")
 
-    # Default mode links any team names it finds (assumes full team names are
-    # present in the dataframe) and returns
+    # Default mode links any team names it finds (assumes full team names are present in
+    # the dataframe) and returns
     if mode is None:
         link_df["Link"] = link_df.apply(build_html, args=("Team",), axis=1)
         # Create dict of Team Name:<img> tag
@@ -5538,17 +5608,17 @@ def add_roster_data(df, suffix, year):
     Parameters:
     df (pandas dataframe): A dataframe containing entries with player names
     suffix (string): Indicates the data to add:
-    "BR" = regular season batting arm + pos data
-    "BP" = postseason (regular season batting arm + pos data)
-    "BF" = farm batting arm data
-    "PR" = regular season throwing arm data
-    "PP" = postseason (regular season batting arm data)
-    "PF" = farm throwing arm data
-    "R" = fielding (age only, arm data is skipped)
+        "BR" = regular season batting arm + pos data
+        "BP" = postseason (regular season batting arm + pos data)
+        "BF" = farm batting arm data
+        "PR" = regular season throwing arm data
+        "PP" = postseason (regular season batting arm data)
+        "PF" = farm throwing arm data
+        "R" = fielding (age only, arm data is skipped)
 
     Returns:
-    df (pandas dataframe): The inputted dataframe with the appended throwing
-    arms and ages"""
+    df (pandas dataframe): The inputted dataframe with the appended throwing arms and
+            ages"""
     rel_dir = os.path.dirname(__file__)
     roster_data_file = rel_dir + "/input/" + year + "/roster_data.csv"
     roster_df = pd.read_csv(roster_data_file)
@@ -5606,8 +5676,8 @@ def add_roster_data(df, suffix, year):
 
 
 def calculate_npb_age(birthdate, year):
-    """Calculates the age of a player based on their birthdate according to
-    the standard for NPB (June 30th)
+    """Calculates the age of a player based on their birthdate according to the standard
+    for NPB (June 30th)
 
     Parameters:
     birthdate (datetime object): The birthdate of the player
@@ -5632,9 +5702,8 @@ def wavg_ignore_missing(df, value_col, weight_col):
         weight_col (str): The name of the column containing weights.
 
     Returns:
-        float: The weighted average of the valid values, or np.nan if no
-            valid rows exist.
-    """
+        float: The weighted average of the valid values, or np.nan if no valid rows
+            exist."""
     valid_rows = df[value_col].notna() & df[weight_col].notna() & (df[weight_col] > 0)
     if not valid_rows.any():
         return np.nan
@@ -5644,19 +5713,17 @@ def wavg_ignore_missing(df, value_col, weight_col):
 
 
 def convert_ip_column_out(df, inn_col="IP"):
-    """In baseball, innings are traditionally represented using .1 (single
-    inning pitched), .2 (2 innings pitched), and whole numbers. This function
-    converts the decimals FROM thirds (.33 -> .1, .66 -> .2) for sake of
-    presentation
+    """In baseball, innings are traditionally represented using .1 (single inning
+    pitched), .2 (2 innings pitched), and whole numbers. This function converts
+    the decimals FROM thirds (.33 -> .1, .66 -> .2) for sake of presentation
 
     Parameters:
-    df (pandas dataframe): A pitching stat dataframe with the "thirds"
-    representation
+    df (pandas dataframe): A pitching stat dataframe with the "thirds" representation
     inn_col (string): The name of the column to convert (default is "IP")
 
     Returns:
-    temp_df[inn_col] (pandas dataframe column): An innings column
-    converted back to the informal innings representation"""
+    temp_df[inn_col] (pandas dataframe column): An innings column converted back to
+            the informal innings representation"""
     # Innings ".0 .1 .2" fix
     temp_df = pd.DataFrame(df[inn_col])
     # Get the ".0 .3 .7" in the innings column
@@ -5667,8 +5734,8 @@ def convert_ip_column_out(df, inn_col="IP"):
     ip_decimals = (ip_decimals / 0.3333333333) / 10
     df[inn_col] = temp_df[inn_col] + ip_decimals
     x = temp_df[inn_col] + ip_decimals
-    # If x (the decimal) is less than .25 (I.E. doesn't round to .3), leave alone
-    # Else, add 1 and remove the decimals
+    # If x (the decimal) is less than .25 (I.E. doesn't round to .3), leave alone Else,
+    # add 1 and remove the decimals
     condlist = [((x % 1) < 0.25), ((x % 1) >= 0.25)]
     choicelist = [x, (x - (x % 1)) + 1]
     temp_df[inn_col] = np.select(condlist, choicelist)
@@ -5678,17 +5745,17 @@ def convert_ip_column_out(df, inn_col="IP"):
 
 
 def convert_ip_column_in(df, inn_col="IP"):
-    """Converts the decimals in the IP column TO thirds (.1 -> .33, .2 -> .66)
-    for stat calculations
+    """Converts the decimals in the IP column TO thirds (.1 -> .33, .2 -> .66) for stat
+    calculations
 
     Parameters:
-    df (pandas dataframe): A pitching stat dataframe with the traditional
-    .1/.2 IP representation
+    df (pandas dataframe): A pitching stat dataframe with the traditional .1/.2 IP
+            representation
     inn_col (string): The name of the column to convert (default is "IP")
 
     Returns:
     temp_df[inn_col] (pandas dataframe column): An IP column converted for stat
-    calculations"""
+            calculations"""
     temp_df = pd.DataFrame(df[inn_col])
     # Get the ".0 .1 .2" in the 'IP' column
     ip_decimals = temp_df[inn_col] % 1
@@ -5709,8 +5776,7 @@ def select_park_factor(df, suffix, year):
     year (string): The year of park factors to pull
 
     Returns:
-    df (pandas dataframe): The pandas dataframe with the new temp park factor
-    column"""
+    df (pandas dataframe): The pandas dataframe with the new temp park factor column"""
     # Check for the park factor file, if nothing is there tell user and return
     pf_df = pd.read_csv(os.path.dirname(__file__) + "/input/park_factors.csv")
     # Modifying all park factors for calculations
@@ -5820,17 +5886,17 @@ def assign_primary_or_utl(
     pct_utl_threshold_low=0.05,
     pct_primary_threshold=0.50,
 ):
-    """Given a row with positions (e.g. row['1B'], row['2B'], etc.),
-    decide if the player is 'UTL' or has a primary position.
+    """Given a row with positions (e.g. row['1B'], row['2B'], etc.), decide if the
+    player is 'UTL' or has a primary position.
 
     Parameters:
     row (pandas series): A row of a dataframe with positions as columns
-    pct_utl_threshold_high (float): The threshold for a player to be considered
-    UTL if they have 3 or more positions >= this value
-    pct_utl_threshold_low (float): The threshold for a player to be considered
-    UTL if they have 4 or more positions >= this value
+    pct_utl_threshold_high (float): The threshold for a player to be considered UTL
+            if they have 3 or more positions >= this value
+    pct_utl_threshold_low (float): The threshold for a player to be considered UTL if
+            they have 4 or more positions >= this value
     pct_primary_threshold (float): The threshold for a player to be considered
-    primary at a position if they have >= this value
+            primary at a position if they have >= this value
 
     Returns:
     fractions.idmax (int): The player's most prominent position"""
@@ -5865,22 +5931,20 @@ def assign_primary_or_utl(
 
 
 def convert_player_to_html(df, suffix, year):
-    """The WordPress tables associated with this project accepts HTML code, so
-    this function formats player names into <a> tags with links to the player's
-    npb.jp pages. Used after stats are calculated but before any csv output
+    """The WordPress tables associated with this project accepts HTML code, so this
+    function formats player names into <a> tags with links to the player's npb.jp
+    pages. Used after stats are calculated but before any csv output
 
     Parameters:
     df (pandas dataframe): Any final stat dataframe
-    suffix (string): Indicates the data in param df
-        "BR" = reg season batting stat URLs passed in
-        "PR" = reg season pitching stat URLs passed in
-        "BF" = farm batting stat URLs passed in
-        "PF" = farm pitching stat URLs passed in
+    suffix (string): Indicates the data in param df "BR" = reg season batting stat
+            URLs passed in "PR" = reg season pitching stat URLs passed in "BF" = farm
+            batting stat URLs passed in "PF" = farm pitching stat URLs passed in
     year (string): Indicates the stat year for df
 
     Returns:
     df (pandas dataframe): The final stat dataframe with valid HTML in the
-    player/pitcher columns"""
+            player/pitcher columns"""
     rel_dir = os.path.dirname(__file__)
     player_link_file = rel_dir + "/input/" + year + "/roster_data.csv"
     # Read in csv that contains player name and their personal page link
@@ -5909,8 +5973,8 @@ def convert_player_to_html(df, suffix, year):
 
 
 def translate_players(df, suffix, year, mode=None):
-    """Translates player names from Japanese to English using a csv file.
-    Utilizes both player name and team name to better translate to EN names.
+    """Translates player names from Japanese to English using a csv file. Utilizes both
+    player name and team name to better translate to EN names.
 
     Parameters:
     df (pandas dataframe): A NPB stat dataframe containing player names
@@ -5919,7 +5983,8 @@ def translate_players(df, suffix, year, mode=None):
 
     Returns:
     df (pandas dataframe): The final stat dataframe with translated names"""
-    # TODO: combine all roster_data.csv into big file, make sure to add year as a column, change other functions that touch roster_data to reflect this
+    # TODO: combine all roster_data.csv into big file, make sure to add year as a
+    # column, change other functions that touch roster_data to reflect this
     rel_dir = os.path.dirname(__file__)
     # Read in csv that contains player and team names in JP and EN
     if mode == "career":
@@ -5999,16 +6064,20 @@ def translate_teams(df, suffix):
     """Translate team names from Japanese abbreviations to full English names.
 
     Parameters:
-        df (pandas DataFrame): A dataframe with a "Team" column containing Japanese team names.
+        df (pandas DataFrame): A dataframe with a "Team" column containing
+            Japanese team names.
         suffix (str): The stat type determining which team name mapping to use:
-            - "R" or "F": Fielding stats with single-character abbreviations (e.g., "巨", "中", "神")
-            - Other: Career data or other stats with full Japanese team names (e.g., "読 売", "中 日")
+            - "R" or "F": Fielding stats with single-character abbreviations
+              (e.g., "巨", "中", "神")
+            - Other: Career data or other stats with full Japanese team names
+              (e.g., "読 売", "中 日")
 
     Returns:
         pandas DataFrame: The dataframe with team names translated to English.
 
     Note:
-        Also normalizes team names by replacing Japanese Unicode spaces with US spaces.
+        Also normalizes team names by replacing Japanese Unicode spaces with US
+        spaces.
     """
     # Filter out JP unicode space "　" and replace with US space " "
     df["Team"] = df["Team"].str.replace("　", " ")
@@ -6074,8 +6143,7 @@ def build_html(row, name_col):
     name_col (str): The column name that contains the player/team names
 
     Returns:
-    html_line (str): The <a> tag if there is a link, else just the team/player
-    name"""
+    html_line (str): The <a> tag if there is a link, else just the team/player name"""
     if pd.notna(row["Link"]) and str(row["Link"]).strip() != "":
         html_line = f"<a href={row['Link']}>{row[name_col]}</a>"
     else:
@@ -6084,8 +6152,8 @@ def build_html(row, name_col):
 
 
 def make_zip(year_dir, suffix, year):
-    """Groups key directories into a single zip for uploading/sending and
-    makes a /zip/ directory to store the zip
+    """Groups key directories into a single zip for uploading/sending and makes a /zip/
+    directory to store the zip
 
     Parameters:
     year_dir (string): The directory that stores the raw, scraped NPB stats
@@ -6133,7 +6201,8 @@ def check_input_files(rel_dir, scrape_year=str(datetime.now().year)):
     year_dir = os.path.join(rel_dir, "input", scrape_year)
     if not os.path.exists(year_dir):
         print(
-            f"\nERROR: Year directory {year_dir} does not exist. Please ensure the input directory structure is correct.\n"
+            f"\nERROR: Year directory {year_dir} does not exist. "
+            "Please ensure the input directory structure is correct.\n"
         )
         return True
 
@@ -6141,32 +6210,61 @@ def check_input_files(rel_dir, scrape_year=str(datetime.now().year)):
     files_to_check = [
         (
             "input/npb_urls.csv",
-            "\nERROR: No NPB URL file found, no links to scrape...\nProvide a valid npb_urls.csv file in the /input/ directory to fix this.\n",
+            (
+                "\nERROR: No NPB URL file found, no links to scrape...\n"
+                "Provide a valid npb_urls.csv file in the /input/ directory "
+                "to fix this.\n"
+            ),
             True,
         ),
         (
             f"input/{scrape_year}/roster_data.csv",
-            "\nERROR: No player link file found, table entries will not have links...\nProvide a roster_data.csv file in the /input/ directory to fix this.\n",
+            (
+                "\nERROR: No player link file found, table entries will not "
+                "have links...\n"
+                "Provide a roster_data.csv file in the /input/ directory "
+                "to fix this.\n"
+            ),
             True,
         ),
         (
             "input/fip_const.csv",
-            "\nERROR: No FIP constant file found, calculations using FIP will be inaccurate...\nProvide a valid fip_const.csv file in the /input/ directory to fix this.\n",
+            (
+                "\nERROR: No FIP constant file found, calculations using FIP "
+                "will be inaccurate...\n"
+                "Provide a valid fip_const.csv file in the /input/ directory "
+                "to fix this.\n"
+            ),
             True,
         ),
         (
             "input/park_factors.csv",
-            "\nERROR: No park factor file found, calculations using park factors will be inaccurate...\nProvide a valid park_factors.csv file in the /input/ directory to fix this.\n",
+            (
+                "\nERROR: No park factor file found, calculations using park "
+                "factors will be inaccurate...\n"
+                "Provide a valid park_factors.csv file in the /input/ directory "
+                "to fix this.\n"
+            ),
             True,
         ),
         (
             "input/team_urls.csv",
-            "\nWARNING: No team link file found, table entries will not have links...\nProvide a team_urls.csv file in the /input/ directory to fix this.\n",
+            (
+                "\nWARNING: No team link file found, table entries will not "
+                "have links...\n"
+                "Provide a team_urls.csv file in the /input/ directory "
+                "to fix this.\n"
+            ),
             False,
         ),
         (
             "input/fielding_urls.csv",
-            "\nERROR: No fielding URL file found, raw fielding files will not be produced...\nProvide a valid fielding_urls.csv file in the /input/ directory to fix this.\n",
+            (
+                "\nERROR: No fielding URL file found, raw fielding files will "
+                "not be produced...\n"
+                "Provide a valid fielding_urls.csv file in the /input/ directory "
+                "to fix this.\n"
+            ),
             True,
         ),
     ]
@@ -6198,19 +6296,17 @@ def check_input_files(rel_dir, scrape_year=str(datetime.now().year)):
 
 
 def store_dataframe(df, store_dir, filename, mode):
-    """
-    Stores a DataFrame to disk as either a CSV file or a plain text file.
+    """Stores a DataFrame to disk as either a CSV file or a plain text file.
 
     Parameters:
         df (pandas.DataFrame): The DataFrame to store.
         store_dir (str): The directory where the file will be saved.
         filename (str): The name of the file to create.
-        mode (str): The file format to use: "csv" for CSV format, "alt" for
-        plain text.
+        mode (str): The file format to use: "csv" for CSV format, "alt" for plain
+            text.
 
     Returns:
-        str: The full path to the stored file.
-    """
+        str: The full path to the stored file."""
     if not os.path.exists(store_dir):
         os.mkdir(store_dir)
     store_path = store_dir + "/" + filename
@@ -6224,10 +6320,9 @@ def store_dataframe(df, store_dir, filename, mode):
 def list_hf_dataset_files(year, repo_id=HF_NPB_REPO, session=None):
     """Lists the consolidated parquet files for one year in a Hugging Face dataset.
 
-    Per-game play-by-play files are skipped. The consolidated yearly tables
-    (pbp_*, schedule, aux_schedule) are included only from the given year's
-    folder. The three top-level players* tables are always included,
-    regardless of year.
+    Per-game play-by-play files are skipped. The consolidated yearly tables (pbp_*,
+    schedule, aux_schedule) are included only from the given year's folder. The
+    three top-level players* tables are always included, regardless of year.
 
     Parameters:
         year (str): The year to list, e.g. "2024".
@@ -6280,32 +6375,30 @@ def hf_csv_filename(rel_path):
 
     Parameters:
         rel_path (str): Path of the file within the dataset repo, e.g.
-        "2026/pbp_data.parquet".
+            "2026/pbp_data.parquet".
 
     Returns:
-        str: The CSV filename, e.g. "raw_hf_2026_pbp_data.csv".
-    """
+        str: The CSV filename, e.g. "raw_hf_2026_pbp_data.csv"."""
     stem = rel_path.replace("/", "_").replace(".parquet", "")
     return f"raw_hf_{stem}.csv"
 
 
 def scrape_hf_npb_data(year, raw_dir=None, repo_id=HF_NPB_REPO):
-    """Scrapes one year of NPB consolidated tables from Hugging Face and stores
-    them as CSVs.
+    """Scrapes one year of NPB consolidated tables from Hugging Face and stores them as
+    CSVs.
 
-    Each parquet file for the year is downloaded, converted to a DataFrame,
-    and written to raw_dir as raw_hf_<path>.csv (e.g. raw_hf_2026_pbp_data.csv).
+    Each parquet file for the year is downloaded, converted to a DataFrame, and
+    written to raw_dir as raw_hf_<path>.csv (e.g. raw_hf_2026_pbp_data.csv).
 
     Parameters:
-        year (str): The year to import, e.g. "2024". Only that year's files
-        are downloaded.
-        raw_dir (str): Directory to write CSVs into. Defaults to
-        stats/all/raw next to this script.
+        year (str): The year to import, e.g. "2024". Only that year's files are
+            downloaded.
+        raw_dir (str): Directory to write CSVs into. Defaults to stats/all/raw next
+            to this script.
         repo_id (str): The Hugging Face dataset repo id (owner/name).
 
     Returns:
-        list[str]: Full paths of the CSV files written.
-    """
+        list[str]: Full paths of the CSV files written."""
     if raw_dir is None:
         raw_dir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "stats", "all", "raw"

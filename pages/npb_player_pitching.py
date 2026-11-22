@@ -1,7 +1,8 @@
 """Displays NPB pitching data with Streamlit"""
 
-import streamlit as st
 import altair as alt
+import streamlit as st
+
 import pages.helper as hp
 
 
@@ -46,7 +47,8 @@ def main():
                 )
 
             leader_view = st.toggle("Qualifiers")
-            # Only display postseason toggle if there is a dataframe, else make sure it's False
+            # Only display postseason toggle if there is a dataframe, else make sure
+            # it's False
             if postseason_pitch_df is not None:
                 postseason_view = st.toggle("Postseason")
 
@@ -211,7 +213,8 @@ def generate_player_pitching_plots(original_df, display_df, user_year):
 
     Args:
         original_df (pandas.DataFrame): Unfiltered pitching statistics dataframe
-        display_df (pandas.DataFrame): Filtered pitching statistics dataframe based on user selections
+        display_df (pandas.DataFrame): Filtered pitching statistics dataframe based on
+        user selections
         user_year (str): The selected NPB season year for chart titles
 
     Returns:

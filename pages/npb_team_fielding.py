@@ -1,6 +1,7 @@
 """Displays NPB team fielding data with Streamlit"""
 
 import streamlit as st
+
 import pages.helper as hp
 
 

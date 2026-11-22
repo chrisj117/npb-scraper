@@ -1,7 +1,8 @@
 """Displays NPB team summary data with Streamlit"""
 
-import streamlit as st
 import altair as alt
+import streamlit as st
+
 import pages.helper as hp
 
 
@@ -51,10 +52,7 @@ def main():
     styler = display_df.style
     styler.apply(hp.color_by_percentile, axis=0, args=(pct_cols, invert_pct_cols))
     styler.apply(hp.color_by_team, axis=0)
-    styler = styler.set_properties(
-        subset=["Team"],
-        **{"font-weight": "bold"}
-    )
+    styler = styler.set_properties(subset=["Team"], **{"font-weight": "bold"})
     st.dataframe(
         styler,
         width="stretch",
@@ -109,18 +107,18 @@ def main():
         alt.Chart(display_df)
         .mark_point(size=250, opacity=0.8, filled=True)
         .encode(
-             x=alt.X(
-                 "ERA+:Q",
-                 title="ERA+",
-                 scale=alt.Scale(type="linear", domain=[65, 135]),
-                 axis=alt.Axis(values=[100]),
-             ),
-             y=alt.Y(
-                 "OPS+:Q",
-                 title="OPS+",
-                 scale=alt.Scale(type="linear", domain=[65, 135]),
-                 axis=alt.Axis(values=[100]),
-             ),
+            x=alt.X(
+                "ERA+:Q",
+                title="ERA+",
+                scale=alt.Scale(type="linear", domain=[65, 135]),
+                axis=alt.Axis(values=[100]),
+            ),
+            y=alt.Y(
+                "OPS+:Q",
+                title="OPS+",
+                scale=alt.Scale(type="linear", domain=[65, 135]),
+                axis=alt.Axis(values=[100]),
+            ),
             color=alt.Color("short_Team:N", legend=None).scale(
                 domain=list(team_colors.keys()), range=list(team_colors.values())
             ),

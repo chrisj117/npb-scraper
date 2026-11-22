@@ -1,6 +1,7 @@
 """Displays NPB standings and daily score data with Streamlit"""
 
 import streamlit as st
+
 import pages.helper as hp
 
 

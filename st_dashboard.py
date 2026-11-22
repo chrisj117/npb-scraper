@@ -43,7 +43,8 @@ def main():
 
     # Footer
     st.caption(
-        "[Yakyu Cosmopolitan](https://www.yakyucosmo.com/) · [Support on Patreon](https://www.patreon.com/c/baseballcosmo)🧡",
+        "[Yakyu Cosmopolitan](https://www.yakyucosmo.com/) · "
+        + "[Support on Patreon](https://www.patreon.com/c/baseballcosmo)🧡",
         text_alignment="center",
     )
 

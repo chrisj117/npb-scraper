@@ -1,9 +1,11 @@
 """Displays NPB player career data with Streamlit"""
 
 from datetime import datetime
-import streamlit as st
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+import streamlit as st
+
 import pages.helper as hp
 
 
@@ -15,7 +17,8 @@ def main():
     from Dropbox-hosted CSV files. Provides an interactive interface with:
 
     - A player selection dropdown filtered to English-name entries
-    - A vertical bio table showing player details (name, position, bats/throws, birthdate)
+    - A vertical bio table showing player details (name, position, bats/throws,
+      birthdate)
     - Batting and Pitching tabs, each containing:
         - A column filter for selecting which statistics to display
         - A season multiselect for filtering specific years
@@ -24,8 +27,10 @@ def main():
 
     Batting stats include standard (H, HR, RBI, etc.) and advanced metrics (OPS+, BABIP,
     wSB, etc.). Pitching stats include standard (W, L, ERA, etc.) and advanced metrics
-    (FIP, kwERA, CSW%, etc.). Percentage columns are normalized from decimal to whole-number
-    format. Pitcher innings pitched (IP) values are converted between internal and display
+    (FIP, kwERA, CSW%, etc.). Percentage columns are normalized from decimal to
+    whole-number
+    format. Pitcher innings pitched (IP) values are converted between internal and
+    display
     formats.
 
     Returns:
@@ -386,7 +391,7 @@ def main():
 
 
 def normalize_pct_cols(convert_df):
-    """TODO docs"""
+    """Massage incoming percentage columns to Streamlit's representation if needed"""
     # Convert to desired types and use column_config for trailing zeroes
     for col in convert_df.columns.tolist():
         if "%" in col:
@@ -403,7 +408,7 @@ def highlight_totals_row(row):
 
 
 def apply_zebra_rows(row):
-    """TODO docs"""
+    """Apply zebra row coloring to dataframe"""
     # row.name is the row index position for styler
     if row.name != "Total" and int(row.name) % 2:
         bg = "#f8f9fb"
