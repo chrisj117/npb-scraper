@@ -561,7 +561,7 @@ def create_sort_filter(cols, mode):
             # Set index of default sort column for team stat pages
             else:
                 default_sort_col_index = cols.index("OPS+")
-        except:
+        except ValueError:
             default_sort_col_index = 0
     elif mode == "pitch":
         default_sort = {
@@ -632,7 +632,7 @@ def create_sort_filter(cols, mode):
             # Set index of default sort column for team stat pages
             else:
                 default_sort_col_index = cols.index("ERA+")
-        except:
+        except ValueError:
             default_sort_col_index = 0
     elif mode == "field":
         default_sort = {
@@ -660,7 +660,7 @@ def create_sort_filter(cols, mode):
             # Set index of default sort column for team stat pages
             else:
                 default_sort_col_index = cols.index("TZR")
-        except:
+        except ValueError:
             default_sort_col_index = 0
     elif mode == "team_summary":
         default_sort = {

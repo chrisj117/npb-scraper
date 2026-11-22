@@ -27,15 +27,14 @@ def main():
     )
     with stat_col1:
         user_year = hp.create_year_filter()
-    with stat_col2:
-        with st.container(horizontal=True):
-            user_league = hp.create_league_filter("npb")
-            user_bat_pitch = st.pills(
-                "Statistics",
-                ["Batting", "Pitching"],
-                selection_mode="multi",
-                default=["Batting", "Pitching"],
-            )
+    with stat_col2, st.container(horizontal=True):
+        user_league = hp.create_league_filter("npb")
+        user_bat_pitch = st.pills(
+            "Statistics",
+            ["Batting", "Pitching"],
+            selection_mode="multi",
+            default=["Batting", "Pitching"],
+        )
 
     # Generate list of dataframe to show
     if len(user_league) == 0 or len(user_bat_pitch) == 0:
